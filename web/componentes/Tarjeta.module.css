@@ -89,9 +89,20 @@
   overflow: hidden;
 }
 
-.fecha {
+.pie {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: auto;
-  padding-top: 10px;
+  padding-top: 12px;
+}
+
+.compartir {
+  display: contents;
+}
+
+.fecha {
   font-size: 13px;
   font-weight: 700;
 }

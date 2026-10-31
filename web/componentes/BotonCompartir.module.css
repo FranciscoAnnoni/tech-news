@@ -36,3 +36,25 @@
   padding: 0;
   background: none;
 }
+
+/* En la Tarjeta: ícono de 20px, sin borde; el padding de 12px da un área táctil de 44px y los márgenes negativos devuelven el espacio, así no corre el texto. */
+.boton.chico {
+  box-sizing: content-box;
+  width: 20px;
+  height: 20px;
+  margin: -12px 0 -12px -12px;
+  padding: 12px;
+  border: 0;
+}
+
+.boton.chico svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Dentro del pie de la Tarjeta (position: relative), encima de la fila y alineado a la izquierda. */
+.aviso.avisoChico {
+  right: auto;
+  left: 0;
+  bottom: calc(100% + 2px);
+}

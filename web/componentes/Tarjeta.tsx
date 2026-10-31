@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import type { TarjetaNoticia } from "@/lib/tipos";
+import { BotonCompartir } from "./BotonCompartir";
 import estilos from "./Tarjeta.module.css";
 
 const UMBRAL = 100;
@@ -128,7 +129,16 @@ export function Tarjeta({
       </div>
       <h2 className={estilos.titulo}>{tarjeta.titulo}</h2>
       {tarjeta.descripcion && <p className={estilos.descripcion}>{tarjeta.descripcion}</p>}
-      <div className={estilos.fecha}>{tarjeta.fecha}</div>
+      <div className={estilos.pie}>
+        {arriba && (
+          // Solo la de arriba: las de atrás no tienen botón enfocable. Frenar pointerdown evita que
+          // el contenedor inicie un gesto (y su setPointerCapture le robe el click al botón).
+          <div className={estilos.compartir} onPointerDown={(e) => e.stopPropagation()}>
+            <BotonCompartir variante="chico" identificador={tarjeta.identificador} titulo={tarjeta.titulo} />
+          </div>
+        )}
+        <div className={estilos.fecha}>{tarjeta.fecha}</div>
+      </div>
       <div ref={selloAbrir} className={`${estilos.sello} ${estilos.selloAbrir}`}>ABRIR</div>
       <div ref={selloDescartar} className={`${estilos.sello} ${estilos.selloDescartar}`}>DESCARTAR</div>
     </article>
