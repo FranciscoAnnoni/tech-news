@@ -7,6 +7,7 @@ import type { TarjetaNoticia } from "@/lib/tipos";
 import { Detalle } from "./Detalle";
 import { Guia } from "./Guia";
 import { Tarjeta } from "./Tarjeta";
+import estilosDetalle from "./Detalle.module.css";
 import estilos from "./Mazo.module.css";
 
 type Capa = { tipo: "detalle"; indice: number } | { tipo: "guia" } | null;
@@ -104,7 +105,17 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         <span>ABRIR →</span>
       </footer>
 
-      {capa?.tipo === "detalle" && <Detalle tarjeta={tarjetas[capa.indice]} alVolver={cerrarCapa} />}
+      {capa?.tipo === "detalle" && (
+        <Detalle
+          tarjeta={tarjetas[capa.indice]}
+          variante="capa"
+          cierre={
+            <button className={estilosDetalle.boton} type="button" onClick={cerrarCapa}>
+              Volver y seguir
+            </button>
+          }
+        />
+      )}
       {capa?.tipo === "guia" && <Guia alCerrar={cerrarCapa} />}
     </div>
   );

@@ -1,3 +1,4 @@
+import { identificadorDe } from "./noticiaPublica";
 import { MAX_CONTENIDO, type Noticia, type TarjetaNoticia, type Talla } from "./tipos";
 
 /** Sin descripción el título es todo el contenido: puede ocupar más. */
@@ -39,6 +40,7 @@ export const enlaceSeguro = (url: string): string => (/^https?:\/\//i.test(url) 
 export function aTarjeta(n: Noticia): TarjetaNoticia {
   return {
     id: n.id,
+    identificador: identificadorDe(n),
     titulo: n.titulo,
     descripcion: n.descripcion,
     contenido: contenidoVisible(n.contenido),

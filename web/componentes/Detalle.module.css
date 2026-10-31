@@ -1,6 +1,5 @@
 .detalle {
   position: absolute;
-  z-index: 40;
   inset: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -9,6 +8,11 @@
   background: var(--papel);
   color: var(--tinta);
   font-family: var(--sans);
+}
+
+/* Dentro del Mazo: capa sobre las tarjetas. */
+.capa {
+  z-index: 40;
   animation: entrada 0.2s ease-out;
 }
 
@@ -21,6 +25,16 @@
 
 .cuerpo {
   padding: calc(24px + env(safe-area-inset-top)) 20px 0;
+}
+
+/* En la página pública: la marca ubica a quien llega sin saber qué es Infomate. */
+.marca {
+  display: inline-block;
+  margin: 0 0 16px;
+  padding: 5px 8px;
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 14px var(--mono);
 }
 
 .origen {
@@ -77,6 +91,17 @@
   bottom: 0;
   padding-bottom: calc(var(--reserva-inferior) + 4px);
   background: var(--papel);
+}
+
+.fila {
+  display: flex;
+  gap: 12px;
+}
+
+/* Ancho completo por defecto; en la fila, el botón principal ocupa lo que sobra. */
+.fila > .principal {
+  flex: 1;
+  min-width: 0;
 }
 
 .boton {

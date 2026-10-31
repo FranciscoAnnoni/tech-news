@@ -32,6 +32,8 @@ export type Talla = "c" | "m" | "l";
 /** Lo que necesita la tarjeta para pintarse: ya resuelto en el servidor. */
 export interface TarjetaNoticia {
   id: number;
+  /** Categoría + id (`tech-123`): la parte final de la URL pública. */
+  identificador: string;
   titulo: string;
   descripcion: string | null;
   contenido: string | null;
