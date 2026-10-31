@@ -1,0 +1,4 @@
+n8n/ids.json
+.env
+__pycache__/
+*.log
