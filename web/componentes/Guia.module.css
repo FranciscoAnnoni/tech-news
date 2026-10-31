@@ -1,0 +1,149 @@
+.guia {
+  position: absolute;
+  z-index: 45;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: calc(12px + env(safe-area-inset-top)) 18px var(--reserva-inferior);
+  background: var(--amarillo);
+  color: var(--tinta);
+  font-family: var(--sans);
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cabecera h2 {
+  margin: 0;
+  padding-top: 8px;
+  font-size: 24px;
+  line-height: 1.15;
+  font-weight: 800;
+  outline: none;
+}
+
+.cerrar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--tinta);
+  background: var(--papel);
+  color: var(--tinta);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.intro {
+  margin: 10px 0 12px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.accion {
+  display: block;
+  flex: none;
+  width: 100%;
+  min-height: 52px;
+  margin: 0 0 10px;
+  border: 3px solid var(--tinta);
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 16px var(--mono);
+  cursor: pointer;
+}
+
+.mensaje {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.numero {
+  margin: 10px 0 8px;
+  font: 800 13px var(--mono);
+}
+
+.escena {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: var(--papel);
+  border: 3px solid var(--tinta);
+  overflow-y: auto;
+}
+
+.dibujo {
+  flex: 1 1 0;
+  min-height: 130px;
+  width: 100%;
+  font-family: var(--sans);
+}
+
+.foco {
+  animation: latido 1.2s ease-in-out infinite;
+}
+
+@keyframes latido {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.texto {
+  flex: none;
+  margin: 12px 0 0;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.orientativo {
+  flex: none;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.navegacion {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.navegacion button {
+  min-height: 52px;
+  border: 3px solid var(--tinta);
+  background: var(--papel);
+  color: var(--tinta);
+  font: 800 15px var(--mono);
+  cursor: pointer;
+}
+
+.navegacion .sigue {
+  background: var(--tinta);
+  color: var(--amarillo);
+}
+
+.navegacion button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-height: 720px) {
+  .intro {
+    font-size: 14px;
+    margin: 6px 0 8px;
+  }
+
+  .texto {
+    font-size: 15px;
+  }
+}

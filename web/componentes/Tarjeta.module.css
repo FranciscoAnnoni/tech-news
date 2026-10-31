@@ -1,0 +1,138 @@
+.tarjeta {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  background: var(--papel);
+  border: 3px solid var(--tinta);
+  box-shadow: 6px 6px 0 var(--tinta);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  overflow: hidden;
+  transform: translateY(calc(var(--k) * 11px)) scale(calc(1 - var(--k) * 0.035));
+  transform-origin: bottom center;
+}
+
+.tarjeta[data-k="1"],
+.tarjeta[data-k="2"] {
+  background: hsl(var(--tono) 70% 86%);
+}
+
+.origen {
+  flex: none;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 0;
+}
+
+.monograma {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 3px solid var(--tinta);
+  font-weight: 800;
+  background: hsl(var(--tono) 75% 70%);
+}
+
+.fuente {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoria {
+  flex: none;
+  margin-left: auto;
+  padding: 3px 7px;
+  background: var(--tinta);
+  color: var(--papel);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.titulo {
+  margin: auto 0 12px;
+  font: 800 30px/1.14 var(--sans);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  overflow: hidden;
+}
+
+.tarjeta[data-talla="c"] .titulo {
+  font-size: 38px;
+}
+
+.tarjeta[data-talla="l"] .titulo {
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.descripcion {
+  margin: 0;
+  font: 16px/1.45 var(--sans);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 15;
+  overflow: hidden;
+}
+
+.fecha {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sello {
+  position: absolute;
+  top: 74px;
+  padding: 6px 10px;
+  border: 4px solid;
+  font: 800 24px/1 var(--mono);
+  background: var(--papel);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.selloAbrir {
+  left: 14px;
+  color: #0a7a3d;
+}
+
+.selloDescartar {
+  right: 14px;
+  color: #c81e1e;
+}
+
+@media (max-height: 720px) {
+  .tarjeta {
+    padding: 14px;
+  }
+
+  .titulo,
+  .tarjeta[data-talla="c"] .titulo {
+    font-size: 25px;
+  }
+
+  .tarjeta[data-talla="l"] .titulo {
+    font-size: 19px;
+  }
+
+  .descripcion {
+    font-size: 14px;
+    line-height: 1.32;
+  }
+}
