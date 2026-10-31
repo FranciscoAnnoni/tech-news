@@ -59,7 +59,7 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   return (
     <div className={estilos.mazo}>
       <header className={estilos.cabecera}>
-        <span>EL MAZO</span>
+        <span>INFOMATE</span>
         {!instalada && (
           <button ref={botonDescargar} className={estilos.descargar} type="button" onClick={() => abrirCapa({ tipo: "guia" })}>
             Descargar

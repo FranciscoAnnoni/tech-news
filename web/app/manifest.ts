@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "El mazo de hoy",
-    short_name: "Mazo",
+    name: "Infomate",
+    short_name: "Infomate",
     description: "Lector diario de noticias en tarjetas.",
     lang: "es",
     start_url: "/",

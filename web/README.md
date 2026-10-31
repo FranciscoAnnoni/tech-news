@@ -1,4 +1,4 @@
-# El mazo de hoy
+# Infomate
 
 Lector diario de noticias en tarjetas (Next.js, PWA). El collector vive en la raíz del repo; esto es la app web.
 

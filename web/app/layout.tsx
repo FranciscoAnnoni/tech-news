@@ -4,13 +4,13 @@ import { CAPTURA_INSTALACION } from "@/lib/instalacion";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "El mazo de hoy",
+  title: "Infomate",
   description: "Lector diario de noticias en tarjetas.",
   icons: {
     icon: "/iconos/icono-192.png",
     apple: [{ url: "/iconos/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" }],
   },
-  appleWebApp: { capable: true, title: "Mazo", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Infomate", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
