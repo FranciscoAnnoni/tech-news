@@ -58,6 +58,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const terminado = indice >= n;
   const visibles = tarjetas.slice(indice, indice + PROFUNDIDAD);
 
+  const tarjetaAbierta = capa?.tipo === "detalle" ? tarjetas[capa.indice] : null;
+
   return (
     <div className={estilos.mazo}>
       <header className={estilos.cabecera}>
@@ -106,11 +108,11 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         <span>ABRIR →</span>
       </footer>
 
-      {capa?.tipo === "detalle" && (
+      {tarjetaAbierta && (
         <Detalle
-          tarjeta={tarjetas[capa.indice]}
+          tarjeta={tarjetaAbierta}
           variante="capa"
-          compartir={<BotonCompartir identificador={tarjetas[capa.indice].identificador} titulo={tarjetas[capa.indice].titulo} />}
+          compartir={<BotonCompartir identificador={tarjetaAbierta.identificador} titulo={tarjetaAbierta.titulo} />}
           cierre={
             <button className={estilosDetalle.boton} type="button" onClick={cerrarCapa}>
               Volver y seguir
