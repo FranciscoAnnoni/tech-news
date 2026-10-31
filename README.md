@@ -72,6 +72,7 @@ El código de este repo es el mismo que está desplegado: se comparó el 30/10 c
 | `n8n/nodos/parsear.js` | Código del nodo `Parsear y limpiar`. |
 | `n8n/construir.py` | Arma el workflow con esos nodos y lo sube a n8n por la API. Así el workflow se edita acá y no a mano en n8n. |
 | `docs/historia.md` | Cómo llegamos a esto: el relevamiento del 26/10 y los arreglos del 28 y 29/10. |
+| `ejemplos/noticias.json` | 5 noticias de cada categoría (argentina, global, tech), las mejores de los últimos 3 días al 31/10, para prototipar una app. |
 
 No están en este repo (viven en el repo privado de configuración del servidor): el workflow de resúmenes y su SQL (`preparar_resumen`, `guardar_resumen`, la vista `noticias_todas` que une tech con las noticias generales) y el panel web.
 
