@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { hayAviso, pedirInstalacion, suscribirInstalacion } from "@/lib/instalacion";
 import { detectarPlataforma, type Plataforma } from "@/lib/plataforma";
+import { copiarAlPortapapeles } from "@/lib/portapapeles";
 import { CONTENIDO_GUIA } from "./contenidoGuia";
 import { DibujoGuia } from "./DibujosGuia";
 import estilos from "./Guia.module.css";
@@ -44,7 +45,7 @@ export function Guia({ alCerrar }: { alCerrar: () => void }) {
 
   async function copiar() {
     try {
-      await navigator.clipboard.writeText(location.origin + location.pathname);
+      await copiarAlPortapapeles(location.origin + location.pathname);
       setMensaje("Enlace copiado.");
     } catch {
       setMensaje("No se pudo copiar: usá el menú de la app para copiar el enlace.");

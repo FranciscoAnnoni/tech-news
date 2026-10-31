@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { BotonCompartir } from "@/componentes/BotonCompartir";
 import { Detalle } from "@/componentes/Detalle";
 import estilosDetalle from "@/componentes/Detalle.module.css";
 import { NoticiaNoDisponible } from "@/componentes/NoticiaNoDisponible";
@@ -19,10 +20,12 @@ export default async function PaginaNoticia({ params }: { params: Promise<{ iden
   const { identificador } = await params;
   const resultado = await buscarNoticia(identificador, new Date());
   if (!resultado.disponible) return <NoticiaNoDisponible />;
+  const tarjeta = aTarjeta(resultado.noticia);
   return (
     <Detalle
-      tarjeta={aTarjeta(resultado.noticia)}
+      tarjeta={tarjeta}
       variante="pagina"
+      compartir={<BotonCompartir identificador={tarjeta.identificador} titulo={tarjeta.titulo} />}
       cierre={
         <Link className={estilosDetalle.boton} href="/">
           Ver las noticias de hoy

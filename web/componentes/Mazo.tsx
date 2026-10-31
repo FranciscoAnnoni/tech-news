@@ -4,6 +4,7 @@ import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalSt
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
 import type { TarjetaNoticia } from "@/lib/tipos";
+import { BotonCompartir } from "./BotonCompartir";
 import { Detalle } from "./Detalle";
 import { Guia } from "./Guia";
 import { Tarjeta } from "./Tarjeta";
@@ -109,6 +110,7 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         <Detalle
           tarjeta={tarjetas[capa.indice]}
           variante="capa"
+          compartir={<BotonCompartir identificador={tarjetas[capa.indice].identificador} titulo={tarjetas[capa.indice].titulo} />}
           cierre={
             <button className={estilosDetalle.boton} type="button" onClick={cerrarCapa}>
               Volver y seguir
