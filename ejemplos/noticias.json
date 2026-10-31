@@ -1,0 +1,189 @@
+{
+  "generado": "2026-10-31T00:16",
+  "argentina": [
+    {
+      "id": 6200,
+      "titulo": "Sin corte de cinta y a 4000 metros de altura, la minera que lidera en litio puso la mira en el cobre",
+      "descripcion": "El CEO global de Rio Tinto, Simon Trott, dijo que la Argentina es la base de su estrategia de litio y que la compañía explora oportunidades en cobre en el país; analizan una nueva planta en Catamarca",
+      "fuente": "La Nación",
+      "link": "https://www.lanacion.com.ar/economia/sin-corte-de-cinta-y-a-4000-metros-de-altura-la-minera-que-lidera-el-litio-puso-la-mira-en-el-cobre-nid28102026/",
+      "publicada": "2026-10-28T15:55:51Z",
+      "region": "argentina",
+      "puntaje": 9.57,
+      "relevancia": 11,
+      "puntos": null
+    },
+    {
+      "id": 6482,
+      "titulo": "Más de 1800 empresas quieren subirse a la ola del RIGI, sobre todo en el sector de la minería",
+      "descripcion": "Rosario fue la sede de una gran ronda de negocios entre quienes adhirieron al régimen de inversiones y las pymes que quieren venderles productos y servicios",
+      "fuente": "La Nación",
+      "link": "https://www.lanacion.com.ar/economia/mas-de-1800-empresas-quieren-subirse-a-la-ola-del-rigi-sobre-todo-en-el-sector-de-la-mineria-nid29102026/",
+      "publicada": "2026-10-29T20:12:17Z",
+      "region": "argentina",
+      "puntaje": 8.81,
+      "relevancia": 9,
+      "puntos": null
+    },
+    {
+      "id": 6209,
+      "titulo": "Empleados de Comercio: cuánto cobrarán en noviembre 2026, categoría por categoría, tras el aumento paritario",
+      "descripcion": "El incremento se pagará en tres tramos entre octubre y diciembre. El acuerdo alcanza a cerca de 1,2 millones de trabajadores del sector",
+      "fuente": "Infobae",
+      "link": "https://www.infobae.com/economia/2026/10/29/empleados-de-comercio-cuanto-cobraran-en-noviembre-2026-categoria-por-categoria-tras-el-aumento-paritario/",
+      "publicada": "2026-10-28T14:30:46Z",
+      "region": "argentina",
+      "puntaje": 8.63,
+      "relevancia": 12,
+      "puntos": null
+    },
+    {
+      "id": 6218,
+      "titulo": "A días de la visita del Papa y tras un embargo judicial, el Gobierno dice haber regularizado una deuda con el Cottolengo Don Orione",
+      "descripcion": "Esta semana, el juez federal Juan Pablo Auge había embargado por $828 millones las cuentas del ministerio que encabeza Mario Lugones",
+      "fuente": "La Nación",
+      "link": "https://www.lanacion.com.ar/politica/a-dias-de-la-visita-del-papa-y-tras-un-embargo-judicial-el-gobierno-dice-haber-regularizado-una-nid29102026/",
+      "publicada": "2026-10-28T01:16:23Z",
+      "region": "argentina",
+      "puntaje": 8.6,
+      "relevancia": 9,
+      "puntos": null
+    },
+    {
+      "id": 6483,
+      "titulo": "El Senado debate la Ley de Salud Mental y un proyecto de incentivo de inversiones para grandes empresas",
+      "descripcion": null,
+      "fuente": "TN",
+      "link": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxQTVEtaGlvVkJ1YXV2bjdWU3JSaThsNzZQUlk0VnFSSFBKNy1pWkVYTUZoTUtCakJzTkVIeGZNRU4tSU5tcVpJNHNxRHpyQmphZm5KOVRnekNPZFNFcjRkbVh3T0dyNlFpMEFnOVg5RkFzQ0doUWp3Q0tCY1B3c1o5UDFoNkJjenBuc3VKSkpWM3FKY3o0blVSOWFvUlA3Sm9PTVI2SGFrS1RoVFc2bWR5ZWdwUnpMVjJHaHdDOWJ6dzhJUUlTbERIWmdBZXZRR1dQWjU4Uzg4cUcxcDTSAe8BQVVfeXFMT2NvVUhWbDJMcHR6U3UydzQ5bGhIU1RFV1ppdi1vWVJDekdlVTBaUEJfbnlnM2tsQU8tb3RpWVFBU1VpZTZDaG1KN3hMbTB2cXFQcFYxcmtDQVNBOTRwcVVrR2JvZWVEaWM1RkVQWG1OemN3VHN5LXBvN1dnQ2xTclJuU05ibUVUaDdaYmhlLXlEN0tMRUI3RFNfc3ozSkE4a0YtbTdidFZRc0pqdHFtTWRNUlVrWFdZY1VUZi1zMVE4VEtsN01VRFdWdzhKUEJLOEFBNVlEQnMteWxWZUo3T29aOWVyNy1Fai1JbC1sVE0?oc=5",
+      "publicada": "2026-10-29T09:00:00Z",
+      "region": "argentina",
+      "puntaje": 8.59,
+      "relevancia": 8,
+      "puntos": null
+    }
+  ],
+  "global": [
+    {
+      "id": 6107,
+      "titulo": "La ONU aprueba la resolución contra el embargo a Cuba",
+      "descripcion": null,
+      "fuente": "Página|12",
+      "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQeDhTbnc1cG1HcEVReXRLUG5FSGc4TDJ5RXhJRGoydEVndFp0dm91d3Y0NHFfOHIxcjYzc2VSanp4clFQdHItejRNZUdGMDlkTUZYQVhMMTZpTXExWTJUaGdtZFBHa1VEOTVSQ0NYUXV5NjJ4WkdEOXhIbHpJVXBTTTlibVZXUmdkVVJIMGtCLUQ3N1hZQ1F5dg?oc=5",
+      "publicada": "2026-10-28T16:37:08Z",
+      "region": "usa",
+      "puntaje": 11.28,
+      "relevancia": 17,
+      "puntos": null
+    },
+    {
+      "id": 6390,
+      "titulo": "Elecciones en Israel: Qatar rechaza \"peligrosas\" acusaciones de interferencia",
+      "descripcion": "El portavoz de Exteriores de Qatar rechazó las acusaciones \"formuladas por ciertos políticos israelíes y sus contactos en los medios de comunicación\" de que su país había interferido en las elecciones israelíes.",
+      "fuente": "DW.com",
+      "link": "https://www.dw.com/es/elecciones-en-israel-qatar-rechaza-peligrosas-acusaciones-de-interferencia/a-79797692?maca=spa-rss-sp-all-1122-xml-mrss",
+      "publicada": "2026-10-29T13:57:00Z",
+      "region": "mundo",
+      "puntaje": 9.4,
+      "relevancia": 8,
+      "puntos": null
+    },
+    {
+      "id": 6444,
+      "titulo": "Funcionarios electorales de Alaska se oponen a intervención del Departamento de Justicia de Trump en contienda por el Senado",
+      "descripcion": null,
+      "fuente": "CNN en Español",
+      "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNSHktQ3V3Z0RMam8wemE5UGk0UzRFUm5CRnZxYVpfWVlRa3p3dXJQSEtTeEJnOEhISS1uSGFvSmZvY0lfaEl4Y3lLa2t0N0p6M2VRMTRUS3R2R3J1X3BfSWlaNzFPYmxNNGtlNFMzUnpNQUhHM1I0OXdMRGVBQUlGOFBYcXA?oc=5",
+      "publicada": "2026-10-29T02:14:00Z",
+      "region": "usa",
+      "puntaje": 9.2,
+      "relevancia": 9,
+      "puntos": null
+    },
+    {
+      "id": 6096,
+      "titulo": "Unos 200 pasajeros de un crucero global quedan varados en Camboya",
+      "descripcion": "La compañía Villa Vie Residences suspende operaciones por la subida del combustible tras el conflicto en Irán. En este 2026, la firma da siete horas a los residentes del buque Odyssey para desembarcar en Sihanoukville e inicia un periodo de reestructuración de dos meses.",
+      "fuente": "Euronews",
+      "link": "https://es.euronews.com/2026/10/28/abandonar-el-barco-unos-200-pasajeros-de-crucero-de-por-vida-varados-en-camboya",
+      "publicada": "2026-10-28T10:32:33Z",
+      "region": "mundo",
+      "puntaje": 8.99,
+      "relevancia": 6,
+      "puntos": null
+    },
+    {
+      "id": 6166,
+      "titulo": "Muere a los 96 años Dolores Huerta, pionera del movimiento sindical e ícono de los derechos civiles",
+      "descripcion": null,
+      "fuente": "CNN en Español",
+      "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxPa1o0LXdwdnJzQUVhWG84b04zMl9oVXdPTkd2UVpMeGhkd01fLVJkcWZUUldjWklYM2R3eU5VYldjdndCZTd6QWdLQ3VSd01oTHdZVHdBYmlJZDMtVFlFQ1RxV1VvWU1HVjNfZ0I1aXczdkhrVmxYNU1GbEVWVlI4c0RudTJUS0hqelhXSVVB?oc=5",
+      "publicada": "2026-10-28T16:48:00Z",
+      "region": "usa",
+      "puntaje": 8.91,
+      "relevancia": 9,
+      "puntos": null
+    }
+  ],
+  "tech": [
+    {
+      "id": 341,
+      "titulo": "Why is this fingerprinting script creating bioweapons?",
+      "descripcion": null,
+      "fuente": "nullpt.rs",
+      "link": "https://nullpt.rs/fingerprinting-bioweapons",
+      "publicada": "2026-10-28T17:13:29Z",
+      "region": "tech",
+      "puntaje": 7.15,
+      "relevancia": 2,
+      "puntos": 1573
+    },
+    {
+      "id": 340,
+      "titulo": "Apple's git still trusts the compromised eMudhra certificates",
+      "descripcion": null,
+      "fuente": "emudhra.we-have-a-problem.com",
+      "link": "https://emudhra.we-have-a-problem.com/apple.html",
+      "publicada": "2026-10-28T11:03:40Z",
+      "region": "tech",
+      "puntaje": 6.82,
+      "relevancia": 2,
+      "puntos": 1192
+    },
+    {
+      "id": 339,
+      "titulo": "Evidence of a spying operation by ICE against left-wing social movements",
+      "descripcion": null,
+      "fuente": "wired.com",
+      "link": "https://wired.com/story/ice-is-running-one-of-the-largest-anti-left-surveillance-operations-in-us-history",
+      "publicada": "2026-10-28T12:49:45Z",
+      "region": "tech",
+      "puntaje": 6.29,
+      "relevancia": 2,
+      "puntos": 1191
+    },
+    {
+      "id": 354,
+      "titulo": "Patrick Stewart has died",
+      "descripcion": null,
+      "fuente": "nytimes.com",
+      "link": "https://nytimes.com/2026/10/29/arts/television/patrick-stewart-dead.html",
+      "publicada": "2026-10-29T19:41:39Z",
+      "region": "tech",
+      "puntaje": 5.0,
+      "relevancia": 1,
+      "puntos": 3247
+    },
+    {
+      "id": 356,
+      "titulo": "Binance-hacker-1029 – $5.6B stolen from Binance",
+      "descripcion": null,
+      "fuente": "arkm.com",
+      "link": "https://arkm.com/explorer/entity/21a94755-f604-45e5-9501-6542e23005e8",
+      "publicada": "2026-10-29T21:38:59Z",
+      "region": "tech",
+      "puntaje": 4.8,
+      "relevancia": 1,
+      "puntos": 1727
+    }
+  ]
+}

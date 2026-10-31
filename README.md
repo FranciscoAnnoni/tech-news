@@ -74,6 +74,7 @@ El código de este repo es el mismo que está desplegado: se comparó el 30/10 c
 | `docs/historia.md` | Cómo llegamos a esto: el relevamiento del 26/10 y los arreglos del 28 y 29/10. |
 | `docs/como-funciona-hoy.md` | Fuentes, puntaje y cómo se arma el resumen (incluye la parte que vive en skynet), con puntos para discutir. |
 | `docs/flujos-n8n.md` | Qué workflows de n8n tocan las noticias tech, cuáles están activos y cuáles apagados. |
+| `ejemplos/noticias.json` | 5 noticias de cada categoría (argentina, global, tech), las mejores de los últimos 3 días al 31/10, para prototipar una app. |
 
 No están en este repo (viven en el repo privado de configuración del servidor): el workflow de resúmenes y su SQL (`preparar_resumen`, `guardar_resumen`, la vista `noticias_todas` que une tech con las noticias generales) y el panel web.
 
