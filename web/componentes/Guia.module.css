@@ -8,6 +8,16 @@
   background: var(--amarillo);
   color: var(--tinta);
   font-family: var(--sans);
+  /* Crece desde el botón Descargar. */
+  transform-origin: 160px calc(34px + env(safe-area-inset-top));
+  animation: entrada 0.2s ease-out;
+}
+
+@keyframes entrada {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
 }
 
 .cabecera {
