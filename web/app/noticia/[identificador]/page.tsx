@@ -6,13 +6,30 @@ import { Detalle } from "@/componentes/Detalle";
 import estilosDetalle from "@/componentes/Detalle.module.css";
 import { NoticiaNoDisponible } from "@/componentes/NoticiaNoDisponible";
 import { buscarNoticia } from "@/lib/noticias";
+import { metadatosMarca, metadatosPreview } from "@/lib/preview";
 import { aTarjeta } from "@/lib/texto";
+import { urlPublica } from "@/lib/urlPublica";
+
+// Sin buscadores, también cuando no está disponible. `noindex` no impide que WhatsApp o Slack lean el preview.
+const SIN_BUSCADORES: Metadata["robots"] = { index: false, follow: false };
 
 /**
- * Sin buscadores, también cuando no está disponible. #7 reemplaza esto por generateMetadata
- * (título para el preview) y debe conservar `robots` y llamar `await connection()` por la fecha.
+ * Preview del link. Disponible: título de la Noticia. No disponible (vencida, desconocida, inválida):
+ * solo la marca, sin dato alguno de la Noticia aunque exista. `openGraph` y `twitter` se reemplazan enteros
+ * al definirlos acá, por eso cada rama los trae completos.
  */
-export const metadata: Metadata = { robots: { index: false, follow: false } };
+export async function generateMetadata({ params }: { params: Promise<{ identificador: string }> }): Promise<Metadata> {
+  // La vigencia depende de la hora: sin esto el preview de un link vencido podría quedar congelado.
+  await connection();
+  const { identificador } = await params;
+  const resultado = await buscarNoticia(identificador, new Date());
+  if (!resultado.disponible) return { ...metadatosMarca(), robots: SIN_BUSCADORES };
+  const { titulo, descripcion } = aTarjeta(resultado.noticia);
+  return {
+    ...metadatosPreview({ titulo, descripcion, url: urlPublica(identificador) }),
+    robots: SIN_BUSCADORES,
+  };
+}
 
 export default async function PaginaNoticia({ params }: { params: Promise<{ identificador: string }> }) {
   // El vencimiento depende de la hora: nunca se prerenderiza ni se guarda en caché.
