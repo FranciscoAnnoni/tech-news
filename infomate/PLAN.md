@@ -117,26 +117,31 @@ Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del
 
 ## Paso 3: Infraestructura
 
+**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco.
+
+- Respaldo: `n8n-backup` (03:30) solo vuelca la base de n8n; ni `infomate` ni las otras bases entran. Queda para decidir.
+- El rol `infomate` puede conectarse a `postgres`, `entrenador`, `mails`, `instagram` y `tareas` (permiso por defecto de Postgres), pero no lee ninguna tabla. A `noticias` y `n8n` no puede entrar.
+
 **Entregable:** la base `infomate` creada en el Postgres de skynet, con usuario propio y el esquema aplicado, y la credencial `Postgres infomate` cargada en n8n. Es el primer paso que toca skynet: solo agrega cosas, no modifica nada existente.
 
 ### Tarea 3.1: Base y usuario
 
-- [ ] `infomate/sql/00-crear-base.sql`: crea el rol `infomate` (LOGIN, la contraseña se pasa al correrlo y no se commitea) y la base `infomate`, cuyo dueño es ese rol.
-- [ ] Correrlo como superusuario dentro del contenedor de Postgres.
-- [ ] Verificar si el rol `infomate` puede conectarse a otras bases (por defecto Postgres deja conectarse a cualquiera, aunque sin permisos sobre las tablas). Si puede, se muestra qué roles usan cada base y se pide aprobación antes de quitarle a PUBLIC el permiso de conexión.
+- [x] `infomate/sql/00-crear-base.sql`: crea el rol `infomate` (LOGIN, la contraseña se pasa al correrlo y no se commitea) y la base `infomate`, cuyo dueño es ese rol.
+- [x] Correrlo como superusuario dentro del contenedor de Postgres.
+- [x] Verificar si el rol `infomate` puede conectarse a otras bases (por defecto Postgres deja conectarse a cualquiera, aunque sin permisos sobre las tablas). Si puede, se muestra qué roles usan cada base y se pide aprobación antes de quitarle a PUBLIC el permiso de conexión.
 
 ### Tarea 3.2: Esquema
 
-- [ ] Aplicar `01-esquema.sql` en `infomate` como el rol `infomate`. `pg_trgm` es una extensión confiable desde Postgres 13, así que el dueño de la base puede crearla.
-- [ ] Correr `prueba.sql` dentro de una transacción que se deshace (ROLLBACK), para que no queden datos de prueba.
+- [x] Aplicar `01-esquema.sql` en `infomate` como el rol `infomate`. `pg_trgm` es una extensión confiable desde Postgres 13, así que el dueño de la base puede crearla.
+- [x] Correr `prueba.sql` dentro de una transacción que se deshace (ROLLBACK), para que no queden datos de prueba.
 
 ### Tarea 3.3: Credencial en n8n
 
-- [ ] Crear la credencial `Postgres infomate` por la API de n8n, con host, base, usuario y contraseña tomados de variables de entorno. Su ID se guarda solo en local, en `infomate/n8n/ids.json`, que no se versiona.
+- [x] Crear la credencial `Postgres infomate` por la API de n8n, con host, base, usuario y contraseña tomados de variables de entorno. Su ID se guarda solo en local, en `infomate/n8n/ids.json`, que no se versiona.
 
 ### Tarea 3.4: Respaldo
 
-- [ ] Revisar si skynet tiene un respaldo de Postgres y si incluye las bases nuevas automáticamente. Si no hay respaldo o no la incluye, se anota para decidir juntos. No se arma nada nuevo en este paso.
+- [x] Revisar si skynet tiene un respaldo de Postgres y si incluye las bases nuevas automáticamente. Si no hay respaldo o no la incluye, se anota para decidir juntos. No se arma nada nuevo en este paso.
 
 ### Chequeo del paso 3
 
