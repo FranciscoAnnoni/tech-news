@@ -153,25 +153,35 @@ Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del
 
 ## Paso 4: Recolector
 
+**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco. Dos corridas a mano: la primera dejó 132 global, 70 ARG y 121 tech; la segunda no duplicó (0 nuevas en tech, 1 en global, 17 en ARG por La Nación Política, que en la primera falló por DNS).
+
+Para los pasos 5 y 6:
+- Repetidas que se escapan: pares reales con 39-49 % de parecido (Flock, Lenovo, Mythos, Ruta 51, Bariloche). Bajar el umbral a ~40 % une también notas de servicio distintas (ANSES), que conviene filtrar antes.
+- Notas de servicio en ARG: calendario ANSES, dólar hoy, clima local.
+- Global arriba está dominado por política interna de EE.UU. (Google News EE.UU. y medios hispanos de EE.UU.).
+- ARG trae noticias locales de provincias vía Google News (Gualeguaychú, Quitilipi).
+- Tech queda dominado por HN, porque Reddit y Lobsters casi no aportan votos al puntaje provisorio.
+- 69 de 133 global y 34 de 87 ARG tienen solo link de Google News.
+
 **Entregable:** el workflow `Infomate · Diario` en n8n, que recolecta y guarda en las tablas por categoría, todavía sin IA y sin horario (solo se corre a mano). Cubre los nodos 1 a 5 y 13 de `ARQUITECTURA.md`.
 
 **Despliegue sin API key:** `construir.py` arma el JSON del workflow y lo sube por SSH con `n8n import:workflow`. Las corridas de prueba se hacen con `n8n execute`, igual que en el paso 3.
 
 ### Tarea 4.1: Fuentes y parser
 
-- [ ] `n8n/nodos/fuentes.js`: las fuentes de hoy menos France 24, cada una con `categoria` y `origen`. Global: Google News Mundo y EE.UU., BBC Mundo, DW, La Nación EE.UU., El País Europa y Euronews. ARG: Google News Argentina, Infobae y La Nación (política y economía). Tech: HN (10 puntos o más), Lobsters y los 3 subreddits. Portadas de Google News AR y EE.UU. Sociedad y deportes de ARG entran en el paso 5.
-- [ ] `n8n/nodos/parsear.js`: un solo parser para RSS, Atom, HN y Lobsters. Devuelve por ítem `categoria`, `fuente`, `titulo_original`, `link`, `link_google`, `descripcion_fuente`, `contenido` (si el feed trae 300 caracteres o más, los primeros 2000), `fecha_publicacion`, `posicion`, `puntos`, `comentarios` y `medios`. Descarta lo de más de 24 h. Las portadas salen aparte: solo títulos.
-- [ ] Prueba: `n8n/probar-parser.mjs` corre el parser con Node sobre ejemplos guardados (un RSS, un Google News, HN, Lobsters y Reddit) y verifica los campos.
+- [x] `n8n/nodos/fuentes.js`: las fuentes de hoy menos France 24, cada una con `categoria` y `origen`. Global: Google News Mundo y EE.UU., BBC Mundo, DW, La Nación EE.UU., El País Europa y Euronews. ARG: Google News Argentina, Infobae y La Nación (política y economía). Tech: HN (10 puntos o más), Lobsters y los 3 subreddits. Portadas de Google News AR y EE.UU. Sociedad y deportes de ARG entran en el paso 5.
+- [x] `n8n/nodos/parsear.js`: un solo parser para RSS, Atom, HN y Lobsters. Devuelve por ítem `categoria`, `fuente`, `titulo_original`, `link`, `link_google`, `descripcion_fuente`, `contenido` (si el feed trae 300 caracteres o más, los primeros 2000), `fecha_publicacion`, `posicion`, `puntos`, `comentarios` y `medios`. Descarta lo de más de 24 h. Las portadas salen aparte: solo títulos.
+- [x] Prueba: `n8n/probar-parser.mjs` corre el parser con Node sobre ejemplos guardados (un RSS, un Google News, HN, Lobsters y Reddit) y verifica los campos.
 
 ### Tarea 4.2: Ingreso en la base
 
-- [ ] `sql/02-funciones.sql`, con dos funciones:
+- [x] `sql/02-funciones.sql`, con dos funciones:
     - `infomate_ingresar(items jsonb, portadas jsonb, corrida text)`:
         - Une las repetidas por link y, si no, por título parecido dentro de la misma categoría en las últimas 72 h. Al unir, suma `medios`, se queda con la mejor `posicion`, los puntos más altos y el texto más largo, y cambia un link de Google News por el del medio si aparece.
         - Si una noticia global ya está en ARG, queda solo en ARG.
         - Marca `portada`, calcula un `puntaje_previo` provisorio (se rehace en el paso 6) y deja como máximo 200 noticias nuevas por categoría por corrida.
     - `infomate_limpiar()`: borra lo de más de 7 días que no está en `diaria`.
-- [ ] Prueba: `sql/prueba-funciones.sql`, en el Postgres descartable de `probar.sh`. Verifica que:
+- [x] Prueba: `sql/prueba-funciones.sql`, en el Postgres descartable de `probar.sh`. Verifica que:
     - un link repetido no duplica la noticia;
     - un título parecido se une y suma medios;
     - un link de Google News se reemplaza por el del medio cuando aparece;
@@ -181,10 +191,10 @@ Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del
 
 ### Tarea 4.3: Workflow
 
-- [ ] `n8n/construir.py`, con estos nodos: Probar a mano, Fuentes, Bajar fuentes, Bajar Reddit, Parsear, Guardar sin repetidas, Limpiar y cerrar (fila en `corridas`).
+- [x] `n8n/construir.py`, con estos nodos: Probar a mano, Fuentes, Bajar fuentes, Bajar Reddit, Parsear, Guardar sin repetidas, Limpiar y cerrar (fila en `corridas`).
     - `Bajar fuentes` y `Bajar Reddit` son dos nodos HTTP. El de Reddit espera 65 s entre pedidos.
     - Una fuente caída no corta la corrida: queda anotada en `corridas`.
-- [ ] Subirlo y correrlo a mano en skynet.
+- [x] Subirlo y correrlo a mano en skynet.
 
 ### Chequeo del paso 4
 

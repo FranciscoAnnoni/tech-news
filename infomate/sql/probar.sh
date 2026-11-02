@@ -9,3 +9,6 @@ until docker exec "$C" pg_isready -U postgres -d infomate -q 2>/dev/null; do sle
 sleep 1
 docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 01-esquema.sql
 docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate -c "TRUNCATE diaria, noticias, corridas"
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 02-funciones.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba-funciones.sql
