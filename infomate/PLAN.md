@@ -117,9 +117,9 @@ Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del
 
 ## Paso 3: Infraestructura
 
-**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco.
+**Estado:** hecho y aprobado el 02/11/2026.
 
-- Respaldo: `n8n-backup` (03:30) solo vuelca la base de n8n; ni `infomate` ni las otras bases entran. Queda para decidir.
+- Respaldo: `n8n-backup` (03:30) solo vuelca la base de n8n. Decisión de Francisco: no se respaldan las bases, porque estarían en el mismo disco.
 - El rol `infomate` puede conectarse a `postgres`, `entrenador`, `mails`, `instagram` y `tareas` (permiso por defecto de Postgres), pero no lee ninguna tabla. A `noticias` y `n8n` no puede entrar.
 
 **Entregable:** la base `infomate` creada en el Postgres de skynet, con usuario propio y el esquema aplicado, y la credencial `Postgres infomate` cargada en n8n. Es el primer paso que toca skynet: solo agrega cosas, no modifica nada existente.
@@ -148,3 +148,47 @@ Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del
 - `SELECT edicion(current_date)` como `infomate` devuelve `[]`.
 - Un workflow descartable en n8n hace la misma consulta con la credencial nueva y obtiene `[]`; después se borra.
 - El rol `infomate` no puede leer la base `noticias`.
+
+---
+
+## Paso 4: Recolector
+
+**Entregable:** el workflow `Infomate · Diario` en n8n, que recolecta y guarda en las tablas por categoría, todavía sin IA y sin horario (solo se corre a mano). Cubre los nodos 1 a 5 y 13 de `ARQUITECTURA.md`.
+
+**Despliegue sin API key:** `construir.py` arma el JSON del workflow y lo sube por SSH con `n8n import:workflow`. Las corridas de prueba se hacen con `n8n execute`, igual que en el paso 3.
+
+### Tarea 4.1: Fuentes y parser
+
+- [ ] `n8n/nodos/fuentes.js`: las fuentes de hoy menos France 24, cada una con `categoria` y `origen`. Global: Google News Mundo y EE.UU., BBC Mundo, DW, La Nación EE.UU., El País Europa y Euronews. ARG: Google News Argentina, Infobae y La Nación (política y economía). Tech: HN (10 puntos o más), Lobsters y los 3 subreddits. Portadas de Google News AR y EE.UU. Sociedad y deportes de ARG entran en el paso 5.
+- [ ] `n8n/nodos/parsear.js`: un solo parser para RSS, Atom, HN y Lobsters. Devuelve por ítem `categoria`, `fuente`, `titulo_original`, `link`, `link_google`, `descripcion_fuente`, `contenido` (si el feed trae 300 caracteres o más, los primeros 2000), `fecha_publicacion`, `posicion`, `puntos`, `comentarios` y `medios`. Descarta lo de más de 24 h. Las portadas salen aparte: solo títulos.
+- [ ] Prueba: `n8n/probar-parser.mjs` corre el parser con Node sobre ejemplos guardados (un RSS, un Google News, HN, Lobsters y Reddit) y verifica los campos.
+
+### Tarea 4.2: Ingreso en la base
+
+- [ ] `sql/02-funciones.sql`, con dos funciones:
+    - `infomate_ingresar(items jsonb, portadas jsonb, corrida text)`:
+        - Une las repetidas por link y, si no, por título parecido dentro de la misma categoría en las últimas 72 h. Al unir, suma `medios`, se queda con la mejor `posicion`, los puntos más altos y el texto más largo, y cambia un link de Google News por el del medio si aparece.
+        - Si una noticia global ya está en ARG, queda solo en ARG.
+        - Marca `portada`, calcula un `puntaje_previo` provisorio (se rehace en el paso 6) y deja como máximo 200 noticias nuevas por categoría por corrida.
+    - `infomate_limpiar()`: borra lo de más de 7 días que no está en `diaria`.
+- [ ] Prueba: `sql/prueba-funciones.sql`, en el Postgres descartable de `probar.sh`. Verifica que:
+    - un link repetido no duplica la noticia;
+    - un título parecido se une y suma medios;
+    - un link de Google News se reemplaza por el del medio cuando aparece;
+    - una noticia que ya está en ARG no entra en global;
+    - el tope de 200 se respeta;
+    - la limpieza borra lo viejo y respeta `diaria`.
+
+### Tarea 4.3: Workflow
+
+- [ ] `n8n/construir.py`, con estos nodos: Probar a mano, Fuentes, Bajar fuentes, Bajar Reddit, Parsear, Guardar sin repetidas, Limpiar y cerrar (fila en `corridas`).
+    - `Bajar fuentes` y `Bajar Reddit` son dos nodos HTTP. El de Reddit espera 65 s entre pedidos.
+    - Una fuente caída no corta la corrida: queda anotada en `corridas`.
+- [ ] Subirlo y correrlo a mano en skynet.
+
+### Chequeo del paso 4
+
+- La corrida termina bien y deja como máximo 200 noticias por categoría, sin repetidas y con `fecha_publicacion`.
+- Los links son del medio, salvo los de Google News que no tienen par en un feed. Esos quedan marcados con `link_google` y se resuelven en el paso 5.
+- Correrla dos veces seguidas no duplica nada.
+- Francisco revisa un listado por categoría de lo que entró, ordenado por `puntaje_previo`.
