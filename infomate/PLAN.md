@@ -389,11 +389,11 @@ Cambios sobre lo planeado:
 
 ## Paso 10a: La edición en Vercel Blob (adelantado por pedido de Francisco)
 
-**Estado:** hecho el 02/11/2026. El store es **privado** (decisión de Francisco): se sube con `x-vercel-blob-access: private`.
+**Estado:** hecho el 02/11/2026. El store pasó a **público** (decisión de Francisco, mismo día): se sube con `x-vercel-blob-access: public` y se lee sin token en `https://<id-del-store>.public.blob.vercel-storage.com/infomate/hoy.json` (la URL completa no se versiona).
 
 Prueba: la corrida subió `infomate/hoy.json` y `infomate/2026-11-02.json` (44,5 KB cada uno). Leído de vuelta desde Vercel con la misma credencial, `hoy.json` tiene las mismas 15 noticias y en el mismo orden que `edicion(hoy)`.
 
-**Cómo leerlo (para la app):** `GET https://<id-del-store>.private.blob.vercel-storage.com/infomate/hoy.json` con `Authorization: Bearer <token>`, o `get('infomate/hoy.json', { access: 'private' })` de `@vercel/blob`. Solo desde un servidor: el token no puede ir al navegador.
+**Cómo leerlo (para la app):** un `GET` a la URL pública, sin token. Si el store se vuelve a hacer privado, hay que cambiar el encabezado `x-vercel-blob-access` en `construir.py` (Vercel rechaza subir privado a un store público y al revés).
 
 **Entregable:** cada corrida sube la edición del día como JSON a un Blob público de Vercel, en una ruta fija que la app lee con el token.
 
