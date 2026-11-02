@@ -6,6 +6,20 @@
 
 **Stack:** n8n 2.41.3 (nodos Code en JavaScript, HTTP Request, Postgres), Postgres 17, OpenRouter, Python 3 para el script que sube el workflow (mismo esquema que `n8n/construir.py`).
 
+## Cómo retomar (estado al 02/11/2026)
+
+- **Pasos 1 a 6: hechos y aprobados.** El workflow `Infomate · Diario` (id `infomateDiario01`) está en el n8n de skynet, sin horario: recolecta, guarda sin repetidas, preselecciona, decodifica Google News, baja el texto y marca 10 candidatas por categoría.
+- **Sigue el paso 7: elegir el modelo del juez.** Requisito previo: la credencial `OpenRouter Infomate` creada por Francisco directo en n8n (tipo Header Auth, ver abajo). La key nunca pasa por el chat, el repo ni archivos locales.
+- **Rama:** `infomate/plan` (commits locales, sin push).
+- **Pruebas:** `node n8n/probar-parser.mjs`, `node n8n/probar-texto.mjs` y `sql/probar.sh` (necesita Docker en la Mac).
+- **Desplegar:** aplicar `sql/02-funciones.sql` y `sql/03-preseleccion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`.
+- **Correr a mano:** `ssh skynet 'docker exec -e N8N_RUNNERS_BROKER_PORT=5699 n8n-n8n-1 n8n execute --id=infomateDiario01 --rawOutput'` (el puerto distinto evita chocar con la instancia que ya corre). El resumen queda en la tabla `corridas`.
+- **Locales, fuera de git:** `n8n/.env` (contraseña de la base) e `n8n/ids.json` (id de la credencial Postgres).
+
+### Credencial de OpenRouter (la crea Francisco)
+
+En n8n: Credentials, New, **Header Auth**. Nombre de la credencial: `OpenRouter Infomate`. Name: `Authorization`. Value: `Bearer <key nueva>`. Guardar. En la cuenta de OpenRouter, poner un tope de gasto mensual a la key. Después alcanza con avisar que está creada: el workflow la referencia por nombre y su id se busca en n8n sin leer el secreto.
+
 ## Cómo se trabaja
 
 Cada paso tiene cuatro tiempos:
