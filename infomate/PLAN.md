@@ -23,7 +23,7 @@ No se arranca un paso sin cerrar el anterior. El detalle de cada paso se escribe
 - No se commitean IPs, IDs de credenciales, API keys ni chat IDs. La configuración va por variables de entorno.
 - Zona horaria: `America/Argentina/Buenos_Aires`.
 - Nombres: base `infomate`, workflow `Infomate · Diario`, carpeta `infomate/`.
-- Límites: `resumen` de 500 caracteres como máximo, `contenido` de 2000 caracteres como máximo, hasta 100 noticias por categoría y por día, 10 candidatas por categoría y 5 elegidas por categoría.
+- Límites: `resumen` de 500 caracteres como máximo, `contenido` de 2000 caracteres como máximo, hasta 200 noticias por categoría y por día, retención de 7 días (salvo lo publicado en `diaria`), 10 candidatas por categoría y 5 elegidas por categoría.
 
 ## Puntos de riesgo (revisar en cada paso que toque esto)
 
@@ -38,10 +38,10 @@ No se arranca un paso sin cerrar el anterior. El detalle de cada paso se escribe
 | # | Paso | Entregable | Criterio de cierre |
 |---|---|---|---|
 | 1 | Arquitectura | `infomate/ARQUITECTURA.md` + el dibujo en el documento de diseño | Francisco aprueba piezas, nodos del workflow, esquema, contrato del juez y estructura de carpetas |
-| 2 | Relevamiento | Informe con números reales: noticias por día de cada fuente, a qué hora publican, qué trae hoy global/ARG y qué falta | Sabemos si 100 por categoría alcanza, si las 08:00 están bien y qué fuentes revisar |
+| 2 | Relevamiento | Informe con números reales: noticias por día de cada fuente, a qué hora publican, qué trae hoy global/ARG y qué falta | Sabemos si el tope alcanza (quedó en 200), si las 08:00 están bien y qué fuentes revisar |
 | 3 | Infraestructura | Base `infomate` con usuario propio, esquema aplicado y credencial Postgres en n8n | n8n consulta la base con ese usuario, y ese usuario no ve la base `noticias` |
-| 4 | Recolector | `Infomate · Diario` recolecta y guarda en las tablas por categoría, sin IA | Una corrida a mano deja hasta 100 por categoría, sin repetidas, con `link` directo y `fecha_publicacion` |
-| 5 | Fuentes global y ARG | Ajustes a `fuentes.js` según los pasos 2 y 4 | Francisco revisa una corrida y está de acuerdo con lo que entra |
+| 4 | Recolector | `Infomate · Diario` recolecta y guarda en las tablas por categoría, sin IA | Una corrida a mano deja hasta 200 por categoría, sin repetidas, con `link` directo y `fecha_publicacion` |
+| 5 | Fuentes global y ARG | Ajustes a `fuentes.js` según los pasos 2 y 4: sumar sociedad y deportes a ARG, decidir qué hacer con Google News, revisar El País Europa, BBC Mundo y France 24 | Francisco revisa una corrida y está de acuerdo con lo que entra |
 | 6 | Preselección y texto | Puntaje previo, las 10 candidatas por categoría y su texto | El 80 % o más de las candidatas sale con texto; si no, se decide si hace falta un extractor aparte |
 | 7 | Modelo | Comparación de 2 o 3 modelos con las 30 candidatas de un día real: costo por día y calidad | Francisco elige el modelo y se crea la credencial nueva con tope de gasto |
 | 8 | Jueces y tabla diaria | Los 3 prompts, el juez en el flujo, la elección de las 5, la tabla `diaria`, la vista JSON y el aviso por Telegram si falla | Una corrida completa deja 15 noticias con el formato de la app, y el horario de las 08:00 queda activado |
@@ -86,3 +86,29 @@ No se arranca un paso sin cerrar el anterior. El detalle de cada paso se escribe
 ### Chequeo del paso 1
 
 Francisco revisa `ARQUITECTURA.md` y el dibujo. Si aprueba, se commitea en la rama `infomate/plan` y se escribe el detalle del paso 2.
+
+---
+
+## Paso 2: Relevamiento
+
+**Estado:** hecho y aprobado el 02/11/2026. A partir del informe, el tope pasó de 100 a 200 por categoría, con retención de 7 días.
+
+**Entregable:** `infomate/relevamiento/INFORME.md` con números medidos directo en los feeds, sin tocar skynet ni la base vieja. Incluye el script que los mide (`relevamiento/medir.py`), así se puede volver a correr.
+
+**Limitación:** una sola foto de los feeds muestra lo que cada feed tiene en ese momento. Los feeds que cubren menos de 24 h (France 24, Euronews) se miden por su ventana y se marca.
+
+### Tarea 2.1: Script de medición
+
+- [x] `relevamiento/medir.py`, solo con biblioteca estándar de Python. Baja las mismas fuentes de hoy: los 15 feeds de global/ARG y HN, Lobsters y los 3 subreddits de tech. Reddit va espaciado. Guarda la foto cruda en `relevamiento/datos/` (no se commitea).
+- [x] Por feed: ítems, cuántos de las últimas 24 h, antigüedad del más viejo (ventana que cubre), si traen descripción, si traen texto completo (300 caracteres o más) y cuántos links son de Google News.
+- [x] Por categoría: noticias distintas en 24 h después de unir repetidas por título parecido, y cuántas cubre más de un medio.
+- [x] Horas de publicación (hora Argentina) de lo publicado en las últimas 48 h, por categoría.
+- [x] Muestra de 5 links de Google News: ¿se pueden resolver al link del medio con un GET simple?
+
+### Tarea 2.2: Informe
+
+- [x] `relevamiento/INFORME.md` con las tablas y tres respuestas: si 100 por categoría alcanza o sobra, si las 08:00 con ventana de 24 h está bien, y qué fuentes de global y ARG conviene revisar en el paso 5.
+
+### Chequeo del paso 2
+
+Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del paso 3.

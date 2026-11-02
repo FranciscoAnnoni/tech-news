@@ -28,7 +28,7 @@ Es un solo workflow, sin subflujos. Los nodos van en línea recta, así que un s
 | 2 | Fuentes | Code (`fuentes.js`) | Lista de feeds, cada uno con su `categoria` (`global`, `arg` o `tech`) y su `origen` (`rss`, `gnews`, `portada`, `hn`, `reddit`...) | se arma desde las fuentes de hoy |
 | 3 | Bajar fuentes | HTTP Request | Baja cada feed. Reddit va espaciado porque devuelve 429 | igual al de hoy |
 | 4 | Parsear | Code (`parsear.js`) | Normaliza cada ítem: `titulo_original`, `link`, `descripcion_fuente`, `fecha_publicacion`, `posicion`, `fuente`, `puntos`, `comentarios`. Descarta lo publicado hace más de 24 h | se arma desde los parsers de hoy |
-| 5 | Guardar sin repetidas | Postgres: `infomate_ingresar(items, corrida)` | Une las repetidas (link y parecido de títulos), suma `medios` y `portada`, calcula `puntaje_previo` y deja hasta 100 por categoría | nuevo |
+| 5 | Guardar sin repetidas | Postgres: `infomate_ingresar(items, corrida)` | Une las repetidas (link y parecido de títulos), suma `medios` y `portada`, calcula `puntaje_previo` y deja hasta 200 por categoría | nuevo |
 | 6 | Candidatas | Postgres: `infomate_candidatas(corrida)` | Las 15 primeras por `puntaje_previo` de cada categoría, sin las que salieron en `diaria` los últimos 7 días. Son 15 y no 10 por las que se quedan sin texto | nuevo |
 | 7 | Bajar texto | HTTP Request + Code (`texto.js`) | Resuelve el link de Google News al del medio, baja la nota, extrae el texto y lo recorta a 2000 caracteres (`contenido`) | nuevo |
 | 8 | Quedarse con 10 | Code | Las primeras 10 con texto de cada categoría; las marca `candidata` | nuevo |
@@ -36,7 +36,7 @@ Es un solo workflow, sin subflujos. Los nodos van en línea recta, así que un s
 | 10 | Validar | Code (`validar.js`) | Revisa el JSON del juez. Si es inválido, repite la llamada una vez | nuevo |
 | 11 | Guardar juicio | Postgres: `infomate_juzgar(items)` | Guarda `titulo`, `resumen`, `puntaje`, `motivo` y `juzgada` | nuevo |
 | 12 | Armar edición | Postgres: `infomate_armar_edicion(fecha)` | Borra la edición del día si existe y carga las 5 de mayor `puntaje` por categoría (desempata `puntaje_previo`) | nuevo |
-| 13 | Cerrar corrida | Postgres | Guarda los conteos en `corridas` | nuevo |
+| 13 | Limpiar y cerrar | Postgres: `infomate_limpiar()` | Borra lo recolectado hace más de 7 días que no salió en `diaria` y guarda los conteos en `corridas` | nuevo |
 
 **Errores:** un workflow aparte, `Infomate · Error`, configurado como workflow de error de `Infomate · Diario`, manda por Telegram el nodo que falló y el mensaje.
 
@@ -50,7 +50,7 @@ Es un solo workflow, sin subflujos. Los nodos van en línea recta, así que un s
 
 Esquema en [`sql/01-esquema.sql`](sql/01-esquema.sql). Se prueba con `sql/probar.sh`, que lo levanta en un Postgres descartable y corre [`sql/prueba.sql`](sql/prueba.sql).
 
-- **`noticias`:** particionada por categoría. Las particiones `global`, `arg` y `tech` son las tablas por categoría que pediste, y `noticias` permite consultarlas juntas. Todo lo recolectado queda ahí, sin borrar.
+- **`noticias`:** particionada por categoría. Las particiones `global`, `arg` y `tech` son las tablas por categoría que pediste, y `noticias` permite consultarlas juntas. Lo recolectado se guarda 7 días; lo que salió en `diaria` se guarda siempre.
 - **`diaria`:** 5 por categoría y por día (`orden` de 1 a 5). Nunca se borra. La clave foránea impide cargar una noticia en una categoría que no es la suya.
 - **`corridas`:** una fila por ejecución, con sus conteos.
 - **`diaria_json` y `edicion(fecha)`:** devuelven la edición de un día como array JSON con el formato de la app, ordenada por puntaje.
@@ -64,6 +64,7 @@ Funciones que usa el workflow. Se escriben en el paso de cada una:
 | `infomate_candidatas(corrida text)` | filas `(id, categoria, titulo_original, link, link_google, fuente, fecha_publicacion)`, 15 por categoría | 6 |
 | `infomate_juzgar(items jsonb)` | cantidad de noticias actualizadas | 8 |
 | `infomate_armar_edicion(dia date)` | jsonb con cuántas quedaron por categoría | 8 |
+| `infomate_limpiar()` | cantidad de noticias borradas | 4 |
 
 La fórmula de `puntaje_previo` se define en el paso 6, con los datos del relevamiento.
 
