@@ -14,7 +14,21 @@ Las pruebas agregadas verifican configuración por ambiente, buffer y captura po
 
 El procedimiento reproducible está en [.scratch/analitica-infomate/verification](../.scratch/analitica-infomate/verification/README.md). Usa una copia temporal del proyecto sin archivos `.env`, feed de tres tarjetas con fecha actual, token ficticio y un perfil temporal de Chrome. Las solicitudes a proveedores se interceptan y responden localmente.
 
-Estado: ejecución integrada en curso; completar resultados antes de la entrega.
+Ejecución del 2026-11-02 sobre el commit `5e089e1` (Chrome headless, viewport 390 × 844, token ficticio con `NEXT_PUBLIC_ANALITICA_PRUEBA=true`). Se capturaron 21 eventos de Mixpanel en 24 solicitudes interceptadas; ninguna llegó a un proveedor.
+
+| Escenario | Resultado |
+| --- | --- |
+| Inicio de visita con UTM de compartir, email y fragmento de prueba: un `app_iniciada` con `origen_entrada=compartido`, un `mazo_iniciado`, una sola `tarjeta_vista` | Pasó |
+| Abrir y cerrar la guía de instalación emite `guia_instalacion_abierta` sin exponer la tarjeta de fondo | Pasó |
+| Abrir, cerrar, ir a la anterior y reabrir: exposición única y segunda `noticia_abierta` | Pasó |
+| Compartir nativo exitoso y fallback al portapapeles: resultados `compartido`/`copiado`, enlace con los dos UTM fijos | Pasó |
+| Descartar hasta el final, `mazo_completado` con el recorrido inicial y reinicio con `recorrido_id` nuevo | Pasó |
+| Página pública válida (`noticia_abierta` con `superficie=pagina` sin recorrido) y página no disponible (`noticia_no_disponible_vista`) | Pasó |
+| Privacidad: ni payloads ni persistencia de Mixpanel contienen email, fragmento o término de búsqueda del referrer | Pasó |
+
+El arnés también responde con JSON a la carga del script de Speed Insights, así que el navegador registra `SyntaxError: Unexpected token ':'` en cada carga de página. Es un efecto del arnés, no del producto, y significa que esta ejecución no verificó los payloads de Speed Insights.
+
+No cubiertos (verificación manual pendiente): documento inicialmente oculto, mazo vacío, arrastre cancelado, activación de la fuente (`fuente_abierta`) con mouse, teclado y botón central, conteos de completado tras volver atrás, cancelación, error y latencia de compartir, fallback ante fallo nativo, prompt de instalación (aceptada/cancelada/error) y `appinstalled` temprano o tardío, SDK, red o almacenamiento bloqueados, carga única y payload saneado de Speed Insights, y métricas en un despliegue real.
 
 ## Revisión
 
