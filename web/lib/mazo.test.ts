@@ -50,3 +50,24 @@ it("cuenta abiertas y descartadas, y reinicia", () => {
   expect(textoFin(e)).toBe("Abriste 1 y descartaste 2.");
   expect(reducirMazo(e, { tipo: "reiniciar" })).toEqual(ESTADO_INICIAL);
 });
+
+describe("volver a la noticia anterior", () => {
+  it("permite retroceder de a una tarjeta sin pasar el inicio", () => {
+    let estado = reducirMazo(ESTADO_INICIAL, { tipo: "avanzar", hasta: 2 });
+    estado = reducirMazo(estado, { tipo: "anterior" });
+    expect(estado.indice).toBe(1);
+    estado = reducirMazo(estado, { tipo: "anterior" });
+    expect(estado.indice).toBe(0);
+    expect(reducirMazo(estado, { tipo: "anterior" }).indice).toBe(0);
+  });
+
+  it("recupera la última tarjeta al terminar y actualiza su resolución sin duplicar el conteo", () => {
+    let estado = reducirMazo(ESTADO_INICIAL, { tipo: "resolver", indice: 0, resolucion: "descartada" });
+    estado = reducirMazo(estado, { tipo: "avanzar", hasta: 1 });
+    estado = reducirMazo(estado, { tipo: "anterior" });
+    expect(estado.indice).toBe(0);
+    expect(textoFin(estado)).toBe("Abriste 0 y descartaste 1.");
+    estado = reducirMazo(estado, { tipo: "resolver", indice: 0, resolucion: "abierta" });
+    expect(textoFin(estado)).toBe("Abriste 1 y descartaste 0.");
+  });
+});
