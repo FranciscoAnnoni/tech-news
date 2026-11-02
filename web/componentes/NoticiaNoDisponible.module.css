@@ -1,0 +1,49 @@
+.pantalla {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 14px;
+  overflow-y: auto;
+  padding: calc(24px + env(safe-area-inset-top)) 20px var(--reserva-inferior);
+  background: var(--amarillo);
+  color: var(--tinta);
+  font-family: var(--sans);
+}
+
+.marca {
+  margin: 0;
+  padding: 5px 8px;
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 14px var(--mono);
+}
+
+.pantalla h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.pantalla p:not(.marca) {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  padding: 8px 14px;
+  background: var(--tinta);
+  color: var(--amarillo);
+  border: 3px solid var(--tinta);
+  font: 800 16px var(--mono);
+  text-decoration: none;
+}

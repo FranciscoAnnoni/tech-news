@@ -1,0 +1,40 @@
+:root {
+  --reserva-inferior: calc(12px + env(safe-area-inset-bottom));
+  --amarillo: #f4c93c;
+  --tinta: #111;
+  --papel: #fffdf5;
+  --sans: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #2b2b2e;
+}
+
+#telefono {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

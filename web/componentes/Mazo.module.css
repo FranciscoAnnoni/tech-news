@@ -1,0 +1,90 @@
+.mazo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--amarillo);
+  color: var(--tinta);
+  padding: calc(12px + env(safe-area-inset-top)) 18px var(--reserva-inferior);
+  font-family: var(--mono);
+}
+
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.cabecera span {
+  background: var(--tinta);
+  color: var(--amarillo);
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.cabecera .cuenta {
+  margin-left: auto;
+}
+
+.descargar {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 3px solid var(--tinta);
+  background: var(--papel);
+  color: var(--tinta);
+  font: 800 14px var(--mono);
+  cursor: pointer;
+}
+
+.mesa {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 36px;
+}
+
+.pista {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.fin {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  background: var(--tinta);
+  color: var(--amarillo);
+  border: 3px solid var(--tinta);
+  box-shadow: 6px 6px 0 #7a5d00;
+}
+
+.fin h2 {
+  margin: 0;
+  font: 800 44px/1 var(--sans);
+}
+
+.fin p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.fin button {
+  min-height: 50px;
+  border: 3px solid var(--amarillo);
+  background: var(--amarillo);
+  color: var(--tinta);
+  font: 800 16px var(--mono);
+  cursor: pointer;
+}

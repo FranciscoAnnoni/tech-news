@@ -1,0 +1,60 @@
+/* Cuadrado de 50px, la misma altura que "Leer en {fuente}": área táctil cómoda. */
+.boton {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 50px;
+  height: 50px;
+  margin-top: 12px;
+  padding: 0;
+  border: 2px solid currentColor;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.boton:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+/* Flotando sobre el bloque fijo: no empuja el layout ni tapa el botón. role="status" vive siempre, vacío (así se anuncia el texto al aparecer). */
+.aviso {
+  position: absolute;
+  right: 20px;
+  bottom: calc(100% + 4px);
+  margin: 0;
+  padding: 6px 10px;
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 700 14px var(--mono);
+  pointer-events: none;
+}
+
+.aviso:empty {
+  padding: 0;
+  background: none;
+}
+
+/* En la Tarjeta: ícono de 20px, sin borde; el padding de 12px da un área táctil de 44px y los márgenes negativos devuelven el espacio, así no corre el texto. */
+.boton.chico {
+  box-sizing: content-box;
+  width: 20px;
+  height: 20px;
+  margin: -12px 0 -12px -12px;
+  padding: 12px;
+  border: 0;
+}
+
+.boton.chico svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Dentro del pie de la Tarjeta (position: relative), encima de la fila y alineado a la izquierda. */
+.aviso.avisoChico {
+  right: auto;
+  left: 0;
+  bottom: calc(100% + 2px);
+}
