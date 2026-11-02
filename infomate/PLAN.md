@@ -207,7 +207,7 @@ Para los pasos 5 y 6:
 
 ## Paso 5: Fuentes
 
-**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco. Corrida desde cero: 187 global, 159 ARG y 120 tech; 26 de 26 fuentes respondieron; 0 notas de servicio.
+**Estado:** hecho y aprobado el 02/11/2026. Corrida desde cero: 187 global, 159 ARG y 120 tech; 26 de 26 fuentes respondieron; 0 notas de servicio.
 
 Cambios sobre lo planeado:
 - China, Reino Unido y Brasil van con la edición local de Google News (inglés y portugués), no con búsqueda en español, que traía ruido argentino ("China" Suárez, GP de Brasil). EE.UU. también quedó con tope 25.
@@ -246,3 +246,43 @@ Para el paso 6: arriba de global siguen notas de EE.UU., porque el puntaje provi
 ### Chequeo del paso 5
 
 Una corrida a mano con el workflow desplegado. Francisco revisa cuántas noticias entran por país y por sección, y las primeras de cada categoría.
+
+---
+
+## Paso 6: Preselección y texto
+
+**Entregable:** el workflow elige 10 candidatas por categoría, variadas y con texto, y las marca `candidata`. Cubre los nodos 6, 7 y 8 de `ARQUITECTURA.md`. Sigue sin IA.
+
+### Tarea 6.1: Puntaje previo nuevo
+
+- [ ] Guardar de qué feed vino cada noticia (`feed`, por ejemplo `Google News EE.UU.` o `Infobae deportes`). Hoy `fuente` guarda el medio y se pierde el feed.
+- [ ] Rehacer `infomate_puntaje_previo` con tres señales, todas normalizadas a 0-1 para que ninguna fuente gane solo por su forma:
+    - **lugar en su feed**, como percentil: el 1.º de un feed de 25 vale lo mismo que el 1.º de uno de 100; en HN y Lobsters el orden ya es por votos;
+    - **cobertura:** cantidad de medios, con tope de 6;
+    - **portada** de Google News.
+- [ ] Prueba en `prueba-funciones.sql`: una noticia 1.ª en un feed chico no queda por debajo de la 10.ª de Google News solo por tener más medios.
+
+### Tarea 6.2: Elegir las candidatas
+
+- [ ] `infomate_candidatas(corrida)`: las 15 mejores por puntaje previo de cada categoría, con estas reglas:
+    - como máximo 4 por feed, para que ningún país o sección domine;
+    - como máximo 3 de deportes en ARG;
+    - sin las que salieron en `diaria` los últimos 7 días (por id o por título parecido);
+    - si dos candidatas se parecen 35 % o más, queda la de mayor puntaje (atrapa las repetidas que se escapan, como Bariloche).
+- [ ] Prueba de cada regla en `prueba-funciones.sql`.
+
+### Tarea 6.3: Link real y texto
+
+- [ ] Para las candidatas con link de Google News, decodificarlo en n8n: GET de la página, nodo Code que lee `data-n-a-sg` y `data-n-a-ts`, POST a `batchexecute` y nodo Code que saca el link. Si falla, la candidata queda sin texto.
+- [ ] Para las candidatas sin `contenido`, bajar la página y extraer el texto (`nodos/texto.js`): primero `articleBody` del JSON-LD que traen casi todos los medios y, si no hay, los párrafos `<p>` de 60 caracteres o más. Si quedan menos de 300 caracteres, no hay texto. Se guardan los primeros 2000.
+- [ ] Prueba: `probar-texto.mjs` con páginas de ejemplo (con JSON-LD, solo con `<p>` y con muro de pago).
+
+### Tarea 6.4: Quedarse con 10
+
+- [ ] `infomate_guardar_texto(items)`: guarda link real, medio y `contenido`. Después marca `candidata` en las 10 primeras con texto de cada categoría.
+- [ ] Desplegar y correr a mano.
+
+### Chequeo del paso 6
+
+- El 80 % o más de las 15 candidatas de cada categoría sale con texto. Si no, se decide si hace falta un extractor aparte (por ejemplo, trafilatura en un contenedor).
+- Francisco revisa las 30 candidatas (10 por categoría) con su fuente y el principio del texto.
