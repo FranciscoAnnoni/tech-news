@@ -389,22 +389,26 @@ Cambios sobre lo planeado:
 
 ## Paso 10a: La edición en Vercel Blob (adelantado por pedido de Francisco)
 
-**Estado:** plan para aprobar.
+**Estado:** hecho el 02/11/2026. El store es **privado** (decisión de Francisco): se sube con `x-vercel-blob-access: private`.
 
-**Entregable:** cada corrida sube la edición del día como JSON a un Blob público de Vercel, en una URL fija que la app puede leer.
+Prueba: la corrida subió `infomate/hoy.json` y `infomate/2026-11-02.json` (44,5 KB cada uno). Leído de vuelta desde Vercel con la misma credencial, `hoy.json` tiene las mismas 15 noticias y en el mismo orden que `edicion(hoy)`.
+
+**Cómo leerlo (para la app):** `GET https://<id-del-store>.private.blob.vercel-storage.com/infomate/hoy.json` con `Authorization: Bearer <token>`, o `get('infomate/hoy.json', { access: 'private' })` de `@vercel/blob`. Solo desde un servidor: el token no puede ir al navegador.
+
+**Entregable:** cada corrida sube la edición del día como JSON a un Blob público de Vercel, en una ruta fija que la app lee con el token.
 
 **Cómo se sube:** no hay SDK en n8n, así que se usa la misma API HTTP que usa `@vercel/blob` por dentro (`PUT https://vercel.com/api/blob/?pathname=...`, encabezados `x-api-version: 13`, `x-vercel-blob-access: public`, `x-content-type`, `x-add-random-suffix: 0`, `x-allow-overwrite: 1`, `x-cache-control-max-age`). Fuente: `_autodocs/endpoints.md` del repo `vercel/storage`. No es una API documentada para uso directo: si Vercel cambia la versión, el nodo falla y llega el aviso por Telegram.
 
-**Requisito (lo hace Francisco):** crear un Blob store público en Vercel y cargar su token de lectura y escritura en n8n como credencial **Header Auth** llamada `Vercel Blob infomate`, con Name `Authorization` y Value `Bearer <token>`. El token no pasa por el chat ni por el repo.
+**Requisito (lo hace Francisco):** crear el Blob store en Vercel y cargar su token de lectura y escritura en n8n como credencial **Header Auth** llamada `Vercel Blob Infomate`, con Name `Authorization` y Value `Bearer <token>`. El token no pasa por el chat ni por el repo.
 
 ### Tarea 10a.1: Subir la edición
 
-- [ ] Nodo Postgres "Edición JSON": `edicion(hoy)`.
-- [ ] Nodo HTTP "Subir a Vercel": sube `infomate/hoy.json` (se pisa cada día) y `infomate/AAAA-MM-DD.json` (archivo del día). Caché de 5 minutos.
-- [ ] Si la edición quedó vacía no se sube nada, para no dejar la app en blanco; el aviso por Telegram ya sale por "Revisar edición".
-- [ ] La URL y la cantidad subida quedan en `corridas`.
+- [x] Nodo Postgres "Edición JSON": `edicion(hoy)`.
+- [x] Nodo HTTP "Subir a Vercel": sube `infomate/hoy.json` (se pisa cada día) y `infomate/AAAA-MM-DD.json` (archivo del día). Caché de 5 minutos.
+- [x] Si la edición quedó vacía no se sube nada, para no dejar la app en blanco; el aviso por Telegram ya sale por "Revisar edición".
+- [ ] ~~La URL y la cantidad subida quedan en `corridas`.~~ No se hizo: la subida va en una rama aparte, después de cerrar la corrida; el resultado queda en la ejecución de n8n.
 
 ### Chequeo del paso 10a
 
-- La URL pública devuelve las 15 noticias, igual a `edicion(hoy)`.
+- Leído con el token, `hoy.json` devuelve las 15 noticias, igual a `edicion(hoy)`. Hecho.
 - Una segunda corrida el mismo día pisa los archivos sin error.

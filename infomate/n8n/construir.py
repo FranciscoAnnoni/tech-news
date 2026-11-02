@@ -12,8 +12,8 @@ PG = {"postgres": {"id": IDS["pg_cred"], "name": "Postgres infomate"}}
 # Credencial nativa de OpenRouter (tipo openRouterApi); el nodo HTTP Request la usa como predefinedCredentialType.
 OR = {"openRouterApi": {"id": IDS["or_cred"], "name": "infomate"}}
 TG = {"telegramApi": {"id": IDS["tg_cred"], "name": "Telegram account"}}
-# Vercel Blob (paso 10a): Header Auth con "Authorization: Bearer <token>". Si todavía no está en ids.json, no se sube nada.
-VERCEL = {"httpHeaderAuth": {"id": IDS["vercel_cred"], "name": "Vercel Blob infomate"}} if IDS.get("vercel_cred") else None
+# Vercel Blob (paso 10a), store privado: Header Auth con "Authorization: Bearer <token>". Si todavía no está en ids.json, no se sube nada.
+VERCEL = {"httpHeaderAuth": {"id": IDS["vercel_cred"], "name": "Vercel Blob Infomate"}} if IDS.get("vercel_cred") else None
 ID_DIARIO = "infomateDiario01"
 ID_ERROR = "infomateError001"
 PROMPTS = os.path.join(AQUI, "..", "prompts")
@@ -187,7 +187,7 @@ def diario():
                 "method": "PUT", "url": "=https://vercel.com/api/blob/?pathname={{ encodeURIComponent($json.pathname) }}",
                 "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
                 "sendHeaders": True, "specifyHeaders": "keypair", "headerParameters": {"parameters": [
-                    {"name": "x-api-version", "value": "13"}, {"name": "x-vercel-blob-access", "value": "public"},
+                    {"name": "x-api-version", "value": "13"}, {"name": "x-vercel-blob-access", "value": "private"},
                     {"name": "x-content-type", "value": "application/json"}, {"name": "x-add-random-suffix", "value": "0"},
                     {"name": "x-allow-overwrite", "value": "1"}, {"name": "x-cache-control-max-age", "value": "300"}]},
                 "sendBody": True, "contentType": "raw", "rawContentType": "application/json", "body": "={{ $json.body }}",
