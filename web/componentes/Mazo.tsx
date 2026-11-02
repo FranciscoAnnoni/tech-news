@@ -18,6 +18,7 @@ const PROFUNDIDAD = 3;
 export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const [estado, despachar] = useReducer(reducirMazo, ESTADO_INICIAL);
   const [capa, setCapa] = useState<Capa>(null);
+  const [enTransicion, setEnTransicion] = useState(false);
   const botonDescargar = useRef<HTMLButtonElement>(null);
   // Oculto hasta hidratar: una app ya instalada nunca muestra el botón.
   const instalada = useSyncExternalStore(suscribirInstalacion, estaInstalada, () => true);
@@ -64,6 +65,15 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
     <div className={estilos.mazo}>
       <header className={estilos.cabecera}>
         <span>INFOMATE</span>
+        <button
+          className={estilos.anterior}
+          type="button"
+          aria-label="Volver a la noticia anterior"
+          disabled={indice === 0 || enTransicion || capa !== null}
+          onClick={() => despachar({ tipo: "anterior" })}
+        >
+          ← Anterior
+        </button>
         {!instalada && (
           <button ref={botonDescargar} className={estilos.descargar} type="button" onClick={() => abrirCapa({ tipo: "guia" })}>
             Descargar
@@ -90,10 +100,12 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
                 key={tarjeta.id}
                 tarjeta={tarjeta}
                 profundidad={k}
-                alMarcar={(direccion) =>
-                  despachar({ tipo: "resolver", indice, resolucion: direccion > 0 ? "abierta" : "descartada" })
-                }
+                alMarcar={(direccion) => {
+                  setEnTransicion(true);
+                  despachar({ tipo: "resolver", indice, resolucion: direccion > 0 ? "abierta" : "descartada" });
+                }}
                 alTerminar={(direccion) => {
+                  setEnTransicion(false);
                   if (direccion > 0) abrirCapa({ tipo: "detalle", indice });
                   else despachar({ tipo: "avanzar", hasta: indice + 1 });
                 }}

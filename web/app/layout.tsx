@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     icon: "/iconos/icono-192.png",
     apple: [{ url: "/iconos/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" }],
   },
-  appleWebApp: { capable: true, title: "Infomate", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Infomate", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {

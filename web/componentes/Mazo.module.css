@@ -13,7 +13,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 800;
   font-size: 14px;
   margin-bottom: 14px;
@@ -32,12 +32,39 @@
 
 .descargar {
   min-height: 44px;
-  padding: 0 10px;
+  padding: 0 6px;
   border: 3px solid var(--tinta);
   background: var(--papel);
   color: var(--tinta);
-  font: 800 14px var(--mono);
+  font: 800 12px var(--mono);
   cursor: pointer;
+}
+
+.anterior {
+  flex: none;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: 700 11px var(--mono);
+  cursor: pointer;
+}
+
+.anterior:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.anterior:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+@media (max-width: 360px) {
+  .cabecera {
+    flex-wrap: wrap;
+  }
 }
 
 .mesa {

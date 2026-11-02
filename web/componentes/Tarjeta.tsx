@@ -127,8 +127,10 @@ export function Tarjeta({
         <span className={estilos.fuente}>{tarjeta.fuente}</span>
         <span className={estilos.categoria}>{tarjeta.categoria}</span>
       </div>
-      <h2 className={estilos.titulo}>{tarjeta.titulo}</h2>
-      {tarjeta.descripcion && <p className={estilos.descripcion}>{tarjeta.descripcion}</p>}
+      <div className={estilos.lectura} tabIndex={arriba ? 0 : -1} role="region" aria-label="Texto de la noticia">
+        <h2 className={estilos.titulo}>{tarjeta.titulo}</h2>
+        {tarjeta.descripcion && <p className={estilos.descripcion}>{tarjeta.descripcion}</p>}
+      </div>
       <div className={estilos.pie}>
         {arriba && (
           // Solo la de arriba: las de atrás no tienen botón enfocable. Frenar pointerdown evita que
