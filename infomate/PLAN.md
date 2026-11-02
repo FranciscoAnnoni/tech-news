@@ -11,8 +11,8 @@
 - **Pasos 1 a 6: hechos y aprobados.** El workflow `Infomate · Diario` (id `infomateDiario01`) está en el n8n de skynet, sin horario: recolecta, guarda sin repetidas, preselecciona, decodifica Google News, baja el texto y marca 10 candidatas por categoría.
 - **Paso 7: modelos elegidos** (detalle abajo). Sigue el paso 8: el juez en el flujo. La credencial de OpenRouter: `infomate`, tipo nativo `openRouterApi` (no Header Auth), con tope de USD 10 en total. Su id está en `n8n/ids.json` como `or_cred` y `construir.py` la expone como `OR`. La key nunca pasa por el chat, el repo ni archivos locales.
 - **Rama:** `infomate/plan` (commits locales, sin push).
-- **Pruebas:** `node n8n/probar-parser.mjs`, `node n8n/probar-texto.mjs` y `sql/probar.sh` (necesita Docker en la Mac).
-- **Desplegar:** aplicar `sql/02-funciones.sql` y `sql/03-preseleccion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`.
+- **Pruebas:** `node n8n/probar-parser.mjs`, `node n8n/probar-texto.mjs`, `node n8n/probar-juez.mjs` y `sql/probar.sh` (necesita Docker en la Mac).
+- **Desplegar:** aplicar `sql/02-funciones.sql`, `sql/03-preseleccion.sql` y `sql/04-edicion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`.
 - **Correr a mano:** `ssh skynet 'docker exec -e N8N_RUNNERS_BROKER_PORT=5699 n8n-n8n-1 n8n execute --id=infomateDiario01 --rawOutput'` (el puerto distinto evita chocar con la instancia que ya corre). El resumen queda en la tabla `corridas`.
 - **Locales, fuera de git:** `n8n/.env` (contraseña de la base) e `n8n/ids.json` (id de la credencial Postgres).
 
@@ -338,3 +338,50 @@ Sin texto en tech: un sitio que no es nota (Show HN), un link a Reddit (bloquead
 - Parámetros: `json_schema` estricto, `provider.require_parameters`, `reasoning.effort: "low"`, sin `temperature`.
 - Prompts: `prompts/juez-base.md` más el criterio de cada juez. ARG: las policiales y tragedias puntúan 0-39 salvo casos de alcance nacional, con el Estado involucrado, consecuencias más allá del hecho o gran escala.
 - Traducir con Google lo que no está en español quedó como idea de Francisco. Con el juez devolviendo título y resumen en español, por ahora no hace falta.
+
+## Paso 8: Jueces y tabla diaria
+
+**Estado:** 8.1 a 8.3 hechos el 02/11/2026; falta el visto bueno de Francisco a la edición y activar el horario (8.4).
+
+Primera corrida completa: 30 de 30 juzgadas válidas al primer intento, juez en 6 s, costo USD 0,009 (global 0,0025, ARG 0,0028, tech 0,0037), edición 5 + 5 + 5. Haiku se pasa de 450 en tech (473 a 605 caracteres); entra igual, como se decidió.
+
+Cambios sobre lo planeado:
+- Bug corregido en `infomate_guardar_texto`: una juzgada de otro día que volvía a preseleccionarse quedaba candidata aunque no estuviera entre las 10. Ahora las candidatas se recalculan desde cero en cada corrida.
+- Nodo "Revisar edición" al final: si la edición no llega a 15 (juez caído, key sin saldo, día flojo), falla a propósito para que llegue el aviso por Telegram.
+- El aviso por Telegram se probó con una copia descartable (llegó). Que n8n dispare `Infomate · Error` cuando falla el Diario no se puede probar desde la línea de comandos: n8n solo lo hace en ejecuciones automáticas. Se verá con el horario activado.
+- El SQL nuevo está en `sql/04-edicion.sql` y su prueba en `sql/prueba-edicion.sql`; la prueba de los nodos en `n8n/probar-juez.mjs`.
+
+**Entregable:** una corrida completa deja 15 noticias en `diaria` (5 por categoría) con título y resumen en español, y el horario de las 08:00 queda activado. Cubre los nodos 9 a 13 de `ARQUITECTURA.md` y el workflow `Infomate · Error`.
+
+### Tarea 8.1: El juez en el flujo
+
+- [x] Nodo Postgres "A juzgar": las candidatas de esta corrida sin `juzgada`. Si una prioritaria no tiene texto (por ejemplo un Show HN que es un sitio), el juez recibe título y copete del feed.
+- [x] Nodo Code "Pedidos al juez" (`nodos/juez.js`): arma el pedido de cada nota con el prompt de su categoría (`construir.py` lo arma desde `prompts/` al desplegar), el modelo de su categoría (global y ARG `openai/gpt-6-luna`, tech `anthropic/claude-haiku-5.5`), `json_schema` estricto, `provider.require_parameters` y `reasoning.effort: "low"`.
+- [x] Nodo HTTP "Juez": POST a OpenRouter con la credencial `infomate`, 5 en paralelo, 2 minutos de espera máxima por llamada, y si falla la conexión reintenta.
+- [x] Nodo Code "Validar" (`nodos/validar.js`): JSON con las 4 claves; `titulo_es` de 1 a 200 caracteres; `resumen` de 1 a 1000; `puntaje` entero de 0 a 100; `motivo` de hasta 200. Las que no cumplen van a un segundo pedido (nodo "Juez, reintento") y se validan otra vez; si fallan de nuevo, quedan sin puntaje.
+- [x] `infomate_juzgar(items)`: guarda `titulo`, `resumen`, `puntaje`, `motivo` y `juzgada`. El costo de OpenRouter de cada llamada se suma por categoría y queda en `corridas`.
+- [x] Prueba: `probar-juez.mjs` (respuesta buena, JSON roto, resumen largo pero menor a 1000, puntaje fuera de rango, clave faltante).
+
+### Tarea 8.2: La edición del día
+
+- [x] `infomate_armar_edicion(fecha)`: borra la edición de esa fecha si existe y carga las 5 de mayor `puntaje` de cada categoría entre las candidatas de esta corrida (desempata `puntaje_previo`). Si hay menos de 5 juzgadas, carga las que haya.
+- [x] Revisar que `edicion(fecha)` devuelva el formato de la app (ya existe en `01-esquema.sql`).
+- [x] Prueba en `sql/prueba-edicion.sql`: elige las 5 mejores, desempata, ignora candidatas de otros días, una segunda corrida el mismo día reemplaza la edición sin duplicar, y un día con 3 juzgadas deja 3.
+
+### Tarea 8.3: Aviso de errores
+
+- [x] Workflow `Infomate · Error`: Error Trigger y mensaje de Telegram con el nodo que falló y el error, usando el bot `Telegram account` que ya existe. El chat se guarda en `n8n/ids.json` (fuera de git). Se configura como workflow de error de `Infomate · Diario`.
+- [x] Probarlo forzando un error en una copia descartable.
+
+### Tarea 8.4: Corrida completa y horario
+
+- [x] Desplegar y correr a mano. Francisco revisa las 15 noticias.
+- [ ] Con el visto bueno, agregar el disparador de las 08:00 (hora de Argentina) y activar el workflow.
+
+### Chequeo del paso 8
+
+- La corrida deja 15 noticias en `diaria`, con título y resumen en español y puntaje.
+- `edicion(hoy)` devuelve las 15 con el formato de la app.
+- Correrlo dos veces el mismo día no duplica nada.
+- Un error en el workflow llega por Telegram.
+- Costo de la corrida, visto en `corridas`: alrededor de 1 centavo de dólar.

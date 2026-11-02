@@ -11,12 +11,34 @@ IDS = json.load(open(os.path.join(AQUI, "ids.json")))
 PG = {"postgres": {"id": IDS["pg_cred"], "name": "Postgres infomate"}}
 # Credencial nativa de OpenRouter (tipo openRouterApi); el nodo HTTP Request la usa como predefinedCredentialType.
 OR = {"openRouterApi": {"id": IDS["or_cred"], "name": "infomate"}}
+TG = {"telegramApi": {"id": IDS["tg_cred"], "name": "Telegram account"}}
 ID_DIARIO = "infomateDiario01"
+ID_ERROR = "infomateError001"
+PROMPTS = os.path.join(AQUI, "..", "prompts")
+SECCION = {"global": "Internacional", "arg": "Argentina", "tech": "Tecnología"}
+AHORA_AR = "(now() AT TIME ZONE 'America/Argentina/Buenos_Aires')"
 TZ = "America/Argentina/Buenos_Aires"
 
 
 def codigo(nombre):
     return open(os.path.join(AQUI, "nodos", nombre)).read()
+
+
+def prompts():
+    """Prompt de sistema de cada juez: la base con su sección y su criterio."""
+    base = open(os.path.join(PROMPTS, "juez-base.md")).read()
+    return {c: base.replace("{SECCION}", s).replace("{CRITERIO}", open(os.path.join(PROMPTS, f"juez-{c}.md")).read().strip())
+            for c, s in SECCION.items()}
+
+
+def juez(nombre, pos):
+    """POST a OpenRouter con el pedido que armó juez.js. 5 en paralelo; si falla la conexión reintenta."""
+    return nodo(nombre, "n8n-nodes-base.httpRequest", 4.5, pos, {
+        "method": "POST", "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType", "nodeCredentialType": "openRouterApi",
+        "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {"timeout": 120000, "batching": {"batch": {"batchSize": 5, "batchInterval": 0}}}},
+        OR, onError="continueRegularOutput", retryOnFail=True, maxTries=2, waitBetweenTries=5000)
 
 
 def nodo(nombre, tipo, version, pos, params, cred=None, **extra):
@@ -64,8 +86,9 @@ def diario():
     orden = ["Probar a mano", "Fuentes", "Bajar fuentes", "Fuentes Reddit", "Bajar Reddit", "Parsear",
              "Guardar sin repetidas", "Preseleccionar", "Google a decodificar", "Página Google", "Firma Google",
              "Decodificar Google", "Link real", "Guardar links", "Sin texto", "Bajar nota", "Extraer texto",
-             "Guardar texto y elegir", "Limpiar y cerrar"]
-    fila2 = 220
+             "Guardar texto y elegir", "A juzgar", "Pedidos al juez", "Juez", "Validar", "Reintentos", "Juez, reintento",
+             "Validar reintento", "Guardar juicio", "Armar edición", "Limpiar y cerrar", "Revisar edición"]
+    fila2, fila3 = 220, 440
     nodes = [
         nodo("Probar a mano", "n8n-nodes-base.manualTrigger", 1, [0, 0], {}),
         code("Fuentes", "fuentes.js", [220, 0]),
@@ -105,20 +128,62 @@ def diario():
         code("Extraer texto", "texto.js", [1760, fila2]),
         sql("Guardar texto y elegir", [1980, fila2], "SELECT infomate_guardar_texto($1::jsonb) AS texto",
             "={{ [JSON.stringify($json.textos)] }}"),
-        sql("Limpiar y cerrar", [2200, fila2],
+        # Paso 8: el juez. Una prioritaria sin texto va con el copete del feed.
+        sql("A juzgar", [0, fila3],
+            "SELECT id, categoria, titulo_original, fuente, coalesce(contenido, descripcion_fuente) AS texto, "
+            "to_char(fecha_publicacion AT TIME ZONE 'America/Argentina/Buenos_Aires', 'DD/MM/YYYY HH24:MI') AS fecha "
+            "FROM noticias WHERE candidata AND preseleccion IS NOT NULL AND juzgada IS NULL ORDER BY categoria, preseleccion",
+            None, alwaysOutputData=True),
+        nodo("Pedidos al juez", "n8n-nodes-base.code", 2, [220, fila3], {"mode": "runOnceForAllItems", "language": "javaScript",
+             "jsCode": codigo("juez.js").replace("/*PROMPTS*/{}", json.dumps(prompts(), ensure_ascii=False))}, alwaysOutputData=True),
+        juez("Juez", [440, fila3]),
+        code("Validar", "validar.js", [660, fila3]),
+        nodo("Reintentos", "n8n-nodes-base.code", 2, [880, fila3], {"mode": "runOnceForAllItems", "language": "javaScript",
+             "jsCode": "return ($input.first().json.malas || []).map((m) => ({ json: m }));"}, alwaysOutputData=True),
+        juez("Juez, reintento", [1100, fila3]),
+        nodo("Validar reintento", "n8n-nodes-base.code", 2, [1320, fila3], {"mode": "runOnceForAllItems", "language": "javaScript",
+             "jsCode": codigo("validar.js").replace("const ORIGEN = 'Pedidos al juez';", "const ORIGEN = 'Reintentos';")}),
+        sql("Guardar juicio", [1540, fila3], "SELECT infomate_juzgar($1::jsonb) AS juzgadas", "={{ [JSON.stringify($json.juicios)] }}"),
+        sql("Armar edición", [1760, fila3], f"SELECT infomate_armar_edicion({AHORA_AR}::date) AS edicion", None),
+        sql("Limpiar y cerrar", [1980, fila3],
             "SELECT infomate_cerrar($1::text, 'ok', $2::jsonb) AS corrida",
             "={{ [$('Parsear').first().json.corrida, JSON.stringify({ fuentes: $('Parsear').first().json.estado, "
             "ingreso: $('Guardar sin repetidas').first().json.ingreso, preseleccion: $('Preseleccionar').first().json.preseleccion, "
             "google: { decodificados: $('Guardar links').first().json.links, fallas: $('Link real').first().json.fallas }, "
-            "texto: $json.texto, sin_texto: $('Extraer texto').first().json.sin_texto })] }}"),
+            "texto: $('Guardar texto y elegir').first().json.texto, sin_texto: $('Extraer texto').first().json.sin_texto, "
+            "juez: { juzgadas: $('Guardar juicio').first().json.juzgadas, fallidas: $('Validar reintento').first().json.fallidas, "
+            "costo_usd: $('Validar reintento').first().json.costo }, edicion: $json.edicion })] }}"),
+        # Si la edición no llegó a 15 (juez caído, key sin saldo, día flojo), falla a propósito para que llegue el aviso por Telegram.
+        nodo("Revisar edición", "n8n-nodes-base.code", 2, [2200, fila3], {"mode": "runOnceForAllItems", "language": "javaScript", "jsCode":
+             "const e = $('Armar edición').first().json.edicion;\n"
+             "const total = Object.values(e).reduce((a, b) => a + Number(b), 0);\n"
+             "if (total < 15) throw new Error(`Edición incompleta (${total} de 15): ${JSON.stringify(e)}. "
+             "Juez: ${$('Validar reintento').first().json.fallidas} fallidas.`);\n"
+             "return $input.all();"}),
         nodo("Nota", "n8n-nodes-base.stickyNote", 1, [200, -260], {"width": 640, "height": 200, "color": 4, "content":
              "## Infomate · Diario\nRecolecta global, ARG y tech, guarda sin repetidas (hasta 200 nuevas por categoría), "
-             "preselecciona 15 por categoría, les busca el link real y el texto, y marca 10 candidatas.\n"
-             "Paso 6 del plan: todavía sin IA ni horario. Código en el repo tech-news, carpeta `infomate/`: no editar acá, se pisa al volver a desplegar."}),
+             "preselecciona 15 por categoría, les busca el link real y el texto, marca 10 candidatas, las juzga con IA "
+             "(OpenRouter) y deja las 5 mejores de cada categoría en `diaria`.\n"
+             "Si falla, avisa por Telegram (Infomate · Error). Código en el repo tech-news, carpeta `infomate/`: no editar acá, se pisa al volver a desplegar."}),
     ]
     return {"id": ID_DIARIO, "name": "Infomate · Diario", "active": False, "nodes": nodes, "connections": con(*orden),
-            "settings": {"executionOrder": "v1", "timezone": TZ, "callerPolicy": "workflowsFromSameOwner"}}
+            "settings": {"executionOrder": "v1", "timezone": TZ, "callerPolicy": "workflowsFromSameOwner", "errorWorkflow": ID_ERROR}}
+
+
+def error():
+    """Workflow de error de Infomate · Diario: avisa por Telegram qué nodo falló y por qué. No hace falta activarlo."""
+    texto = ("=Infomate · Diario falló\nNodo: {{ $json.execution.lastNodeExecuted }}\n"
+             "Error: {{ $json.execution.error.message }}\n{{ $json.execution.url }}")
+    nodes = [
+        nodo("Error", "n8n-nodes-base.errorTrigger", 1, [0, 0], {}),
+        nodo("Avisar por Telegram", "n8n-nodes-base.telegram", 1.2, [220, 0], {
+            "chatId": IDS["tg_chat"], "text": texto,
+            "additionalFields": {"appendAttribution": False, "disable_web_page_preview": True}}, TG,
+            webhookId=str(uuid.uuid5(uuid.NAMESPACE_URL, "infomate/telegram-error"))),
+    ]
+    return {"id": ID_ERROR, "name": "Infomate · Error", "active": False, "nodes": nodes, "connections": con("Error", "Avisar por Telegram"),
+            "settings": {"executionOrder": "v1", "timezone": TZ}}
 
 
 if __name__ == "__main__":
-    print(json.dumps([diario()], ensure_ascii=False))
+    print(json.dumps([diario(), error()], ensure_ascii=False))

@@ -71,8 +71,8 @@ BEGIN
     FROM jsonb_array_elements(coalesce(items, '[]')) i
    WHERE n.id = (i->>'id')::uuid AND n.categoria = (i->>'categoria')::categoria
      AND length(coalesce(i->>'contenido', '')) >= 300;
-  -- Una preseleccionada que quedó candidata otro día y no se juzgó vuelve a competir desde cero.
-  UPDATE noticias SET candidata = false WHERE preseleccion IS NOT NULL AND juzgada IS NULL;
+  -- Las candidatas se recalculan en cada corrida: una que fue candidata otro día (juzgada o no) vuelve a competir desde cero.
+  UPDATE noticias SET candidata = false WHERE candidata;
   UPDATE noticias n SET candidata = true
     FROM (SELECT id, categoria, row_number() OVER (PARTITION BY categoria ORDER BY preseleccion) AS rn
             FROM noticias WHERE preseleccion IS NOT NULL AND (contenido IS NOT NULL OR prioridad)) t
