@@ -26,9 +26,19 @@ Ejecución del 2026-11-02 sobre el commit `5e089e1` (Chrome headless, viewport 3
 | Página pública válida (`noticia_abierta` con `superficie=pagina` sin recorrido) y página no disponible (`noticia_no_disponible_vista`) | Pasó |
 | Privacidad: ni payloads ni persistencia de Mixpanel contienen email, fragmento o término de búsqueda del referrer | Pasó |
 
-El arnés también responde con JSON a la carga del script de Speed Insights, así que el navegador registra `SyntaxError: Unexpected token ':'` en cada carga de página. Es un efecto del arnés, no del producto, y significa que esta ejecución no verificó los payloads de Speed Insights.
+### Speed Insights
 
-No cubiertos (verificación manual pendiente): documento inicialmente oculto, mazo vacío, arrastre cancelado, activación de la fuente (`fuente_abierta`) con mouse, teclado y botón central, conteos de completado tras volver atrás, cancelación, error y latencia de compartir, fallback ante fallo nativo, prompt de instalación (aceptada/cancelada/error) y `appinstalled` temprano o tardío, SDK, red o almacenamiento bloqueados, carga única y payload saneado de Speed Insights, y métricas en un despliegue real.
+Segunda ejecución sobre el commit `3922a28`. El arnés sirve el script real de Speed Insights (v0.1.3 del CDN oficial) en `/_vercel/speed-insights/script.js` e intercepta los envíos a `/_vercel/speed-insights/vitals`. Para que el script no se descarte como bot en Chrome headless, el arnés presenta un user agent de Chrome normal y `navigator.webdriver=false`. Los siete escenarios anteriores volvieron a pasar.
+
+| Escenario | Resultado |
+| --- | --- |
+| Carga única: un solo `<script>` y una sola solicitud del script por documento, también tras navegar en cliente de noticia a mazo | Pasó |
+| Noticia válida y no disponible con query, email y fragmento: `href` y `route` llegan como `/noticia/[identificador]` o `/`, sin query, fragmento, UTM ni email (TTFB, FCP, LCP, CLS, FID, INP) | Pasó |
+| Ruta desconocida (404) con email en el path: `href` llega como `/otra`, pero `route` llega crudo (`/ruta-desconocida/private-test%40example.com`) | Falló |
+
+Causa del fallo: el script de Speed Insights solo aplica el campo `url` que devuelve `beforeSend` y conserva el `route` original. Ese valor sale de `data-route`, que el componente de Next calcula con el pathname y los parámetros; en rutas sin parámetros dinámicos es el pathname crudo. La depuración de `route` en `depurarMedicion` no tiene efecto en el transporte real, y una ruta inexistente puede enviar segmentos arbitrarios del visitante. En `/` y `/noticia/[identificador]` el problema no se observa porque `data-route` ya es la plantilla. Queda pendiente de corrección en el producto. Por este fallo, el escenario de privacidad general también falla en esta ejecución.
+
+No cubiertos (verificación manual pendiente): documento inicialmente oculto, mazo vacío, arrastre cancelado, activación de la fuente (`fuente_abierta`) con mouse, teclado y botón central, conteos de completado tras volver atrás, cancelación, error y latencia de compartir, fallback ante fallo nativo, prompt de instalación (aceptada/cancelada/error) y `appinstalled` temprano o tardío, SDK, red o almacenamiento bloqueados y métricas de Speed Insights en un despliegue real.
 
 ## Revisión
 
