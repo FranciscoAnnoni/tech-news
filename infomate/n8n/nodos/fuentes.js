@@ -5,21 +5,20 @@
 // tope: máximo de noticias de esa fuente por corrida (si no, 100). Los países y deportes van con 25 para que ninguno domine.
 // peso: multiplica el lugar en el feed para el puntaje previo (si no, 0.85).
 // prioridad: la n.º 1 de ese feed entra siempre como candidata, con 100 puntos (acordado con Francisco el 02/11/2026).
-// asegurar: ese feed tiene un lugar asegurado entre las preseleccionadas: la mejor de sus 3 primeras que se pueda leer (un lugar por país).
 // seccion: distingue feeds del mismo medio (Infobae política, Infobae deportes...).
 const OPINION = '/(opinion|editoriales|lnmas|fotos)/';
 const GN = 'https://news.google.com/rss';
 const hace24h = Math.floor(Date.now() / 1000) - 86400;
 const fuentes = [
   { categoria: 'global', fuente: 'Google News Mundo', origen: 'gnews', peso: 1, prioridad: true, url: `${GN}/headlines/section/topic/WORLD?hl=es-419&gl=AR&ceid=AR:es-419` },
-  { categoria: 'global', fuente: 'Google News EE.UU.', origen: 'gnews', tope: 25, asegurar: true, url: `${GN}/headlines/section/topic/NATION?hl=es-419&gl=US&ceid=US:es-419` },
+  { categoria: 'global', fuente: 'Google News EE.UU.', origen: 'gnews', tope: 25, url: `${GN}/headlines/section/topic/NATION?hl=es-419&gl=US&ceid=US:es-419` },
   // Ediciones locales: la búsqueda en español trae ruido argentino ("China" Suárez, GP de Brasil). El juez traduce los títulos.
-  { categoria: 'global', fuente: 'Google News Reino Unido', origen: 'gnews', tope: 25, asegurar: true, url: `${GN}/headlines/section/topic/NATION?hl=en-GB&gl=GB&ceid=GB:en` },
-  { categoria: 'global', fuente: 'Google News Brasil', origen: 'gnews', tope: 25, asegurar: true, url: `${GN}/headlines/section/topic/NATION?hl=pt-BR&gl=BR&ceid=BR:pt-419` },
-  // China y Rusia no tienen edición local útil: van por búsqueda y traen 1 medio por noticia, por eso van aseguradas.
+  { categoria: 'global', fuente: 'Google News Reino Unido', origen: 'gnews', tope: 25, url: `${GN}/headlines/section/topic/NATION?hl=en-GB&gl=GB&ceid=GB:en` },
+  { categoria: 'global', fuente: 'Google News Brasil', origen: 'gnews', tope: 25, url: `${GN}/headlines/section/topic/NATION?hl=pt-BR&gl=BR&ceid=BR:pt-419` },
+  // China y Rusia no tienen edición local útil: van por búsqueda y traen 1 medio por noticia.
   // China en inglés sin medios pagos (en español la búsqueda trae "la China Suárez" y Mbappé); Rusia en español desde la edición de EE.UU.
-  { categoria: 'global', fuente: 'Google News China', origen: 'gnews', tope: 25, asegurar: true, url: `${GN}/search?q=China%20-site:bloomberg.com%20-site:wsj.com%20-site:nytimes.com%20-site:ft.com%20-site:economist.com%20-site:washingtonpost.com%20when:1d&hl=en-US&gl=US&ceid=US:en` },
-  { categoria: 'global', fuente: 'Google News Rusia', origen: 'gnews', tope: 25, asegurar: true, url: `${GN}/search?q=Rusia%20when:1d&hl=es-419&gl=US&ceid=US:es-419` },
+  { categoria: 'global', fuente: 'Google News China', origen: 'gnews', tope: 25, url: `${GN}/search?q=China%20-site:bloomberg.com%20-site:wsj.com%20-site:nytimes.com%20-site:ft.com%20-site:economist.com%20-site:washingtonpost.com%20when:1d&hl=en-US&gl=US&ceid=US:en` },
+  { categoria: 'global', fuente: 'Google News Rusia', origen: 'gnews', tope: 25, url: `${GN}/search?q=Rusia%20when:1d&hl=es-419&gl=US&ceid=US:es-419` },
   { categoria: 'global', fuente: 'BBC Mundo', origen: 'rss', url: 'https://feeds.bbci.co.uk/mundo/rss.xml' },
   { categoria: 'global', fuente: 'DW', origen: 'rss', url: 'https://rss.dw.com/xml/rss-sp-all' },
   { categoria: 'global', fuente: 'La Nación', seccion: 'EE.UU.', origen: 'rss', excluir: OPINION, url: 'https://www.lanacion.com.ar/arc/outboundfeeds/rss/category/estados-unidos/' },

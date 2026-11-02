@@ -15,7 +15,7 @@ const fuentes = [
   { categoria: 'tech', fuente: 'Lobsters', origen: 'lobsters', url: 'https://lobste.rs/hottest.json' },
   { categoria: 'global', fuente: 'DW', origen: 'rss', url: 'https://rss.dw.com/caida' },
   { categoria: 'arg', fuente: 'Portada Google News Argentina', origen: 'portada', url: 'https://news.google.com/rss' },
-  { categoria: 'global', fuente: 'Google News China', origen: 'gnews', asegurar: true, url: 'https://news.google.com/rss/search' },
+  { categoria: 'global', fuente: 'Google News China', origen: 'gnews', url: 'https://news.google.com/rss/search' },
 ];
 const largo = 'Texto de la nota. '.repeat(200);
 const respuestas = [
@@ -111,7 +111,5 @@ assert.equal(gn.feed, 'Google News Argentina');
 
 assert.equal(por('Opinion | U.S.-China Relations Will Never Be the Same'), undefined, 'columnas de opinión no entran');
 const xi = por('Xi meets Gulf leaders on trade');
-assert.equal(xi.asegurada, true, 'la 1.ª de un feed de país queda asegurada');
-assert.equal(inf.asegurada, false);
 
 console.log(`PARSER OK (${r.items.length} ítems)`);

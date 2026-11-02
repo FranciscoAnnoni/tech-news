@@ -32,7 +32,7 @@ BEGIN
   IF (SELECT bool_or(prioridad) FROM noticias) THEN RAISE EXCEPTION 'la prioridad debería borrarse en cada corrida'; END IF;
   TRUNCATE diaria, noticias;
 
-  -- Preselección: 6 de Google News EE.UU. con mucho puntaje: entran 2 (tope especial). La prioritaria entra primera aunque el feed esté lleno.
+  -- Preselección: 6 de Google News EE.UU. con mucho puntaje: entran 4 (el tope general, sin trato especial). La prioritaria entra primera aunque el feed esté lleno.
   r := infomate_ingresar((SELECT jsonb_agg(it('global', 'Google News EE.UU.', (ARRAY['El Senado aprueba la ley de presupuesto','Un huracán golpea la costa de Florida','La Reserva Federal sube las tasas de interés','Incendio forestal avanza sobre California','Resultados de la elección en Nueva York','Huelga de actores paraliza Hollywood'])[i], 1.0 - i / 100.0, '{A,B,C,D,E,F}')) FROM generate_series(1, 6) i)
       || jsonb_build_array(
          it('global', 'Google News EE.UU.', 'La primera prioritaria del feed para la prueba', 0.5, '{A}', true),
@@ -47,14 +47,13 @@ BEGIN
       '[]', 'k2');
   r := infomate_preseleccionar('k2');
   IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'La primera prioritaria del feed para la prueba') <> 1 THEN RAISE EXCEPTION 'la prioritaria debería ser la 1'; END IF;
-  IF (SELECT count(*) FROM noticias WHERE feed = 'Google News EE.UU.' AND preseleccion IS NOT NULL AND NOT prioridad) <> 2 THEN RAISE EXCEPTION 'tope de Google News EE.UU.: esperaba 2'; END IF;
-  IF (SELECT preseleccion FROM noticias WHERE titulo_original LIKE 'Xi Jinping%') <> 2 THEN RAISE EXCEPTION 'la asegurada legible de China debería entrar segunda, después de la prioritaria'; END IF;
+  IF (SELECT count(*) FROM noticias WHERE feed = 'Google News EE.UU.' AND preseleccion IS NOT NULL AND NOT prioridad) <> 4 THEN RAISE EXCEPTION 'tope de Google News EE.UU.: esperaba 4, como cualquier feed'; END IF;
+  IF (SELECT preseleccion FROM noticias WHERE titulo_original LIKE 'Xi Jinping%') < (SELECT max(preseleccion) FROM noticias WHERE feed = 'Google News EE.UU.') THEN RAISE EXCEPTION 'sin lugar asegurado, China entra por puntaje, después de las de más puntaje'; END IF;
   IF (SELECT preseleccion FROM noticias WHERE titulo_original LIKE 'China central bank%') IS NOT NULL THEN RAISE EXCEPTION 'Reuters no se puede leer: no debería preseleccionarse'; END IF;
-  IF (SELECT preseleccion FROM noticias WHERE titulo_original LIKE 'Chinese robot makers%') IS NOT NULL THEN RAISE EXCEPTION 'un solo lugar asegurado por país'; END IF;
   IF (SELECT count(*) FROM noticias WHERE feed = 'Infobae deportes' AND preseleccion IS NOT NULL) <> 3 THEN RAISE EXCEPTION 'tope de deportes: esperaba 3'; END IF;
   IF (SELECT count(*) FROM noticias WHERE titulo_original LIKE 'Elecciones en Bulgaria%' AND preseleccion IS NOT NULL) <> 1 THEN RAISE EXCEPTION 'dos parecidas: debería quedar una'; END IF;
   IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa') IS NULL THEN RAISE EXCEPTION 'BBC debería entrar'; END IF;
-  IF (r->>'global')::int <> 6 OR (r->>'arg')::int <> 4 THEN RAISE EXCEPTION 'conteos: %', r; END IF;
+  IF (r->>'global')::int <> 9 OR (r->>'arg')::int <> 4 THEN RAISE EXCEPTION 'conteos: %', r; END IF;
 
 
   -- Lo publicado en diaria esta semana no vuelve a preseleccionarse.
@@ -77,9 +76,9 @@ BEGIN
   IF EXISTS (SELECT 1 FROM noticias WHERE length(contenido) > 2000) THEN RAISE EXCEPTION 'contenido de más de 2000'; END IF;
   IF EXISTS (SELECT 1 FROM noticias WHERE candidata AND contenido IS NULL AND NOT prioridad) THEN RAISE EXCEPTION 'candidata sin texto'; END IF;
   IF NOT (SELECT candidata FROM noticias WHERE titulo_original = 'La primera prioritaria del feed para la prueba') THEN RAISE EXCEPTION 'la prioritaria sin texto debería ser candidata'; END IF;
-  -- global: 5 preseleccionadas (el terremoto quedó afuera por diaria); la 1 es la prioritaria sin texto;
-  -- con texto las impares no prioritarias (3 y 5) = 2. Candidatas = 2 + la prioritaria = 3.
-  IF (r->'global'->>'con_texto')::int <> 2 OR (r->'global'->>'candidatas')::int <> 3 THEN RAISE EXCEPTION 'guardar_texto: %', r; END IF;
+  -- global: 8 preseleccionadas (el terremoto quedó afuera por diaria); la 1 es la prioritaria sin texto;
+  -- con texto las impares no prioritarias (3, 5 y 7) = 3. Candidatas = 3 + la prioritaria = 4.
+  IF (r->'global'->>'con_texto')::int <> 3 OR (r->'global'->>'candidatas')::int <> 4 THEN RAISE EXCEPTION 'guardar_texto: %', r; END IF;
 
 
   -- Tech preselecciona 20 (las demás 15).

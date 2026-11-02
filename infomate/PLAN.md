@@ -9,7 +9,7 @@
 ## Cómo retomar (estado al 02/11/2026)
 
 - **Pasos 1 a 6: hechos y aprobados.** El workflow `Infomate · Diario` (id `infomateDiario01`) está en el n8n de skynet, sin horario: recolecta, guarda sin repetidas, preselecciona, decodifica Google News, baja el texto y marca 10 candidatas por categoría.
-- **Sigue el paso 7: elegir el modelo del juez.** Requisito previo: la credencial `OpenRouter Infomate` creada por Francisco directo en n8n (tipo Header Auth, ver abajo). La key nunca pasa por el chat, el repo ni archivos locales.
+- **Sigue el paso 7: elegir el modelo del juez.** La credencial ya está: `infomate`, tipo nativo `openRouterApi` (no Header Auth), con tope de USD 10 en total. Su id está en `n8n/ids.json` como `or_cred` y `construir.py` la expone como `OR`. La key nunca pasa por el chat, el repo ni archivos locales.
 - **Rama:** `infomate/plan` (commits locales, sin push).
 - **Pruebas:** `node n8n/probar-parser.mjs`, `node n8n/probar-texto.mjs` y `sql/probar.sh` (necesita Docker en la Mac).
 - **Desplegar:** aplicar `sql/02-funciones.sql` y `sql/03-preseleccion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`.
@@ -19,6 +19,16 @@
 ### Credencial de OpenRouter (la crea Francisco)
 
 En n8n: Credentials, New, **Header Auth**. Nombre de la credencial: `OpenRouter Infomate`. Name: `Authorization`. Value: `Bearer <key nueva>`. Guardar. En la cuenta de OpenRouter, poner un tope de gasto mensual a la key. Después alcanza con avisar que está creada: el workflow la referencia por nombre y su id se busca en n8n sin leer el secreto.
+
+## Sesgos conocidos en global (pendiente, anotado el 02/11/2026)
+
+Decisión de Francisco: ningún país tiene trato especial. Se sacaron el tope propio de 2 de EE.UU. y los lugares asegurados de todos los países (EE.UU., China, Rusia, Reino Unido y Brasil). La preselección queda: prioritarias primero y después por puntaje previo, con 4 por feed como máximo. La columna `asegurada` sigue en la base, siempre en false. Lo de abajo queda para más adelante:
+
+- **La portada de global es la de Google News EE.UU.** Los +15 de portada solo pueden premiar noticias de EE.UU. (el 02/11, las 6 globales con portada eran de EE.UU.). Idea: contar en cuántas portadas de países distintos aparece (cuidado: comparar títulos entre idiomas no funciona con el parecido de texto actual).
+- **Las fuentes de un solo medio no compiten.** La cobertura solo la trae Google News; Euronews, DW, La Nación EE.UU. y El País Europa llegan con 1 medio y no pasan de 42,5. El 02/11: Euronews 46 noticias y 0 en el top 50; DW 9 y 0. El País Europa publica poco y casi siempre queda fuera de las 24 h.
+- **Los feeds de país (Brasil, Reino Unido) son portadas nacionales:** traen noticias locales (Fuvest, Lula y la Casa Civil), no globales. Idea: usar las secciones Mundo de varios países (España, Reino Unido, Francia, India).
+- **El tope por feed no limita un país:** las noticias de EE.UU. entran también por Google News Mundo y BBC Mundo.
+- **Nada mira región ni tema:** hay mucha política. Idea: que el juez devuelva región y tema, y que la elección de las 5 ponga topes (por ejemplo, 2 por región y 2 de política).
 
 ## Cómo se trabaja
 
@@ -268,8 +278,8 @@ Una corrida a mano con el workflow desplegado. Francisco revisa cuántas noticia
 **Estado:** hecho y aprobado el 02/11/2026. Corrida final desde cero: las 3 categorías con 10 candidatas. Con texto: ARG 15 de 15, global 14 de 15 (93 %) y tech 17 de 20 (85 %). Google News: 15 de 15 links decodificados.
 
 Ajustes después de la revisión de Francisco:
-- Tech preselecciona 20 (las demás 15); Google News EE.UU. con tope de 2; entidades del portugués.
-- Un lugar asegurado por país (EE.UU., China, Rusia, Reino Unido, Brasil): la mejor de las 3 primeras de su feed que se pueda leer. China y Rusia van por búsqueda (China en inglés sin medios pagos; Rusia en español desde la edición de EE.UU.); sin asegurar quedaban afuera porque traen 1 medio por noticia.
+- Tech preselecciona 20 (las demás 15); Google News EE.UU. con tope de 2 (sacado en el paso 7); entidades del portugués.
+- Un lugar asegurado por país (sacado en el paso 7: EE.UU., China, Rusia, Reino Unido, Brasil): la mejor de las 3 primeras de su feed que se pueda leer. China y Rusia van por búsqueda (China en inglés sin medios pagos; Rusia en español desde la edición de EE.UU.); sin asegurar quedaban afuera porque traen 1 medio por noticia.
 - Fuera columnas de opinión de Google News.
 - Medios que no se pueden leer (Reuters, CNN en Español, The Telegraph, Ars Technica y los de muro de pago) se guardan pero no se preseleccionan. CNN bloquea solo al cliente HTTP de n8n (con curl y Python responde); un extractor aparte solo recuperaría CNN, por eso no se armó.
 - Pendiente para el juez: ARG trae varias policiales y tragedias arriba; Francisco no quiere saturar con eso.

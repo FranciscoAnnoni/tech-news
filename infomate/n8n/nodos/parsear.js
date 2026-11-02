@@ -125,7 +125,7 @@ function parsear(pares, ahora) {
         .filter((n) => !OPINION_TITULO.test(n.titulo_original))
         .slice(0, f.tope || MAX_POR_FUENTE);
       // Lugar en el feed (0-1) por el peso de la fuente: el 1.º vale 1 y el último 1/n. Ver infomate_puntaje_previo.
-      leidos.forEach((n, i) => { n.feed = clave; n.lugar = (1 - i / leidos.length) * (f.peso ?? 0.85); n.prioridad = !!f.prioridad && i === 0; n.asegurada = !!f.asegurar && i < 3; });
+      leidos.forEach((n, i) => { n.feed = clave; n.lugar = (1 - i / leidos.length) * (f.peso ?? 0.85); n.prioridad = !!f.prioridad && i === 0; });
       if (f.origen === 'portada') leidos.forEach((n) => portadas.push({ categoria: f.categoria, titulo: n.titulo_original }));
       else items.push(...leidos);
       estado[clave] = leidos.length;

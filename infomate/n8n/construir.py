@@ -9,6 +9,8 @@ import json, os, uuid
 AQUI = os.path.dirname(os.path.abspath(__file__))
 IDS = json.load(open(os.path.join(AQUI, "ids.json")))
 PG = {"postgres": {"id": IDS["pg_cred"], "name": "Postgres infomate"}}
+# Credencial nativa de OpenRouter (tipo openRouterApi); el nodo HTTP Request la usa como predefinedCredentialType.
+OR = {"openRouterApi": {"id": IDS["or_cred"], "name": "infomate"}}
 ID_DIARIO = "infomateDiario01"
 TZ = "America/Argentina/Buenos_Aires"
 
