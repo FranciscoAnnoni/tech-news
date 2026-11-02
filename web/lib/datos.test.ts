@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { seleccionarMazo } from "./mazo";
+import { nDesdeParametro, seleccionarMazo, tarjetasDelMazo } from "./mazo";
 import { CATEGORIAS, MAX_CONTENIDO, MAX_DESCRIPCION, type DatosNoticias } from "./tipos";
 
 const datos: DatosNoticias = JSON.parse(readFileSync(path.join(process.cwd(), "datos", "noticias.json"), "utf8"));
@@ -26,13 +26,17 @@ describe("datos/noticias.json", () => {
   });
 
   it("mapea cada sección del export a su categoría", () => {
-    const ids = (c: string) => datos.noticias.filter((n) => n.categoria === c).map((n) => n.id).sort((a, b) => a - b);
+    const ids = (c: string) => datos.noticias.filter((n) => n.categoria === c).map((n) => n.id).sort((a, b) => Number(a) - Number(b));
     expect(ids("ARG")).toEqual([6200, 6209, 6218, 6482, 6483]);
     expect(ids("Global")).toEqual([6096, 6107, 6166, 6390, 6444]);
     expect(ids("Tech")).toEqual([339, 340, 341, 354, 356]);
   });
 
-  it("mantiene el mazo por defecto", () => {
+  it("muestra las 15 tarjetas por defecto", () => {
+    expect(tarjetasDelMazo(datos.noticias, nDesdeParametro(undefined))).toHaveLength(15);
+  });
+
+  it("permite limitar el mazo a 10 noticias", () => {
     expect(seleccionarMazo(datos.noticias, 10).map((n) => n.id)).toEqual([6200, 6107, 341, 6482, 6390, 340, 6209, 6444, 339, 6218]);
   });
 });

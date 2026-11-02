@@ -6,7 +6,7 @@ export const MAX_DESCRIPCION = 500;
 export const MAX_CONTENIDO = 2000;
 
 export interface Noticia {
-  id: number;
+  id: number | string;
   /** Título original de la fuente, sin traducir. */
   titulo: string;
   /** Resumen en español, hasta MAX_DESCRIPCION caracteres. */
@@ -18,6 +18,8 @@ export interface Noticia {
   fuente: string;
   /** ISO en UTC. */
   publicada: string;
+  /** Día del archivo que contiene la noticia (YYYY-MM-DD), no su publicación. */
+  edicion?: string;
   /** Solo para ordenar el mazo: no se muestra. */
   puntaje: number;
 }
@@ -31,8 +33,8 @@ export type Talla = "c" | "m" | "l";
 
 /** Lo que necesita la tarjeta para pintarse: ya resuelto en el servidor. */
 export interface TarjetaNoticia {
-  id: number;
-  /** Categoría + id (`tech-123`): la parte final de la URL pública. */
+  id: number | string;
+  /** Edición + categoría + id; los ejemplos locales omiten la edición. */
   identificador: string;
   titulo: string;
   descripcion: string | null;

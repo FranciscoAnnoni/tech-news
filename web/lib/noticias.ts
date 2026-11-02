@@ -1,16 +1,84 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { buscarNoticiaPublica, type ResultadoPublico } from "./noticiaPublica";
-import type { DatosNoticias, Noticia } from "./tipos";
+import { buscarNoticiaPublica, esIdNoticia, leerIdentificador, type ResultadoPublico } from "./noticiaPublica";
+import { CATEGORIAS, type Noticia } from "./tipos";
 
-/** Único punto de acceso a los datos: una API futura reemplaza solo esta función. */
-export async function obtenerNoticias(): Promise<Noticia[]> {
-  const archivo = path.join(process.cwd(), "datos", "noticias.json");
-  const datos: DatosNoticias = JSON.parse(await readFile(archivo, "utf8"));
-  return datos.noticias;
+function esObjeto(valor: unknown): valor is Record<string, unknown> {
+  return typeof valor === "object" && valor !== null;
 }
 
-/** Búsqueda para la página pública: sigue leyendo por `obtenerNoticias`, así que el reemplazo de la fuente la cubre. */
+/** El exportador también entrega fechas DD/MM/YYYY HH:mm en hora argentina. */
+function fechaPublicacion(valor: unknown): unknown {
+  if (typeof valor !== "string") return valor;
+  const partes = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/.exec(valor);
+  if (!partes) return valor;
+  const [, dia, mes, anio, hora, minuto] = partes;
+  return `${anio}-${mes}-${dia}T${hora}:${minuto}:00-03:00`;
+}
+
+function esNoticia(valor: unknown): valor is Noticia {
+  return esObjeto(valor)
+    && esIdNoticia(valor.id)
+    && typeof valor.titulo === "string" && valor.titulo.trim().length > 0
+    && (valor.descripcion === null || typeof valor.descripcion === "string")
+    && (valor.contenido === null || typeof valor.contenido === "string")
+    && CATEGORIAS.some((categoria) => categoria === valor.categoria)
+    && typeof valor.link === "string"
+    && typeof valor.fuente === "string"
+    && typeof valor.publicada === "string" && Number.isFinite(Date.parse(valor.publicada))
+    && typeof valor.puntaje === "number" && Number.isFinite(valor.puntaje);
+}
+
+/** La fecha de edición sigue el día de Buenos Aires del proceso que publica el feed. */
+function diaDeEdicion(fecha: Date): string {
+  const partes = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(fecha).map((p) => [p.type, p.value]));
+  return `${partes.year}-${partes.month}-${partes.day}`;
+}
+
+/** Único acceso a Blob, solo en el servidor. La edición omite el archivo mutable hoy.json. */
+async function leerNoticias(edicion?: string): Promise<Noticia[]> {
+  const storeId = process.env.INFOMATE_STORE_ID?.trim();
+  let datos: unknown;
+  if (storeId) {
+    const store = storeId.replace(/^store_/, "").toLowerCase();
+    if (!/^[a-z0-9]+$/.test(store)) throw new Error("INFOMATE_STORE_ID inválido.");
+    const url = `https://${store}.public.blob.vercel-storage.com/infomate/${edicion ?? "hoy"}.json`;
+    // El Blob es público: no necesita el token de escritura. No congelar el feed en el build.
+    const respuesta = await fetch(url, { cache: "no-store" });
+    if (edicion && respuesta.status === 404) return [];
+    if (!respuesta.ok) throw new Error(`No se pudieron obtener las noticias de Blob (HTTP ${respuesta.status}).`);
+    const feed: unknown = await respuesta.json();
+    // Last-Modified conserva el día de la edición aunque hoy.json no se actualice al día siguiente.
+    const modificada = new Date(respuesta.headers.get("last-modified") ?? "");
+    const dia = edicion ?? diaDeEdicion(Number.isFinite(modificada.getTime()) ? modificada : new Date());
+    // Adaptar el contrato del exportador al modelo de la app.
+    datos = Array.isArray(feed)
+      ? feed.map((nota: unknown) => {
+        if (!esObjeto(nota)) return nota;
+        const categoria = CATEGORIAS.find((c) => c.toLowerCase() === nota.categoria);
+        return { ...nota, categoria, publicada: fechaPublicacion(nota.fecha_publicacion), edicion: dia };
+      }) : feed;
+  } else {
+    const archivo = path.join(process.cwd(), "datos", "noticias.json");
+    datos = JSON.parse(await readFile(archivo, "utf8"));
+  }
+  const noticias = esObjeto(datos) && typeof datos.generado === "string" ? datos.noticias : datos;
+  if (!Array.isArray(noticias) || !noticias.every(esNoticia)) {
+    throw new Error("Formato de noticias inválido: se esperaba un feed de noticias compatible.");
+  }
+  return edicion ? noticias.map((nota) => ({ ...nota, edicion })) : noticias;
+}
+
+/** El mazo siempre lee hoy.json; sin Blob configurado usa el ejemplo local. */
+export async function obtenerNoticias(): Promise<Noticia[]> {
+  return leerNoticias();
+}
+
+/** La página pública y su preview consultan el archivo de la edición incluida en el link. */
 export async function buscarNoticia(identificador: string, ahora: Date): Promise<ResultadoPublico> {
-  return buscarNoticiaPublica(identificador, await obtenerNoticias(), ahora);
+  const partes = leerIdentificador(identificador);
+  if (!partes) return { disponible: false };
+  return buscarNoticiaPublica(identificador, await leerNoticias(partes.edicion), ahora);
 }
