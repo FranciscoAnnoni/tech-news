@@ -28,6 +28,7 @@ Decisión de Francisco: ningún país tiene trato especial. Se sacaron el tope p
 - **Las fuentes de un solo medio no compiten.** La cobertura solo la trae Google News; Euronews, DW, La Nación EE.UU. y El País Europa llegan con 1 medio y no pasan de 42,5. El 02/11: Euronews 46 noticias y 0 en el top 50; DW 9 y 0. El País Europa publica poco y casi siempre queda fuera de las 24 h.
 - **Los feeds de país (Brasil, Reino Unido) son portadas nacionales:** traen noticias locales (Fuvest, Lula y la Casa Civil), no globales. Idea: usar las secciones Mundo de varios países (España, Reino Unido, Francia, India).
 - **El tope por feed no limita un país:** las noticias de EE.UU. entran también por Google News Mundo y BBC Mundo.
+- **Segunda corrida el mismo día (bug conocido, sin arreglar por decisión de Francisco):** la preselección excluye lo publicado en `diaria` los últimos 7 días, y eso incluye la edición de ese mismo día. Al volver a correr, las mejores de la primera corrida quedan afuera y la edición sale más floja (el 02/11 se perdieron Ubuntu 85 y Trump-Irán 78). Arreglo: excluir solo días anteriores (`d.fecha < hoy`) en `infomate_preseleccionar`.
 - **Nada mira región ni tema:** hay mucha política. Idea: que el juez devuelva región y tema, y que la elección de las 5 ponga topes (por ejemplo, 2 por región y 2 de política).
 
 ## Cómo se trabaja
