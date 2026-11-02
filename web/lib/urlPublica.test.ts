@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { URL_PUBLICA_POR_DEFECTO, urlBase, urlPublica } from "./urlPublica";
+import { URL_PUBLICA_POR_DEFECTO, urlBase, urlPublica, urlParaCompartir } from "./urlPublica";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -31,4 +31,14 @@ it("urlBase devuelve la base de la variable sin barra final", () => {
 it.each([undefined, "", "   "])("urlBase con %j devuelve infomate.ar", (base) => {
   vi.stubEnv("NEXT_PUBLIC_URL_PUBLICA", base);
   expect(urlBase()).toBe("https://infomate.ar");
+});
+
+it("marca solo el enlace compartido y conserva edición y categoría", () => {
+  const identificador = "2026-11-02-tech-123";
+  expect(urlParaCompartir(identificador, "https://ejemplo.test/")).toBe(
+    "https://ejemplo.test/noticia/2026-11-02-tech-123?utm_source=share&utm_medium=referral",
+  );
+  expect(urlPublica(identificador, "https://ejemplo.test/")).toBe(
+    "https://ejemplo.test/noticia/2026-11-02-tech-123",
+  );
 });

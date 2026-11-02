@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { TarjetaNoticia } from "@/lib/tipos";
 import estilos from "./Detalle.module.css";
+import { EnlaceFuente } from "./EnlaceFuente";
 
 /**
  * "capa": sobre el Mazo, con animación y rol de diálogo.
@@ -18,11 +19,13 @@ export function Detalle({
   variante,
   cierre,
   compartir,
+  contextoMazo,
 }: {
   tarjeta: TarjetaNoticia;
   variante: VarianteDetalle;
   cierre: ReactNode;
   compartir?: ReactNode;
+  contextoMazo?: () => { recorrido_id: string; posicion: number; cantidad_tarjetas: number };
 }) {
   const esCapa = variante === "capa";
   const Raiz = esCapa ? "section" : "article";
@@ -43,9 +46,7 @@ export function Detalle({
         {tarjeta.contenido && <p className={estilos.contenido} data-prueba="contenido">{tarjeta.contenido}</p>}
         <div className={estilos.acciones}>
           <div className={estilos.fila}>
-            <a className={`${estilos.boton} ${estilos.principal}`} href={tarjeta.link} target="_blank" rel="noopener noreferrer">
-              Leer en {tarjeta.fuente}
-            </a>
+            <EnlaceFuente tarjeta={tarjeta} superficie={variante} contexto={contextoMazo} className={`${estilos.boton} ${estilos.principal}`} />
             {compartir}
           </div>
           {cierre}

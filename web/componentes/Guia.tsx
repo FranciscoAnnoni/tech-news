@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { hayAviso, pedirInstalacion, suscribirInstalacion } from "@/lib/instalacion";
+import { registrarEvento } from "@/lib/analitica";
 import { detectarPlataforma, type Plataforma } from "@/lib/plataforma";
 import { copiarAlPortapapeles } from "@/lib/portapapeles";
 import { CONTENIDO_GUIA } from "./contenidoGuia";
@@ -22,7 +23,20 @@ export function Guia({ alCerrar }: { alCerrar: () => void }) {
   const [paso, setPaso] = useState(0);
   const [mensaje, setMensaje] = useState("");
   const titulo = useRef<HTMLHeadingElement>(null);
+  const aperturaRegistrada = useRef(false);
   const aviso = useSyncExternalStore(suscribirInstalacion, hayAviso, () => false);
+
+  useEffect(() => {
+    const registrarApertura = () => {
+      if (!aperturaRegistrada.current && document.visibilityState === "visible") {
+        aperturaRegistrada.current = true;
+        registrarEvento("guia_instalacion_abierta", { plataforma });
+      }
+    };
+    registrarApertura();
+    document.addEventListener("visibilitychange", registrarApertura);
+    return () => document.removeEventListener("visibilitychange", registrarApertura);
+  }, [plataforma]);
 
   useEffect(() => {
     titulo.current?.focus({ preventScroll: true });
@@ -39,8 +53,12 @@ export function Guia({ alCerrar }: { alCerrar: () => void }) {
   const puedeInstalar = aviso && (plataforma === "android" || plataforma === "escritorio");
 
   async function instalar() {
-    const acepto = await pedirInstalacion();
-    setMensaje(acepto ? "" : "Lo cancelaste. Podés instalarla a mano con estos pasos.");
+    const resultado = await pedirInstalacion();
+    if (!resultado) return;
+    registrarEvento("instalacion_resultado", { plataforma, resultado });
+    setMensaje(resultado === "aceptada" ? "" : resultado === "cancelada"
+      ? "Lo cancelaste. Podés instalarla a mano con estos pasos."
+      : "No se pudo instalar. Podés hacerlo a mano con estos pasos.");
   }
 
   async function copiar() {

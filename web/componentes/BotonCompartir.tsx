@@ -3,19 +3,30 @@
 import { useEffect, useRef, useState } from "react";
 import { compartir } from "@/lib/compartir";
 import { copiarAlPortapapeles } from "@/lib/portapapeles";
-import { urlPublica } from "@/lib/urlPublica";
+import { urlParaCompartir } from "@/lib/urlPublica";
+import { crearId, registrarEvento } from "@/lib/analitica";
+import type { contextoNoticia } from "@/lib/medicionMazo";
 import estilos from "./BotonCompartir.module.css";
 
 const DURACION_AVISO_MS = 2500;
+
+export type ContextoCompartir = ReturnType<typeof contextoNoticia> & {
+  superficie: "tarjeta" | "capa" | "pagina";
+  recorrido_id?: string;
+  posicion?: number;
+  cantidad_tarjetas?: number;
+};
 
 /** Ícono de compartir del Detalle y de la Tarjeta de arriba. Solo cliente: usa Web Share API y portapapeles. */
 export function BotonCompartir({
   identificador,
   titulo,
   variante,
+  contexto,
 }: {
   identificador: string;
   titulo: string;
+  contexto: ContextoCompartir | (() => ContextoCompartir);
   /** "chico": ícono de 20px con área táctil de 44px, para la Tarjeta. El aviso se ancla al contenedor posicionado más cercano. */
   variante?: "chico";
 }) {
@@ -31,10 +42,14 @@ export function BotonCompartir({
   }
 
   async function alTocar() {
+    const intento_id = crearId();
+    const metadatos = typeof contexto === "function" ? contexto() : contexto;
+    registrarEvento("compartir_solicitado", { ...metadatos, intento_id });
     const resultado = await compartir(
-      { title: titulo, url: urlPublica(identificador) },
+      { title: titulo, url: urlParaCompartir(identificador) },
       { share: typeof navigator.share === "function" ? (d) => navigator.share(d) : undefined, copiar: copiarAlPortapapeles },
     );
+    registrarEvento("compartir_resultado", { ...metadatos, intento_id, resultado });
     if (resultado === "copiado") avisar("Link copiado");
     else if (resultado === "error") avisar("No se pudo copiar el link");
   }

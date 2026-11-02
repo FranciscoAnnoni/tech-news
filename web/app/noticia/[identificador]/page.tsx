@@ -1,3 +1,4 @@
+import { PantallaAnalitica } from "@/componentes/Analitica";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -5,6 +6,8 @@ import { BotonCompartir } from "@/componentes/BotonCompartir";
 import { Detalle } from "@/componentes/Detalle";
 import estilosDetalle from "@/componentes/Detalle.module.css";
 import { NoticiaNoDisponible } from "@/componentes/NoticiaNoDisponible";
+import { MedicionNoticia } from "@/componentes/MedicionNoticia";
+import { contextoNoticia } from "@/lib/medicionMazo";
 import { buscarNoticia } from "@/lib/noticias";
 import { metadatosMarca, metadatosPreview } from "@/lib/preview";
 import { aTarjeta } from "@/lib/texto";
@@ -36,18 +39,25 @@ export default async function PaginaNoticia({ params }: { params: Promise<{ iden
   await connection();
   const { identificador } = await params;
   const resultado = await buscarNoticia(identificador, new Date());
-  if (!resultado.disponible) return <NoticiaNoDisponible />;
+  if (!resultado.disponible) {
+    return <><PantallaAnalitica pantalla="no_disponible" /><MedicionNoticia key={`no-disponible:${identificador}`} /><NoticiaNoDisponible /></>;
+  }
   const tarjeta = aTarjeta(resultado.noticia);
   return (
-    <Detalle
-      tarjeta={tarjeta}
-      variante="pagina"
-      compartir={<BotonCompartir identificador={tarjeta.identificador} titulo={tarjeta.titulo} />}
-      cierre={
-        <Link className={estilosDetalle.boton} href="/">
-          Ver las noticias de hoy
-        </Link>
-      }
-    />
+    <>
+      <PantallaAnalitica pantalla="noticia" />
+      <MedicionNoticia key={`noticia:${tarjeta.identificador}`} noticia={contextoNoticia(tarjeta)} />
+      <Detalle
+        tarjeta={tarjeta}
+        variante="pagina"
+        compartir={<BotonCompartir identificador={tarjeta.identificador} titulo={tarjeta.titulo}
+          contexto={{ ...contextoNoticia(tarjeta), superficie: "pagina" }} />}
+        cierre={
+          <Link className={estilosDetalle.boton} href="/">
+            Ver las noticias de hoy
+          </Link>
+        }
+      />
+    </>
   );
 }

@@ -23,11 +23,13 @@ export function Tarjeta({
   profundidad,
   alMarcar,
   alTerminar,
+  contextoCompartir,
 }: {
   tarjeta: TarjetaNoticia;
   profundidad: number;
   alMarcar: (direccion: number) => void;
   alTerminar: (direccion: number) => void;
+  contextoCompartir: () => { identificador: string; categoria: TarjetaNoticia["categoria"]; fuente: string; edicion?: string; recorrido_id: string; posicion: number; cantidad_tarjetas: number; superficie: "tarjeta" };
 }) {
   const nodo = useRef<HTMLElement>(null);
   const selloAbrir = useRef<HTMLDivElement>(null);
@@ -136,7 +138,7 @@ export function Tarjeta({
           // Solo la de arriba: las de atrás no tienen botón enfocable. Frenar pointerdown evita que
           // el contenedor inicie un gesto (y su setPointerCapture le robe el click al botón).
           <div className={estilos.compartir} onPointerDown={(e) => e.stopPropagation()}>
-            <BotonCompartir variante="chico" identificador={tarjeta.identificador} titulo={tarjeta.titulo} />
+            <BotonCompartir variante="chico" identificador={tarjeta.identificador} titulo={tarjeta.titulo} contexto={contextoCompartir} />
           </div>
         )}
         <div className={estilos.fecha}>{tarjeta.fecha}</div>
