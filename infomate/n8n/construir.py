@@ -37,7 +37,8 @@ def http(nombre, pos, pausa_ms):
                                             {"name": "Accept-Encoding", "value": "gzip, deflate"}]},
         "options": {"timeout": 20000, "batching": {"batch": {"batchSize": 1, "batchInterval": pausa_ms}},
                     "response": {"response": {"responseFormat": "text", "outputPropertyName": "data"}}}},
-        onError="continueRegularOutput")
+        # Un corte pasajero (DNS, 406) no hace perder la fuente: reintenta hasta 2 veces, cada 10 s.
+        onError="continueRegularOutput", retryOnFail=True, maxTries=3, waitBetweenTries=10000)
 
 
 def sql(nombre, pos, query, valores):

@@ -207,30 +207,41 @@ Para los pasos 5 y 6:
 
 ## Paso 5: Fuentes
 
+**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco. Corrida desde cero: 187 global, 159 ARG y 120 tech; 26 de 26 fuentes respondieron; 0 notas de servicio.
+
+Cambios sobre lo planeado:
+- China, Reino Unido y Brasil van con la edición local de Google News (inglés y portugués), no con búsqueda en español, que traía ruido argentino ("China" Suárez, GP de Brasil). EE.UU. también quedó con tope 25.
+- Deportes de Infobae y La Nación con tope 25 cada uno: sin tope eran 92 de 194 en ARG.
+- Los pedidos reintentan hasta 2 veces cada 10 s: hubo cortes pasajeros (DNS en skynet, un 406 de Euronews).
+- El umbral quedó en 42 %: con 38-40 % se unirían notas distintas de deportes. Quedan algunas repetidas reales en 39-40 % (Bariloche, Colapinto).
+- Decodificación de Google News: 10 de 10 en 16 s (`relevamiento/decodificar-gn.py`).
+
+Para el paso 6: arriba de global siguen notas de EE.UU., porque el puntaje provisorio premia a Google News (hasta 5 medios por noticia). 127 de 187 global tienen solo link de Google News.
+
 **Entregable:** `fuentes.js` y `parsear.js` ajustados, desplegados y con una corrida a mano revisada. Decisiones de Francisco: global balanceado por países (EE.UU., China, Reino Unido y algún otro relevante); ARG con sociedad y deportes; Google News decodificado; no sumar APIs si no hace falta volumen.
 
 ### Tarea 5.1: Global por países
 
-- [ ] Sumar feeds de Google News en español por país, con búsqueda de las últimas 24 h (`q=<país> when:1d`): China, Reino Unido y Brasil (relevante para Argentina). EE.UU. sigue con su feed actual. Antes de sumarlos, verificar que cada feed responde y trae noticias del país.
-- [ ] Tope por feed de país: 25 noticias, para que ningún país domine. Google News Mundo y los medios (BBC, DW, El País, Euronews) siguen con el tope general de 100.
+- [x] Sumar feeds de Google News en español por país, con búsqueda de las últimas 24 h (`q=<país> when:1d`): China, Reino Unido y Brasil (relevante para Argentina). EE.UU. sigue con su feed actual. Antes de sumarlos, verificar que cada feed responde y trae noticias del país.
+- [x] Tope por feed de país: 25 noticias, para que ningún país domine. Google News Mundo y los medios (BBC, DW, El País, Euronews) siguen con el tope general de 100.
 
 ### Tarea 5.2: ARG con sociedad y deportes, sin notas de servicio
 
-- [ ] Sumar las secciones de sociedad y deportes de Infobae y La Nación. Antes, verificar que esos feeds existen y responden.
-- [ ] Filtro de notas de servicio en `parsear.js`: calendario de ANSES, cuánto cobro, dólar hoy, clima, horóscopo, lotería y quiniela. Se prueba en `probar-parser.mjs`.
+- [x] Sumar las secciones de sociedad y deportes de Infobae y La Nación. Antes, verificar que esos feeds existen y responden.
+- [x] Filtro de notas de servicio en `parsear.js`: calendario de ANSES, cuánto cobro, dólar hoy, clima, horóscopo, lotería y quiniela. Se prueba en `probar-parser.mjs`.
 
 ### Tarea 5.3: Repetidas
 
-- [ ] Con las notas de servicio ya filtradas, bajar el umbral de títulos parecidos de 50 % a 42 % y volver a revisar los pares al borde con datos reales. Si aparecen uniones incorrectas, se vuelve a 50 %.
+- [x] Con las notas de servicio ya filtradas, bajar el umbral de títulos parecidos de 50 % a 42 % y volver a revisar los pares al borde con datos reales. Si aparecen uniones incorrectas, se vuelve a 50 %.
 
 ### Tarea 5.4: Google News decodificado
 
-- [ ] Probar el método no oficial (pedir la página del artículo, leer `data-n-a-sg` y `data-n-a-ts`, y hacer un POST a `batchexecute`) con un script sobre 10 links reales. Medir cuántos se resuelven y cuánto tarda.
-- [ ] Decisión de diseño: se decodifican solo las candidatas (unas 15 por categoría, en el paso 6), no las ~100 de Google News que entran por día. Son ~90 pedidos en vez de ~200, y se pierde poco: las repetidas con un feed de medio ya se unen por título.
+- [x] Probar el método no oficial (pedir la página del artículo, leer `data-n-a-sg` y `data-n-a-ts`, y hacer un POST a `batchexecute`) con un script sobre 10 links reales. Medir cuántos se resuelven y cuánto tarda.
+- [x] Decisión de diseño: se decodifican solo las candidatas (unas 15 por categoría, en el paso 6), no las ~100 de Google News que entran por día. Son ~90 pedidos en vez de ~200, y se pierde poco: las repetidas con un feed de medio ya se unen por título.
 
 ### Tarea 5.5: APIs
 
-- [ ] No se suman APIs en este paso: un domingo ya entraron 133 global, 87 ARG y 121 tech. Se revisa si, después de sumar sociedad y deportes, ARG queda corto un día hábil.
+- [x] No se suman APIs en este paso: un domingo ya entraron 133 global, 87 ARG y 121 tech. Se revisa si, después de sumar sociedad y deportes, ARG queda corto un día hábil.
 
 ### Chequeo del paso 5
 

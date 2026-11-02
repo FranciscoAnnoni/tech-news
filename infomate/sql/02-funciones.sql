@@ -27,7 +27,7 @@ $$;
 CREATE OR REPLACE FUNCTION infomate_ingresar(items jsonb, portadas jsonb, p_corrida text) RETURNS jsonb
 LANGUAGE plpgsql AS $$
 DECLARE
-  UMBRAL  constant real     := 0.5;          -- mismo hecho si el título se parece 50 % o más
+  UMBRAL  constant real     := 0.42;         -- mismo hecho si el título se parece 42 % o más
   VENTANA constant interval := '72 hours';
   TOPE    constant int      := 200;          -- nuevas por categoría y por corrida
   it jsonb; v_cat categoria; v_link text; v_gl text; n text; nid uuid; es_gn boolean;

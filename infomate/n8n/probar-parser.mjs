@@ -11,7 +11,7 @@ const rfc = (d) => d.toUTCString();
 const fuentes = [
   { categoria: 'arg', fuente: 'Infobae', origen: 'rss', excluir: '/(opinion|editoriales|lnmas|fotos)/', url: 'https://www.infobae.com/arc/outboundfeeds/rss/category/politica/' },
   { categoria: 'arg', fuente: 'Google News Argentina', origen: 'gnews', url: 'https://news.google.com/rss/x' },
-  { categoria: 'tech', fuente: 'HN', origen: 'hn', url: 'https://hn.algolia.com/x' },
+  { categoria: 'tech', fuente: 'HN', origen: 'hn', tope: 1, url: 'https://hn.algolia.com/x' },
   { categoria: 'tech', fuente: 'Lobsters', origen: 'lobsters', url: 'https://lobste.rs/hottest.json' },
   { categoria: 'global', fuente: 'DW', origen: 'rss', url: 'https://rss.dw.com/caida' },
   { categoria: 'arg', fuente: 'Portada Google News Argentina', origen: 'portada', url: 'https://news.google.com/rss' },
@@ -22,6 +22,11 @@ const respuestas = [
     <item><title><![CDATA[El Gobierno anunció cambios en el Gabinete]]></title><link>https://www.infobae.com/politica/2026/11/01/gabinete/?utm_source=rss&amp;id=7</link>
       <pubDate>${rfc(hace(3))}</pubDate><description><![CDATA[<p>Copete &amp; detalle</p>]]></description><content:encoded><![CDATA[<p>${largo}</p>]]></content:encoded></item>
     <item><title>Nota vieja</title><link>https://www.infobae.com/politica/vieja/</link><pubDate>${rfc(hace(30))}</pubDate></item>
+    <item><title>Calendario de pagos de ANSES: cuándo cobro en noviembre</title><link>https://www.infobae.com/economia/anses/</link><pubDate>${rfc(hace(2))}</pubDate></item>
+    <item><title>Dólar hoy: a cuánto cotiza este lunes</title><link>https://www.infobae.com/economia/dolar/</link><pubDate>${rfc(hace(2))}</pubDate></item>
+    <item><title>A cuánto llega la PUAM en noviembre de 2026</title><link>https://www.infobae.com/economia/puam/</link><pubDate>${rfc(hace(2))}</pubDate></item>
+    <item><title>Monto de la Asignación Universal por Hijo para jubilados: de cuánto es</title><link>https://www.infobae.com/economia/auh/</link><pubDate>${rfc(hace(2))}</pubDate></item>
+    <item><title>El Gobierno anunció un aumento a jubilados por decreto</title><link>https://www.infobae.com/economia/aumento/</link><pubDate>${rfc(hace(2))}</pubDate></item>
     <item><title>Una opinión</title><link>https://www.infobae.com/opinion/2026/11/01/x/</link><pubDate>${rfc(hace(2))}</pubDate></item>
   </channel></rss>` },
   { data: `<rss><channel><item><title>Paro de transporte el martes - La Nación</title><link>https://news.google.com/rss/articles/CBMiABC?oc=5</link>
@@ -63,6 +68,11 @@ assert.equal(inf.posicion, 1);
 assert.ok(inf.fecha_publicacion);
 assert.equal(por('Nota vieja'), undefined, 'lo de más de 24 h no entra');
 assert.equal(por('Una opinión'), undefined, 'opinión no entra');
+assert.equal(por('Calendario de pagos de ANSES: cuándo cobro en noviembre'), undefined, 'nota de servicio ANSES no entra');
+assert.equal(por('Dólar hoy: a cuánto cotiza este lunes'), undefined, 'dólar hoy no entra');
+assert.equal(por('A cuánto llega la PUAM en noviembre de 2026'), undefined, 'PUAM no entra');
+assert.equal(por('Monto de la Asignación Universal por Hijo para jubilados: de cuánto es'), undefined, 'monto AUH no entra');
+assert.ok(por('El Gobierno anunció un aumento a jubilados por decreto'), 'una noticia real sobre jubilados sí entra');
 
 // Google News: sin " - Medio" en el título, medio como fuente, medios relacionados y link de Google marcado.
 const gn = por('Paro de transporte el martes');
@@ -75,7 +85,7 @@ assert.equal(gn.link, gn.link_google);
 // HN: sin Ask HN, ordenado por puntos, con puntos y comentarios.
 assert.equal(por('Ask HN: What are you working on?'), undefined);
 assert.equal(por('Show HN: Mi proyecto').posicion, 1);
-assert.equal(por('Postgres 18 released').puntos, 120);
+assert.equal(por('Postgres 18 released'), undefined, 'tope 1 en HN: solo entra la más votada');
 
 // Lobsters: sin meta. Reddit: solo posts con link afuera.
 assert.ok(por('Rust 2.0 plans'));

@@ -5,6 +5,9 @@
 const MAX_POR_FUENTE = 100;
 const FUERA_HN = /^(ask hn|tell hn|who is hiring|who wants to be hired|freelancer\? seeking freelancer)\b/i;
 const TAGS_FUERA = ['meta', 'event', 'ask'];
+// Notas de servicio (se compara sin acentos y en minúsculas): no son noticias para la edición.
+const SERVICIO = /\b(calendario de (pagos|cobros?)|cuando cobro|cuanto cobro|fechas? de cobro|dolar (hoy|blue hoy)|a cuanto (abre|cotiza|cerro) el dolar|cotizacion del dolar|pronostico del (tiempo|clima)|alerta (amarilla|naranja|roja)? ?por (tormentas|lluvias|calor|viento|nevadas)|horoscopo|loteria|quiniela|quini 6|loto plus|telekino|brinco|resultados del sorteo|efemerides|santoral|a cuanto llega|asi quedo la tabla|tabla de posiciones|los puntajes de)\b|\b(anses|auh|puam|suaf|pnc|jubilad[oa]s?|jubilaciones)\b.*\b(cuanto|cuando|calendario|monto|bono|fechas?|cobr[ao])\b|\b(cuanto|cuando|calendario|monto|bono|fechas?)\b.*\b(anses|auh|puam|suaf|pnc|jubilad[oa]s?|jubilaciones)\b/;
+const sinAcentos = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 function ent(s) {
   if (!s) return '';
@@ -116,7 +119,8 @@ function parsear(pares, ahora) {
       const lector = { rss, portada: gnews, gnews, hn, lobsters, reddit }[f.origen];
       const leidos = lector(txt, f).filter((n) => n && n.titulo_original && n.link)
         .filter((n) => !n.fecha_publicacion || Date.parse(n.fecha_publicacion) >= desde)
-        .slice(0, MAX_POR_FUENTE);
+        .filter((n) => n.categoria === 'tech' || !SERVICIO.test(sinAcentos(n.titulo_original)))
+        .slice(0, f.tope || MAX_POR_FUENTE);
       if (f.origen === 'portada') leidos.forEach((n) => portadas.push({ categoria: f.categoria, titulo: n.titulo_original }));
       else items.push(...leidos);
       estado[clave] = leidos.length;
