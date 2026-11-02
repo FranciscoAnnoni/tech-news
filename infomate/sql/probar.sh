@@ -1,0 +1,20 @@
+#!/bin/sh
+# Prueba el esquema en un Postgres 17 descartable (Docker). No toca ninguna base real.
+set -e
+cd "$(dirname "$0")"
+C=infomate-prueba-$$
+docker run -d --rm --name "$C" -e POSTGRES_PASSWORD=prueba -e POSTGRES_DB=infomate postgres:17-alpine >/dev/null
+trap 'docker rm -f "$C" >/dev/null' EXIT
+until docker exec "$C" pg_isready -U postgres -d infomate -q 2>/dev/null; do sleep 1; done
+sleep 1
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 01-esquema.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate -c "TRUNCATE diaria, noticias, corridas"
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 02-funciones.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba-funciones.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate -c "TRUNCATE diaria, noticias, corridas"
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 03-preseleccion.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba-preseleccion.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate -c "TRUNCATE diaria, noticias, corridas"
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 04-edicion.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba-edicion.sql
