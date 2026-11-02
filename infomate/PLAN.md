@@ -9,7 +9,7 @@
 ## Cómo retomar (estado al 02/11/2026)
 
 - **Pasos 1 a 6: hechos y aprobados.** El workflow `Infomate · Diario` (id `infomateDiario01`) está en el n8n de skynet, sin horario: recolecta, guarda sin repetidas, preselecciona, decodifica Google News, baja el texto y marca 10 candidatas por categoría.
-- **Sigue el paso 7: elegir el modelo del juez.** La credencial ya está: `infomate`, tipo nativo `openRouterApi` (no Header Auth), con tope de USD 10 en total. Su id está en `n8n/ids.json` como `or_cred` y `construir.py` la expone como `OR`. La key nunca pasa por el chat, el repo ni archivos locales.
+- **Paso 7: modelos elegidos** (detalle abajo). Sigue el paso 8: el juez en el flujo. La credencial de OpenRouter: `infomate`, tipo nativo `openRouterApi` (no Header Auth), con tope de USD 10 en total. Su id está en `n8n/ids.json` como `or_cred` y `construir.py` la expone como `OR`. La key nunca pasa por el chat, el repo ni archivos locales.
 - **Rama:** `infomate/plan` (commits locales, sin push).
 - **Pruebas:** `node n8n/probar-parser.mjs`, `node n8n/probar-texto.mjs` y `sql/probar.sh` (necesita Docker en la Mac).
 - **Desplegar:** aplicar `sql/02-funciones.sql` y `sql/03-preseleccion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`.
@@ -47,12 +47,12 @@ No se arranca un paso sin cerrar el anterior. El detalle de cada paso se escribe
 - No se commitean IPs, IDs de credenciales, API keys ni chat IDs. La configuración va por variables de entorno.
 - Zona horaria: `America/Argentina/Buenos_Aires`.
 - Nombres: base `infomate`, workflow `Infomate · Diario`, carpeta `infomate/`.
-- Límites: `resumen` de 500 caracteres como máximo, `contenido` de 2000 caracteres como máximo, hasta 200 noticias por categoría y por día, retención de 7 días (salvo lo publicado en `diaria`), 10 candidatas por categoría y 5 elegidas por categoría.
+- Límites: `resumen` de 450 caracteres pedidos al juez (la base acepta hasta 1000), `contenido` de 2000 caracteres como máximo, hasta 200 noticias por categoría y por día, retención de 7 días (salvo lo publicado en `diaria`), 10 candidatas por categoría y 5 elegidas por categoría.
 
 ## Puntos de riesgo (revisar en cada paso que toque esto)
 
 1. **Día con pocas noticias** (feriado, fuente caída): una categoría tiene menos de 10 candidatas con texto. Se juzgan las que haya y se eligen hasta 5, sin rellenar con noticias de días anteriores.
-2. **El juez devuelve JSON roto o un resumen de más de 500 caracteres:** se reintenta una vez; si vuelve a fallar, esa noticia queda sin puntaje y no entra en la edición.
+2. **El juez devuelve JSON roto o un resumen de más de 1000 caracteres:** se reintenta una vez; si vuelve a fallar, esa noticia queda sin puntaje y no entra en la edición.
 3. **Misma noticia en dos categorías** (por ejemplo, una nota de economía global que también es ARG): queda en una sola, con la regla de categorías del paso 4.
 4. **La corrida se ejecuta dos veces el mismo día** (a mano y por horario): no duplica la tabla diaria. Reemplaza la edición del día o no hace nada.
 5. **Link de Google News:** nunca se guarda como `link`. Se resuelve al link del medio y, si no se puede, la noticia no es candidata.
@@ -326,3 +326,15 @@ Sin texto en tech: un sitio que no es nota (Show HN), un link a Reddit (bloquead
 
 - El 80 % o más de las 15 candidatas de cada categoría sale con texto. Si no, se decide si hace falta un extractor aparte (por ejemplo, trafilatura en un contenedor).
 - Francisco revisa las 30 candidatas (10 por categoría) con su fuente y el principio del texto.
+
+## Paso 7: Modelo
+
+**Estado:** modelos elegidos el 02/11/2026.
+
+- Comparación: [relevamiento/modelos-juez.md](relevamiento/modelos-juez.md) (Claude Haiku 5.5, GPT-6 Luna y MiMo v2.6 Flash; GPT-6.1 Sol descartado por precio, unas 20 veces más caro).
+- Prueba a ciegas: 3 candidatas por categoría x 3 modelos, con los prompts de `prompts/`. Las 27 respuestas salieron en el formato pedido; costo total menos de 1 centavo. Haiku y MiMo se pasaron de 500 caracteres en 4 de 9 resúmenes cada uno; Luna en ninguno.
+- **Decisión de Francisco:** global y ARG con `openai/gpt-6-luna`; tech con `anthropic/claude-haiku-5.5`. MiMo quedó afuera (puntuó más generoso y su ficha declara solo inglés y chino).
+- Al juez se le piden 450 caracteres de resumen; si se pasa, entra igual. La base subió su límite de 500 a 1000, solo como red.
+- Parámetros: `json_schema` estricto, `provider.require_parameters`, `reasoning.effort: "low"`, sin `temperature`.
+- Prompts: `prompts/juez-base.md` más el criterio de cada juez. ARG: las policiales y tragedias puntúan 0-39 salvo casos de alcance nacional, con el Estado involucrado, consecuencias más allá del hecho o gran escala.
+- Traducir con Google lo que no está en español quedó como idea de Francisco. Con el juez devolviendo título y resumen en español, por ahora no hace falta.

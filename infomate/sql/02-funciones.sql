@@ -7,6 +7,9 @@ LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
 $$;
 
 ALTER TABLE noticias ADD COLUMN IF NOT EXISTS corrida text;   -- corrida en la que entró
+-- Paso 7: al juez se le piden 450 caracteres, pero si se pasa el resumen entra igual. 1000 es solo la red.
+ALTER TABLE noticias DROP CONSTRAINT IF EXISTS noticias_resumen_check;
+ALTER TABLE noticias ADD CONSTRAINT noticias_resumen_check CHECK (char_length(resumen) <= 1000);
 DROP INDEX IF EXISTS noticias_titulo_trgm;
 CREATE INDEX IF NOT EXISTS noticias_norm_trgm ON noticias USING gin (f_norm(titulo_original) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS noticias_corrida ON noticias (corrida);

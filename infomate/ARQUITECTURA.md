@@ -54,7 +54,7 @@ Esquema en [`sql/01-esquema.sql`](sql/01-esquema.sql). Se prueba con `sql/probar
 - **`diaria`:** 5 por categoría y por día (`orden` de 1 a 5). Nunca se borra. La clave foránea impide cargar una noticia en una categoría que no es la suya.
 - **`corridas`:** una fila por ejecución, con sus conteos.
 - **`diaria_json` y `edicion(fecha)`:** devuelven la edición de un día como array JSON con el formato de la app, ordenada por puntaje.
-- **Límites que pone la base:** `resumen` de 500 caracteres como máximo, `contenido` de 2000 como máximo, `puntaje` de 0 a 100 y un mismo link una sola vez por categoría.
+- **Límites que pone la base:** `resumen` de 1000 caracteres como máximo (al juez se le piden 450; 1000 es la red), `contenido` de 2000 como máximo, `puntaje` de 0 a 100 y un mismo link una sola vez por categoría.
 
 Funciones que usa el workflow. Se escriben en el paso de cada una:
 
@@ -70,7 +70,9 @@ La fórmula de `puntaje_previo` se define en el paso 6, con los datos del releva
 
 ## Contrato del juez
 
-**Llamada:** una por noticia, al endpoint de chat de OpenRouter, con temperature 0.2 y salida en JSON. El modelo se confirma en el paso 7.
+**Llamada:** una por noticia, al endpoint de chat de OpenRouter, con `response_format` de tipo `json_schema` estricto, `provider.require_parameters: true` y `reasoning.effort: "low"`. Sin `temperature`: Haiku y Luna no la aceptan.
+
+**Modelo por juez (elegidos en el paso 7 con una prueba a ciegas):** global y ARG con `openai/gpt-6-luna`, tech con `anthropic/claude-haiku-5.5`.
 
 **Entrada (mensaje del usuario):**
 
@@ -79,7 +81,7 @@ Título: <titulo_original>
 Fuente: <fuente>
 Publicada: <fecha_publicacion>
 Texto:
-<texto de la nota, recortado a ~3000 caracteres>
+<contenido de la nota: hasta 2000 caracteres, lo que guarda la base>
 ```
 
 **Salida, en este orden:**
@@ -92,7 +94,7 @@ Texto:
 
 - Es JSON y tiene las cuatro claves.
 - `titulo_es` no está vacío y tiene 200 caracteres como máximo.
-- `resumen` no está vacío y tiene 500 caracteres como máximo.
+- `resumen` no está vacío. Al juez se le piden 450 caracteres; si se pasa, entra igual (sin repetir la llamada) hasta 1000.
 - `puntaje` es un entero de 0 a 100.
 - `motivo` tiene 200 caracteres como máximo.
 
@@ -104,7 +106,7 @@ Si algo no cumple, se repite la llamada una vez. Si vuelve a fallar, la noticia 
 Sos editor de noticias de <categoría>. Leés una nota y devolvés solo un JSON.
 
 1. titulo_es: el título en español rioplatense neutro, fiel al original.
-2. resumen: hasta 500 caracteres, en español. Solo hechos que están en el texto; no inventes ni opines.
+2. resumen: hasta 450 caracteres, en español. Solo hechos que están en el texto; no inventes ni opines.
 3. puntaje: de 0 a 100, según <criterio>, usando esta escala:
    90-100  hecho que va a ser tema central por días y afecta a muchísima gente
    70-89   importante, con consecuencias concretas para mucha gente
@@ -134,7 +136,7 @@ infomate/
   n8n/
     construir.py     crea o actualiza Infomate · Diario e Infomate · Error por la API de n8n
     nodos/           fuentes.js, parsear.js, texto.js, validar.js
-  prompts/           juez-global.md, juez-arg.md, juez-tech.md (paso 8)
+  prompts/           juez-base.md (común, con {SECCION} y {CRITERIO}) y juez-global.md, juez-arg.md, juez-tech.md (el criterio de cada uno)
 ```
 
 `construir.py` sigue el mismo esquema que `n8n/construir.py` y lee la configuración de variables de entorno, que no se commitean:

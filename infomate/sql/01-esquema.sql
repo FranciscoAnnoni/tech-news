@@ -12,7 +12,7 @@ CREATE TABLE noticias (
   titulo_original    text        NOT NULL,                            -- como lo publicó el medio
   titulo             text,                                            -- traducido por el juez
   descripcion_fuente text,                                            -- copete que trae el feed
-  resumen            text        CHECK (char_length(resumen) <= 500),   -- del juez
+  resumen            text        CHECK (char_length(resumen) <= 1000),  -- del juez: se le piden 450; 1000 es solo la red
   contenido          text        CHECK (char_length(contenido) <= 2000),-- primeros 2000 caracteres, idioma original
   link               text        NOT NULL,                            -- directo al medio, nunca Google News
   link_google        text,                                            -- el de Google News, si vino de ahí

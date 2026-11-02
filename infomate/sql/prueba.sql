@@ -32,12 +32,12 @@ BEGIN
   IF e->1->>'fecha_publicacion' <> '02/11/2026 07:45' THEN RAISE EXCEPTION 'fecha_publicacion mal formateada: %', e->1->>'fecha_publicacion'; END IF;
   IF edicion('2026-11-03') <> '[]'::jsonb THEN RAISE EXCEPTION 'edicion de un día sin noticias debería ser []'; END IF;
 
-  -- Resumen de más de 500 caracteres: rechazado.
+  -- Resumen de más de 1000 caracteres: rechazado (al juez se le piden 450, pero lo que se pase entra igual).
   ok := false;
   BEGIN
-    INSERT INTO noticias (categoria, titulo_original, link, fuente, resumen) VALUES ('arg', 't', 'https://x/1', 'f', repeat('a', 501));
+    INSERT INTO noticias (categoria, titulo_original, link, fuente, resumen) VALUES ('arg', 't', 'https://x/1', 'f', repeat('a', 1001));
   EXCEPTION WHEN check_violation THEN ok := true; END;
-  IF NOT ok THEN RAISE EXCEPTION 'resumen de 501 caracteres debería rechazarse'; END IF;
+  IF NOT ok THEN RAISE EXCEPTION 'resumen de 1001 caracteres debería rechazarse'; END IF;
 
   -- Contenido de más de 2000 caracteres: rechazado.
   ok := false;
