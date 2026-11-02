@@ -153,7 +153,7 @@ Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del
 
 ## Paso 4: Recolector
 
-**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco. Dos corridas a mano: la primera dejó 132 global, 70 ARG y 121 tech; la segunda no duplicó (0 nuevas en tech, 1 en global, 17 en ARG por La Nación Política, que en la primera falló por DNS).
+**Estado:** hecho y aprobado el 02/11/2026. Dos corridas a mano: la primera dejó 132 global, 70 ARG y 121 tech; la segunda no duplicó (0 nuevas en tech, 1 en global, 17 en ARG por La Nación Política, que en la primera falló por DNS).
 
 Para los pasos 5 y 6:
 - Repetidas que se escapan: pares reales con 39-49 % de parecido (Flock, Lenovo, Mythos, Ruta 51, Bariloche). Bajar el umbral a ~40 % une también notas de servicio distintas (ANSES), que conviene filtrar antes.
@@ -202,3 +202,36 @@ Para los pasos 5 y 6:
 - Los links son del medio, salvo los de Google News que no tienen par en un feed. Esos quedan marcados con `link_google` y se resuelven en el paso 5.
 - Correrla dos veces seguidas no duplica nada.
 - Francisco revisa un listado por categoría de lo que entró, ordenado por `puntaje_previo`.
+
+---
+
+## Paso 5: Fuentes
+
+**Entregable:** `fuentes.js` y `parsear.js` ajustados, desplegados y con una corrida a mano revisada. Decisiones de Francisco: global balanceado por países (EE.UU., China, Reino Unido y algún otro relevante); ARG con sociedad y deportes; Google News decodificado; no sumar APIs si no hace falta volumen.
+
+### Tarea 5.1: Global por países
+
+- [ ] Sumar feeds de Google News en español por país, con búsqueda de las últimas 24 h (`q=<país> when:1d`): China, Reino Unido y Brasil (relevante para Argentina). EE.UU. sigue con su feed actual. Antes de sumarlos, verificar que cada feed responde y trae noticias del país.
+- [ ] Tope por feed de país: 25 noticias, para que ningún país domine. Google News Mundo y los medios (BBC, DW, El País, Euronews) siguen con el tope general de 100.
+
+### Tarea 5.2: ARG con sociedad y deportes, sin notas de servicio
+
+- [ ] Sumar las secciones de sociedad y deportes de Infobae y La Nación. Antes, verificar que esos feeds existen y responden.
+- [ ] Filtro de notas de servicio en `parsear.js`: calendario de ANSES, cuánto cobro, dólar hoy, clima, horóscopo, lotería y quiniela. Se prueba en `probar-parser.mjs`.
+
+### Tarea 5.3: Repetidas
+
+- [ ] Con las notas de servicio ya filtradas, bajar el umbral de títulos parecidos de 50 % a 42 % y volver a revisar los pares al borde con datos reales. Si aparecen uniones incorrectas, se vuelve a 50 %.
+
+### Tarea 5.4: Google News decodificado
+
+- [ ] Probar el método no oficial (pedir la página del artículo, leer `data-n-a-sg` y `data-n-a-ts`, y hacer un POST a `batchexecute`) con un script sobre 10 links reales. Medir cuántos se resuelven y cuánto tarda.
+- [ ] Decisión de diseño: se decodifican solo las candidatas (unas 15 por categoría, en el paso 6), no las ~100 de Google News que entran por día. Son ~90 pedidos en vez de ~200, y se pierde poco: las repetidas con un feed de medio ya se unen por título.
+
+### Tarea 5.5: APIs
+
+- [ ] No se suman APIs en este paso: un domingo ya entraron 133 global, 87 ARG y 121 tech. Se revisa si, después de sumar sociedad y deportes, ARG queda corto un día hábil.
+
+### Chequeo del paso 5
+
+Una corrida a mano con el workflow desplegado. Francisco revisa cuántas noticias entran por país y por sección, y las primeras de cada categoría.
