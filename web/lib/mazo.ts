@@ -1,18 +1,16 @@
 import { aTarjeta } from "./texto";
 import { CATEGORIAS, type Noticia, type TarjetaNoticia } from "./tipos";
 
-export const N_POR_DEFECTO = 10;
-
-export function nDesdeParametro(valor: string | string[] | undefined): number {
+export function nDesdeParametro(valor: string | string[] | undefined): number | undefined {
   const n = Number.parseInt(Array.isArray(valor) ? valor[0] : (valor ?? ""), 10);
-  return n >= 1 ? n : N_POR_DEFECTO;
+  return n >= 1 ? n : undefined;
 }
 
 /**
  * El puntaje no es comparable entre categorías: cada una se ordena por el suyo
  * y se toma una nota de cada categoría por turno.
  */
-export function seleccionarMazo(noticias: Noticia[], n: number): Noticia[] {
+export function seleccionarMazo(noticias: Noticia[], n: number = noticias.length): Noticia[] {
   const listas = CATEGORIAS.map((categoria) =>
     noticias.filter((nota) => nota.categoria === categoria).sort((a, b) => b.puntaje - a.puntaje),
   );
@@ -26,7 +24,7 @@ export function seleccionarMazo(noticias: Noticia[], n: number): Noticia[] {
   return mazo.slice(0, n);
 }
 
-export const tarjetasDelMazo = (noticias: Noticia[], n: number): TarjetaNoticia[] =>
+export const tarjetasDelMazo = (noticias: Noticia[], n?: number): TarjetaNoticia[] =>
   seleccionarMazo(noticias, n).map(aTarjeta);
 
 export type Resolucion = "abierta" | "descartada";

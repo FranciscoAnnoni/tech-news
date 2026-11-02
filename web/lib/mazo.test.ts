@@ -19,6 +19,9 @@ describe("seleccionarMazo", () => {
   it("corta en n", () => {
     expect(seleccionarMazo(noticias, 4).map((n) => n.id)).toEqual([1, 11, 21, 2]);
   });
+  it("incluye todas las noticias cuando no se indica un límite", () => {
+    expect(seleccionarMazo(noticias).map((n) => n.id)).toEqual([1, 11, 21, 2, 12, 3]);
+  });
   it("no reordena la entrada", () => {
     seleccionarMazo(noticias, 1);
     expect(noticias[0].id).toBe(21);
@@ -27,13 +30,13 @@ describe("seleccionarMazo", () => {
 
 describe("nDesdeParametro", () => {
   it.each([
-    [undefined, 10],
+    [undefined, undefined],
     ["15", 15],
     [["3", "4"], 3],
-    ["0", 10],
-    ["-2", 10],
-    ["hola", 10],
-  ])("%j da %i", (valor, esperado) => {
+    ["0", undefined],
+    ["-2", undefined],
+    ["hola", undefined],
+  ])("%j da %j", (valor, esperado) => {
     expect(nDesdeParametro(valor)).toBe(esperado);
   });
 });
