@@ -12,6 +12,8 @@ PG = {"postgres": {"id": IDS["pg_cred"], "name": "Postgres infomate"}}
 # Credencial nativa de OpenRouter (tipo openRouterApi); el nodo HTTP Request la usa como predefinedCredentialType.
 OR = {"openRouterApi": {"id": IDS["or_cred"], "name": "infomate"}}
 TG = {"telegramApi": {"id": IDS["tg_cred"], "name": "Telegram account"}}
+# Vercel Blob (paso 10a): Header Auth con "Authorization: Bearer <token>". Si todavía no está en ids.json, no se sube nada.
+VERCEL = {"httpHeaderAuth": {"id": IDS["vercel_cred"], "name": "Vercel Blob infomate"}} if IDS.get("vercel_cred") else None
 ID_DIARIO = "infomateDiario01"
 ID_ERROR = "infomateError001"
 PROMPTS = os.path.join(AQUI, "..", "prompts")
@@ -91,6 +93,9 @@ def diario():
     fila2, fila3 = 220, 440
     nodes = [
         nodo("Probar a mano", "n8n-nodes-base.manualTrigger", 1, [0, 0], {}),
+        # Todos los días a las 08:00; la zona horaria la pone settings.timezone.
+        nodo("Todos los días 08:00", "n8n-nodes-base.scheduleTrigger", 1.2, [0, -140],
+             {"rule": {"interval": [{"field": "cronExpression", "expression": "0 8 * * *"}]}}),
         code("Fuentes", "fuentes.js", [220, 0]),
         http("Bajar fuentes", [440, 0], 1500),
         code("Fuentes Reddit", "fuentes-reddit.js", [660, 0]),
@@ -154,7 +159,8 @@ def diario():
             "juez: { juzgadas: $('Guardar juicio').first().json.juzgadas, fallidas: $('Validar reintento').first().json.fallidas, "
             "costo_usd: $('Validar reintento').first().json.costo }, edicion: $json.edicion })] }}"),
         # Si la edición no llegó a 15 (juez caído, key sin saldo, día flojo), falla a propósito para que llegue el aviso por Telegram.
-        nodo("Revisar edición", "n8n-nodes-base.code", 2, [2200, fila3], {"mode": "runOnceForAllItems", "language": "javaScript", "jsCode":
+        # Va debajo de la rama de Vercel: n8n corre las ramas de arriba hacia abajo, así la edición se sube aunque esté incompleta.
+        nodo("Revisar edición", "n8n-nodes-base.code", 2, [2200, fila3 + 220], {"mode": "runOnceForAllItems", "language": "javaScript", "jsCode":
              "const e = $('Armar edición').first().json.edicion;\n"
              "const total = Object.values(e).reduce((a, b) => a + Number(b), 0);\n"
              "if (total < 15) throw new Error(`Edición incompleta (${total} de 15): ${JSON.stringify(e)}. "
@@ -166,7 +172,30 @@ def diario():
              "(OpenRouter) y deja las 5 mejores de cada categoría en `diaria`.\n"
              "Si falla, avisa por Telegram (Infomate · Error). Código en el repo tech-news, carpeta `infomate/`: no editar acá, se pisa al volver a desplegar."}),
     ]
-    return {"id": ID_DIARIO, "name": "Infomate · Diario", "active": False, "nodes": nodes, "connections": con(*orden),
+    conexiones = con(*orden)
+    conexiones["Todos los días 08:00"] = {"main": [[{"node": "Fuentes", "type": "main", "index": 0}]]}
+    if VERCEL:
+        # Paso 10a: rama aparte desde "Limpiar y cerrar". Sube infomate/hoy.json (se pisa) y infomate/AAAA-MM-DD.json.
+        # Usa la API HTTP que usa @vercel/blob por dentro (ver PLAN.md, paso 10a). Si la edición está vacía no sube nada.
+        nodes += [
+            sql("Edición JSON", [2200, fila3], f"SELECT edicion({AHORA_AR}::date)::text AS noticias, {AHORA_AR}::date::text AS fecha", None),
+            nodo("Archivos a subir", "n8n-nodes-base.code", 2, [2420, fila3], {"mode": "runOnceForAllItems", "language": "javaScript", "jsCode":
+                 "const { noticias, fecha } = $input.first().json;\n"
+                 "if (JSON.parse(noticias).length === 0) return [];\n"
+                 "return ['infomate/hoy.json', `infomate/${fecha}.json`].map((pathname) => ({ json: { pathname, body: noticias } }));"}),
+            nodo("Subir a Vercel", "n8n-nodes-base.httpRequest", 4.5, [2640, fila3], {
+                "method": "PUT", "url": "=https://vercel.com/api/blob/?pathname={{ encodeURIComponent($json.pathname) }}",
+                "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": True, "specifyHeaders": "keypair", "headerParameters": {"parameters": [
+                    {"name": "x-api-version", "value": "13"}, {"name": "x-vercel-blob-access", "value": "public"},
+                    {"name": "x-content-type", "value": "application/json"}, {"name": "x-add-random-suffix", "value": "0"},
+                    {"name": "x-allow-overwrite", "value": "1"}, {"name": "x-cache-control-max-age", "value": "300"}]},
+                "sendBody": True, "contentType": "raw", "rawContentType": "application/json", "body": "={{ $json.body }}",
+                "options": {"timeout": 30000}}, VERCEL, retryOnFail=True, maxTries=3, waitBetweenTries=10000),
+        ]
+        conexiones["Limpiar y cerrar"]["main"][0].insert(0, {"node": "Edición JSON", "type": "main", "index": 0})
+        conexiones.update(con("Edición JSON", "Archivos a subir", "Subir a Vercel"))
+    return {"id": ID_DIARIO, "name": "Infomate · Diario", "active": False, "nodes": nodes, "connections": conexiones,
             "settings": {"executionOrder": "v1", "timezone": TZ, "callerPolicy": "workflowsFromSameOwner", "errorWorkflow": ID_ERROR}}
 
 

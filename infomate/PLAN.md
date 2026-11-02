@@ -12,7 +12,7 @@
 - **Paso 7: modelos elegidos** (detalle abajo). Sigue el paso 8: el juez en el flujo. La credencial de OpenRouter: `infomate`, tipo nativo `openRouterApi` (no Header Auth), con tope de USD 10 en total. Su id está en `n8n/ids.json` como `or_cred` y `construir.py` la expone como `OR`. La key nunca pasa por el chat, el repo ni archivos locales.
 - **Rama:** `infomate/plan` (commits locales, sin push).
 - **Pruebas:** `node n8n/probar-parser.mjs`, `node n8n/probar-texto.mjs`, `node n8n/probar-juez.mjs` y `sql/probar.sh` (necesita Docker en la Mac).
-- **Desplegar:** aplicar `sql/02-funciones.sql`, `sql/03-preseleccion.sql` y `sql/04-edicion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`.
+- **Desplegar:** aplicar `sql/02-funciones.sql`, `sql/03-preseleccion.sql` y `sql/04-edicion.sql` con `psql -U infomate -d infomate` dentro de `n8n-postgres-1`, y subir el workflow con `python3 -I n8n/construir.py | ssh skynet 'docker exec -i n8n-n8n-1 sh -c "cat > /tmp/infomate.json && n8n import:workflow --input=/tmp/infomate.json; rm -f /tmp/infomate.json"'`. Importar lo deja sin publicar: después, `ssh skynet 'docker exec n8n-n8n-1 n8n publish:workflow --id=infomateDiario01 && docker restart n8n-n8n-1'` (n8n 2.x: publicar reemplaza a activar, y solo toma efecto al reiniciar; el reinicio corta unos 20 s a los demás workflows, Francisco lo aprobó el 02/11/2026).
 - **Correr a mano:** `ssh skynet 'docker exec -e N8N_RUNNERS_BROKER_PORT=5699 n8n-n8n-1 n8n execute --id=infomateDiario01 --rawOutput'` (el puerto distinto evita chocar con la instancia que ya corre). El resumen queda en la tabla `corridas`.
 - **Locales, fuera de git:** `n8n/.env` (contraseña de la base) e `n8n/ids.json` (id de la credencial Postgres).
 
@@ -376,7 +376,8 @@ Cambios sobre lo planeado:
 ### Tarea 8.4: Corrida completa y horario
 
 - [x] Desplegar y correr a mano. Francisco revisa las 15 noticias.
-- [ ] Con el visto bueno, agregar el disparador de las 08:00 (hora de Argentina) y activar el workflow.
+- [x] Con el visto bueno, agregar el disparador de las 08:00 (hora de Argentina).
+- [x] Activar el workflow: `n8n publish:workflow` y reinicio de n8n (02/11/2026). Ver "Desplegar" arriba.
 
 ### Chequeo del paso 8
 
@@ -385,3 +386,25 @@ Cambios sobre lo planeado:
 - Correrlo dos veces el mismo día no duplica nada.
 - Un error en el workflow llega por Telegram.
 - Costo de la corrida, visto en `corridas`: alrededor de 1 centavo de dólar.
+
+## Paso 10a: La edición en Vercel Blob (adelantado por pedido de Francisco)
+
+**Estado:** plan para aprobar.
+
+**Entregable:** cada corrida sube la edición del día como JSON a un Blob público de Vercel, en una URL fija que la app puede leer.
+
+**Cómo se sube:** no hay SDK en n8n, así que se usa la misma API HTTP que usa `@vercel/blob` por dentro (`PUT https://vercel.com/api/blob/?pathname=...`, encabezados `x-api-version: 13`, `x-vercel-blob-access: public`, `x-content-type`, `x-add-random-suffix: 0`, `x-allow-overwrite: 1`, `x-cache-control-max-age`). Fuente: `_autodocs/endpoints.md` del repo `vercel/storage`. No es una API documentada para uso directo: si Vercel cambia la versión, el nodo falla y llega el aviso por Telegram.
+
+**Requisito (lo hace Francisco):** crear un Blob store público en Vercel y cargar su token de lectura y escritura en n8n como credencial **Header Auth** llamada `Vercel Blob infomate`, con Name `Authorization` y Value `Bearer <token>`. El token no pasa por el chat ni por el repo.
+
+### Tarea 10a.1: Subir la edición
+
+- [ ] Nodo Postgres "Edición JSON": `edicion(hoy)`.
+- [ ] Nodo HTTP "Subir a Vercel": sube `infomate/hoy.json` (se pisa cada día) y `infomate/AAAA-MM-DD.json` (archivo del día). Caché de 5 minutos.
+- [ ] Si la edición quedó vacía no se sube nada, para no dejar la app en blanco; el aviso por Telegram ya sale por "Revisar edición".
+- [ ] La URL y la cantidad subida quedan en `corridas`.
+
+### Chequeo del paso 10a
+
+- La URL pública devuelve las 15 noticias, igual a `edicion(hoy)`.
+- Una segunda corrida el mismo día pisa los archivos sin error.
