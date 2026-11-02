@@ -41,7 +41,7 @@ No se arranca un paso sin cerrar el anterior. El detalle de cada paso se escribe
 | 2 | Relevamiento | Informe con números reales: noticias por día de cada fuente, a qué hora publican, qué trae hoy global/ARG y qué falta | Sabemos si el tope alcanza (quedó en 200), si las 08:00 están bien y qué fuentes revisar |
 | 3 | Infraestructura | Base `infomate` con usuario propio, esquema aplicado y credencial Postgres en n8n | n8n consulta la base con ese usuario, y ese usuario no ve la base `noticias` |
 | 4 | Recolector | `Infomate · Diario` recolecta y guarda en las tablas por categoría, sin IA | Una corrida a mano deja hasta 200 por categoría, sin repetidas, con `link` directo y `fecha_publicacion` |
-| 5 | Fuentes global y ARG | Ajustes a `fuentes.js` según los pasos 2 y 4: sumar sociedad y deportes a ARG, decidir qué hacer con Google News, revisar El País Europa, BBC Mundo y France 24 | Francisco revisa una corrida y está de acuerdo con lo que entra |
+| 5 | Fuentes global y ARG | Ajustes a `fuentes.js` según los pasos 2 y 4: sumar sociedad y deportes a ARG, decidir qué hacer con Google News, sacar France 24, revisar El País Europa y BBC Mundo | Francisco revisa una corrida y está de acuerdo con lo que entra |
 | 6 | Preselección y texto | Puntaje previo, las 10 candidatas por categoría y su texto | El 80 % o más de las candidatas sale con texto; si no, se decide si hace falta un extractor aparte |
 | 7 | Modelo | Comparación de 2 o 3 modelos con las 30 candidatas de un día real: costo por día y calidad | Francisco elige el modelo y se crea la credencial nueva con tope de gasto |
 | 8 | Jueces y tabla diaria | Los 3 prompts, el juez en el flujo, la elección de las 5, la tabla `diaria`, la vista JSON y el aviso por Telegram si falla | Una corrida completa deja 15 noticias con el formato de la app, y el horario de las 08:00 queda activado |
@@ -112,3 +112,34 @@ Francisco revisa `ARQUITECTURA.md` y el dibujo. Si aprueba, se commitea en la ra
 ### Chequeo del paso 2
 
 Francisco revisa el informe. Si aprueba, se commitea y se escribe el detalle del paso 3.
+
+---
+
+## Paso 3: Infraestructura
+
+**Entregable:** la base `infomate` creada en el Postgres de skynet, con usuario propio y el esquema aplicado, y la credencial `Postgres infomate` cargada en n8n. Es el primer paso que toca skynet: solo agrega cosas, no modifica nada existente.
+
+### Tarea 3.1: Base y usuario
+
+- [ ] `infomate/sql/00-crear-base.sql`: crea el rol `infomate` (LOGIN, la contraseña se pasa al correrlo y no se commitea) y la base `infomate`, cuyo dueño es ese rol.
+- [ ] Correrlo como superusuario dentro del contenedor de Postgres.
+- [ ] Verificar si el rol `infomate` puede conectarse a otras bases (por defecto Postgres deja conectarse a cualquiera, aunque sin permisos sobre las tablas). Si puede, se muestra qué roles usan cada base y se pide aprobación antes de quitarle a PUBLIC el permiso de conexión.
+
+### Tarea 3.2: Esquema
+
+- [ ] Aplicar `01-esquema.sql` en `infomate` como el rol `infomate`. `pg_trgm` es una extensión confiable desde Postgres 13, así que el dueño de la base puede crearla.
+- [ ] Correr `prueba.sql` dentro de una transacción que se deshace (ROLLBACK), para que no queden datos de prueba.
+
+### Tarea 3.3: Credencial en n8n
+
+- [ ] Crear la credencial `Postgres infomate` por la API de n8n, con host, base, usuario y contraseña tomados de variables de entorno. Su ID se guarda solo en local, en `infomate/n8n/ids.json`, que no se versiona.
+
+### Tarea 3.4: Respaldo
+
+- [ ] Revisar si skynet tiene un respaldo de Postgres y si incluye las bases nuevas automáticamente. Si no hay respaldo o no la incluye, se anota para decidir juntos. No se arma nada nuevo en este paso.
+
+### Chequeo del paso 3
+
+- `SELECT edicion(current_date)` como `infomate` devuelve `[]`.
+- Un workflow descartable en n8n hace la misma consulta con la credencial nueva y obtiene `[]`; después se borra.
+- El rol `infomate` no puede leer la base `noticias`.
