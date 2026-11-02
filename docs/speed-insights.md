@@ -1,6 +1,6 @@
 # Speed Insights
 
-Speed Insights mide rendimiento real y es independiente de Mixpanel y su token. El layout habilita el componente en producción de Vercel; preview y desarrollo quedan deshabilitados salvo que `NEXT_PUBLIC_ANALITICA_PRUEBA=true`. Usar el override solo para verificación y retirarlo después. El filtro `beforeSend` conserva las métricas técnicas, elimina queries y fragmentos, agrupa toda ruta de noticia en `/noticia/[identificador]` y reemplaza otras rutas desconocidas por `/otra` tanto en URL como en route.
+Speed Insights mide rendimiento real y es independiente de Mixpanel y su token. El layout habilita el componente en producción de Vercel; preview y desarrollo quedan deshabilitados salvo que `NEXT_PUBLIC_ANALITICA_PRUEBA=true`. Usar el override solo para verificación y retirarlo después. El filtro `beforeSend` conserva las métricas técnicas, elimina queries y fragmentos, agrupa toda ruta de noticia en `/noticia/[identificador]` y descarta las mediciones de cualquier otra ruta (por ejemplo, un 404). Se descartan en vez de renombrarse porque el script de Speed Insights solo aplica la `url` que devuelve `beforeSend` y envía el `route` original, que en rutas sin parámetros es el pathname crudo. También se descarta una medición cuyo `route` original no sea `/` ni `/noticia/[identificador]`.
 
 ## Activación y verificación
 
