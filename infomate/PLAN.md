@@ -251,7 +251,14 @@ Una corrida a mano con el workflow desplegado. Francisco revisa cuántas noticia
 
 ## Paso 6: Preselección y texto
 
-**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco. Corrida desde cero: las 3 categorías quedaron con 10 candidatas. Con texto: ARG 15 de 15, global 12 de 15 (80 %) y tech 11 de 15 (73 %). Google News: 16 de 16 links decodificados.
+**Estado:** hecho y aprobado el 02/11/2026. Corrida final desde cero: las 3 categorías con 10 candidatas. Con texto: ARG 15 de 15, global 14 de 15 (93 %) y tech 17 de 20 (85 %). Google News: 15 de 15 links decodificados.
+
+Ajustes después de la revisión de Francisco:
+- Tech preselecciona 20 (las demás 15); Google News EE.UU. con tope de 2; entidades del portugués.
+- Un lugar asegurado por país (EE.UU., China, Rusia, Reino Unido, Brasil): la mejor de las 3 primeras de su feed que se pueda leer. China y Rusia van por búsqueda (China en inglés sin medios pagos; Rusia en español desde la edición de EE.UU.); sin asegurar quedaban afuera porque traen 1 medio por noticia.
+- Fuera columnas de opinión de Google News.
+- Medios que no se pueden leer (Reuters, CNN en Español, The Telegraph, Ars Technica y los de muro de pago) se guardan pero no se preseleccionan. CNN bloquea solo al cliente HTTP de n8n (con curl y Python responde); un extractor aparte solo recuperaría CNN, por eso no se armó.
+- Pendiente para el juez: ARG trae varias policiales y tragedias arriba; Francisco no quiere saturar con eso.
 
 Cambios sobre lo planeado:
 - Puntaje de 0 a 100 con peso por fuente (HN, Google News Mundo y Google News Argentina 1,0; Lobsters 0,8; Reddit 0,7; el resto 0,85) y prioridad: la n.º 1 de esos tres feeds vale 100, entra primera y queda candidata aunque no tenga texto (pedido de Francisco).

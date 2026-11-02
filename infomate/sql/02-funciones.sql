@@ -13,6 +13,7 @@ CREATE INDEX IF NOT EXISTS noticias_corrida ON noticias (corrida);
 ALTER TABLE noticias ADD COLUMN IF NOT EXISTS feed text;                                 -- feed de donde vino (Infobae deportes, HN...)
 ALTER TABLE noticias ADD COLUMN IF NOT EXISTS lugar real;                                -- lugar en su feed (0-1) por el peso de la fuente
 ALTER TABLE noticias ADD COLUMN IF NOT EXISTS prioridad boolean NOT NULL DEFAULT false;  -- n.º 1 de un feed prioritario en la última corrida
+ALTER TABLE noticias ADD COLUMN IF NOT EXISTS asegurada boolean NOT NULL DEFAULT false;  -- n.º 1 de un feed de país en la última corrida
 ALTER TABLE noticias ADD COLUMN IF NOT EXISTS ultima_corrida text;                       -- última corrida en la que apareció
 ALTER TABLE noticias ADD COLUMN IF NOT EXISTS preseleccion smallint;                     -- orden entre las 15 preseleccionadas (1 = mejor)
 CREATE INDEX IF NOT EXISTS noticias_ultima_corrida ON noticias (ultima_corrida);
@@ -47,7 +48,7 @@ DECLARE
   sumar text[]; borradas int;
 BEGIN
   PERFORM set_limit(UMBRAL);
-  UPDATE noticias SET prioridad = false WHERE prioridad;   -- la prioridad vale solo para la corrida de hoy
+  UPDATE noticias SET prioridad = false, asegurada = false WHERE prioridad OR asegurada;   -- valen solo para la corrida de hoy
   -- ARG primero: así una global que ya está en ARG se detecta y queda solo en ARG.
   FOR it IN SELECT value FROM jsonb_array_elements(items)
             ORDER BY (value->>'categoria') = 'arg' DESC, (value->>'posicion')::int LOOP
@@ -78,10 +79,10 @@ BEGIN
     IF nid IS NULL THEN
       INSERT INTO noticias (categoria, titulo_original, descripcion_fuente, contenido, link, link_google, fuente, medios,
                             fecha_publicacion, posicion, puntos, comentarios, corrida,
-                            feed, lugar, prioridad, ultima_corrida)
+                            feed, lugar, prioridad, asegurada, ultima_corrida)
       VALUES (v_cat, it->>'titulo_original', it->>'descripcion_fuente', it->>'contenido', v_link, v_gl, it->>'fuente', sumar,
               (it->>'fecha_publicacion')::timestamptz, (it->>'posicion')::int, (it->>'puntos')::int, (it->>'comentarios')::int, p_corrida,
-              it->>'feed', (it->>'lugar')::real, coalesce((it->>'prioridad')::boolean, false), p_corrida);
+              it->>'feed', (it->>'lugar')::real, coalesce((it->>'prioridad')::boolean, false), coalesce((it->>'asegurada')::boolean, false), p_corrida);
       c := jsonb_set(c, ARRAY[v_cat::text, 'nuevas'], to_jsonb((c->v_cat::text->>'nuevas')::int + 1));
     ELSE
       UPDATE noticias x SET
@@ -106,6 +107,7 @@ BEGIN
         lugar = CASE WHEN x.ultima_corrida IS DISTINCT FROM p_corrida THEN (it->>'lugar')::real
                      ELSE greatest(x.lugar, (it->>'lugar')::real) END,
         prioridad = x.prioridad OR coalesce((it->>'prioridad')::boolean, false),
+        asegurada = x.asegurada OR coalesce((it->>'asegurada')::boolean, false),
         ultima_corrida = p_corrida,
         ultima_vez = now()
       WHERE x.id = nid AND x.categoria = v_cat;

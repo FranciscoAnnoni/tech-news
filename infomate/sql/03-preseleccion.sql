@@ -1,30 +1,42 @@
 -- Infomate: preselección, links reales y texto de las candidatas (paso 6). Se puede volver a correr.
 
--- Elige las 15 preseleccionadas de cada categoría entre lo que apareció en esta corrida y les pone `preseleccion` (1 a 15).
+-- Elige las preseleccionadas de cada categoría (15; 20 en tech, que tiene más páginas sin texto) entre lo que apareció en esta corrida y les pone `preseleccion` (1 a 15).
 -- Reglas: primero las prioritarias (n.º 1 de HN, Google News Mundo y Google News Argentina), que no cuentan para los topes;
--- después por puntaje previo, con 4 por feed como máximo, 3 de deportes en ARG como máximo, sin lo publicado en `diaria`
+-- después un lugar por feed de país (la mejor de sus 3 primeras que se pueda leer), y después por puntaje previo, con 4 por feed como máximo (2 para Google News EE.UU.), 3 de deportes en ARG como máximo, sin lo publicado en `diaria`
 -- en los últimos 7 días y sin dos que se parezcan 35 % o más.
 CREATE OR REPLACE FUNCTION infomate_preseleccionar(p_corrida text) RETURNS jsonb
 LANGUAGE plpgsql AS $$
 DECLARE
-  CUANTAS  constant int  := 15;
   POR_FEED constant int  := 4;
+  -- Medios que no se pueden leer (bloquean bots, muro de pago, o bloquean al cliente HTTP de n8n): se guardan, pero no se preseleccionan.
+  ILEGIBLES constant text[] := ARRAY['Reuters', 'CNN en Español', 'CNN', 'The Telegraph', 'Ars Technica', 'Bloomberg', 'Bloomberg.com',
+                                     'The Wall Street Journal', 'WSJ', 'The New York Times', 'Financial Times', 'The Washington Post', 'The Economist'];
+  aseguradas text[];
+  cuantas int;
   DEPORTES constant int  := 3;
   PARECIDO constant real := 0.35;
   r record; v_cat categoria; elegidas uuid[]; titulos text[]; feeds text[]; n_dep int; res jsonb := '{}';
 BEGIN
   UPDATE noticias SET preseleccion = NULL WHERE preseleccion IS NOT NULL;
   FOREACH v_cat IN ARRAY enum_range(NULL::categoria) LOOP
-    elegidas := '{}'; titulos := '{}'; feeds := '{}'; n_dep := 0;
-    FOR r IN SELECT n.id, n.feed, n.prioridad, f_norm(n.titulo_original) AS t FROM noticias n
+    elegidas := '{}'; titulos := '{}'; feeds := '{}'; aseguradas := '{}'; n_dep := 0;
+    cuantas := CASE WHEN v_cat = 'tech' THEN 20 ELSE 15 END;
+    FOR r IN SELECT n.id, n.feed, n.fuente, n.prioridad, n.asegurada, f_norm(n.titulo_original) AS t FROM noticias n
              WHERE n.categoria = v_cat AND n.ultima_corrida = p_corrida
-             ORDER BY n.prioridad DESC, n.puntaje_previo DESC NULLS LAST, n.posicion LOOP
-      EXIT WHEN cardinality(elegidas) >= CUANTAS;
+             ORDER BY n.prioridad DESC, n.asegurada DESC, n.puntaje_previo DESC NULLS LAST, n.posicion LOOP
+      EXIT WHEN cardinality(elegidas) >= cuantas;
       CONTINUE WHEN EXISTS (SELECT 1 FROM diaria d JOIN noticias p ON p.id = d.noticia_id AND p.categoria = d.categoria
                             WHERE d.fecha > current_date - 7 AND (p.id = r.id OR similarity(f_norm(p.titulo_original), r.t) >= PARECIDO));
       CONTINUE WHEN EXISTS (SELECT 1 FROM unnest(titulos) x WHERE similarity(x, r.t) >= PARECIDO);
       IF NOT r.prioridad THEN
-        CONTINUE WHEN (SELECT count(*) FROM unnest(feeds) f WHERE f = r.feed) >= POR_FEED;
+        CONTINUE WHEN r.fuente = ANY(ILEGIBLES);
+        -- Un solo lugar asegurado por feed de país: la primera legible de sus 3 primeras.
+        IF r.asegurada THEN
+          CONTINUE WHEN r.feed = ANY(aseguradas);
+          aseguradas := aseguradas || r.feed;
+        END IF;
+        CONTINUE WHEN (SELECT count(*) FROM unnest(feeds) f WHERE f = r.feed)
+                      >= CASE WHEN r.feed = 'Google News EE.UU.' THEN 2 ELSE POR_FEED END;
         CONTINUE WHEN v_cat = 'arg' AND r.feed ILIKE '%deportes%' AND n_dep >= DEPORTES;
       END IF;
       elegidas := elegidas || r.id; titulos := titulos || r.t;

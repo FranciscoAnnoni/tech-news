@@ -22,7 +22,7 @@ const paginas = [
   { data: `<html><body><header><p>Ir al menú principal Ir a más sitios de DW Últimos videos Últimos audios Noticias</p></header>`
       + `<picture><source srcset="x.jpg"></picture><svg><path d="M0 0"/></svg><nav><p>Inicia sesión BBC News Mundo Ir al contenido Noticias Video Mis Noticias</p></nav>`
       + `<article><h1>Título</h1><p>${'La policía detuvo a casi 800 personas tras las protestas de la noche del sábado en varias ciudades. '.repeat(3)}</p>`
-      + `<p>${'El ministro dijo que no habrá más tolerancia y que la investigación sigue abierta. '.repeat(3)}</p><p>It&rsquo;s fine &amp; good &mdash; ${'x'.repeat(60)}</p></article>`
+      + `<p>${'El ministro dijo que no habrá más tolerancia y que la investigación sigue abierta. '.repeat(3)}</p><p>It&rsquo;s fine &amp; good &mdash; Presid&ecirc;ncia ${'x'.repeat(60)}</p></article>`
       + `<footer><p>${'Pie de página con enlaces legales y de contacto del medio. '.repeat(3)}</p></footer></body></html>` },
   { data: `<html><body><h1>Weretilneck festejó</h1><script>Fusion.globalContent={"content_elements":[`
       + `{"_id":"A","additional_properties":{},"content":"${'A las 18 horas cerraron las mesas y los primeros resultados apuntaron al oficialismo. '.repeat(3)}","type":"text"},`
@@ -41,7 +41,7 @@ assert.equal(por('id4'), undefined, 'página que no bajó: sin texto');
 assert.equal(t.sin_texto, 2);
 assert.ok(por('id5').contenido.startsWith('La policía detuvo'), 'empieza por la nota, no por el menú');
 assert.ok(!/menú|Inicia sesión|Pie de página/.test(por('id5').contenido), 'sin menú, nav ni pie');
-assert.ok(por('id5').contenido.includes('It’s fine & good —'), 'decodifica &rsquo; &amp; &mdash;');
+assert.ok(por('id5').contenido.includes('It’s fine & good — Presidência'), 'decodifica &rsquo; &amp; &mdash; &ecirc;');
 assert.ok(por('id6').contenido.startsWith('A las 18 horas'), 'Arc XP: lee el texto embebido');
 assert.ok(por('id6').contenido.includes('Todavía quedaba contabilizar el 67% de las mesas, con ventaja clara'), 'Arc XP: decodifica \\u y saca etiquetas');
 

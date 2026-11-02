@@ -15,6 +15,7 @@ const fuentes = [
   { categoria: 'tech', fuente: 'Lobsters', origen: 'lobsters', url: 'https://lobste.rs/hottest.json' },
   { categoria: 'global', fuente: 'DW', origen: 'rss', url: 'https://rss.dw.com/caida' },
   { categoria: 'arg', fuente: 'Portada Google News Argentina', origen: 'portada', url: 'https://news.google.com/rss' },
+  { categoria: 'global', fuente: 'Google News China', origen: 'gnews', asegurar: true, url: 'https://news.google.com/rss/search' },
 ];
 const largo = 'Texto de la nota. '.repeat(200);
 const respuestas = [
@@ -43,6 +44,8 @@ const respuestas = [
   ]) },
   { error: { message: 'getaddrinfo ENOTFOUND' } },
   { data: `<rss><channel><item><title>Paro de transporte el martes - La Nación</title><link>https://news.google.com/rss/articles/CBMiABC</link><pubDate>${rfc(hace(5))}</pubDate><source>La Nación</source></item></channel></rss>` },
+  { data: `<rss><channel><item><title>Opinion | U.S.-China Relations Will Never Be the Same - The New York Times</title><link>https://news.google.com/rss/articles/OP</link><pubDate>${rfc(hace(2))}</pubDate><source>The New York Times</source></item>`
+      + `<item><title>Xi meets Gulf leaders on trade - Reuters</title><link>https://news.google.com/rss/articles/XI</link><pubDate>${rfc(hace(3))}</pubDate><source>Reuters</source></item></channel></rss>` },
 ];
 const reddit = [{ categoria: 'tech', fuente: 'r/programming', origen: 'reddit', url: 'https://www.reddit.com/r/programming/top/.rss' }];
 const redditResp = [{ data: `<feed>
@@ -105,5 +108,10 @@ assert.equal(inf.prioridad, false);
 const top = por('Show HN: Mi proyecto');
 assert.equal(top.lugar, 1); assert.equal(top.prioridad, true);
 assert.equal(gn.feed, 'Google News Argentina');
+
+assert.equal(por('Opinion | U.S.-China Relations Will Never Be the Same'), undefined, 'columnas de opinión no entran');
+const xi = por('Xi meets Gulf leaders on trade');
+assert.equal(xi.asegurada, true, 'la 1.ª de un feed de país queda asegurada');
+assert.equal(inf.asegurada, false);
 
 console.log(`PARSER OK (${r.items.length} ítems)`);

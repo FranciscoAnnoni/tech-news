@@ -7,6 +7,8 @@ const FUERA_HN = /^(ask hn|tell hn|who is hiring|who wants to be hired|freelance
 const TAGS_FUERA = ['meta', 'event', 'ask'];
 // Notas de servicio (se compara sin acentos y en minúsculas): no son noticias para la edición.
 const SERVICIO = /\b(calendario de (pagos|cobros?)|cuando cobro|cuanto cobro|fechas? de cobro|dolar (hoy|blue hoy)|a cuanto (abre|cotiza|cerro) el dolar|cotizacion del dolar|pronostico del (tiempo|clima)|alerta (amarilla|naranja|roja)? ?por (tormentas|lluvias|calor|viento|nevadas)|horoscopo|loteria|quiniela|quini 6|loto plus|telekino|brinco|resultados del sorteo|efemerides|santoral|a cuanto llega|asi quedo la tabla|tabla de posiciones|los puntajes de)\b|\b(anses|auh|puam|suaf|pnc|jubilad[oa]s?|jubilaciones)\b.*\b(cuanto|cuando|calendario|monto|bono|fechas?|cobr[ao])\b|\b(cuanto|cuando|calendario|monto|bono|fechas?)\b.*\b(anses|auh|puam|suaf|pnc|jubilad[oa]s?|jubilaciones)\b/;
+// Columnas de opinión en Google News ("Opinion | ...", "Opinión: ..."): no son noticias.
+const OPINION_TITULO = /^(opinion|opinión|op-ed|editorial)\s*[|:-]/i;
 const sinAcentos = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 function ent(s) {
@@ -120,9 +122,10 @@ function parsear(pares, ahora) {
       const leidos = lector(txt, f).filter((n) => n && n.titulo_original && n.link)
         .filter((n) => !n.fecha_publicacion || Date.parse(n.fecha_publicacion) >= desde)
         .filter((n) => n.categoria === 'tech' || !SERVICIO.test(sinAcentos(n.titulo_original)))
+        .filter((n) => !OPINION_TITULO.test(n.titulo_original))
         .slice(0, f.tope || MAX_POR_FUENTE);
       // Lugar en el feed (0-1) por el peso de la fuente: el 1.º vale 1 y el último 1/n. Ver infomate_puntaje_previo.
-      leidos.forEach((n, i) => { n.feed = clave; n.lugar = (1 - i / leidos.length) * (f.peso ?? 0.85); n.prioridad = !!f.prioridad && i === 0; });
+      leidos.forEach((n, i) => { n.feed = clave; n.lugar = (1 - i / leidos.length) * (f.peso ?? 0.85); n.prioridad = !!f.prioridad && i === 0; n.asegurada = !!f.asegurar && i < 3; });
       if (f.origen === 'portada') leidos.forEach((n) => portadas.push({ categoria: f.categoria, titulo: n.titulo_original }));
       else items.push(...leidos);
       estado[clave] = leidos.length;

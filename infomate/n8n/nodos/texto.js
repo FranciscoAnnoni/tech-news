@@ -6,7 +6,8 @@ const MIN = 300, MAX = 2000;
 
 const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“',
   ndash: '–', mdash: '—', hellip: '…', laquo: '«', raquo: '»', iexcl: '¡', iquest: '¿', aacute: 'á', eacute: 'é', iacute: 'í',
-  oacute: 'ó', uacute: 'ú', ntilde: 'ñ', Aacute: 'Á', Eacute: 'É', Iacute: 'Í', Oacute: 'Ó', Uacute: 'Ú', Ntilde: 'Ñ', uuml: 'ü', ccedil: 'ç', atilde: 'ã', otilde: 'õ' };
+  oacute: 'ó', uacute: 'ú', ntilde: 'ñ', Aacute: 'Á', Eacute: 'É', Iacute: 'Í', Oacute: 'Ó', Uacute: 'Ú', Ntilde: 'Ñ', uuml: 'ü', ccedil: 'ç', atilde: 'ã', otilde: 'õ',
+  ecirc: 'ê', acirc: 'â', ocirc: 'ô', agrave: 'à', Ecirc: 'Ê', Acirc: 'Â', Ocirc: 'Ô', Agrave: 'À', Atilde: 'Ã', Otilde: 'Õ', Ccedil: 'Ç', ouml: 'ö', auml: 'ä', euro: '€', deg: '°' };
 function ent(s) {
   return String(s || '').replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
