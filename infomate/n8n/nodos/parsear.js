@@ -112,7 +112,7 @@ function parsear(pares, ahora) {
   const desde = ahora - 24 * 3600 * 1000;
   const items = [], portadas = [], estado = {};
   for (const [f, r] of pares) {
-    const clave = f.fuente + (f.origen === 'rss' ? ' ' + f.url.split('/').slice(-2).join('/') : '');
+    const clave = f.fuente + (f.seccion ? ' ' + f.seccion : '');
     const txt = r && typeof r.data === 'string' ? r.data : null;
     if (!txt) { estado[clave] = 'ERROR: ' + String((r && r.error && (r.error.message || r.error)) || 'sin respuesta').slice(0, 200); continue; }
     try {
@@ -121,6 +121,8 @@ function parsear(pares, ahora) {
         .filter((n) => !n.fecha_publicacion || Date.parse(n.fecha_publicacion) >= desde)
         .filter((n) => n.categoria === 'tech' || !SERVICIO.test(sinAcentos(n.titulo_original)))
         .slice(0, f.tope || MAX_POR_FUENTE);
+      // Lugar en el feed (0-1) por el peso de la fuente: el 1.º vale 1 y el último 1/n. Ver infomate_puntaje_previo.
+      leidos.forEach((n, i) => { n.feed = clave; n.lugar = (1 - i / leidos.length) * (f.peso ?? 0.85); n.prioridad = !!f.prioridad && i === 0; });
       if (f.origen === 'portada') leidos.forEach((n) => portadas.push({ categoria: f.categoria, titulo: n.titulo_original }));
       else items.push(...leidos);
       estado[clave] = leidos.length;

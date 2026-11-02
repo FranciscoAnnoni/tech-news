@@ -251,36 +251,45 @@ Una corrida a mano con el workflow desplegado. Francisco revisa cuántas noticia
 
 ## Paso 6: Preselección y texto
 
+**Estado:** hecho el 02/11/2026, falta el chequeo de Francisco. Corrida desde cero: las 3 categorías quedaron con 10 candidatas. Con texto: ARG 15 de 15, global 12 de 15 (80 %) y tech 11 de 15 (73 %). Google News: 16 de 16 links decodificados.
+
+Cambios sobre lo planeado:
+- Puntaje de 0 a 100 con peso por fuente (HN, Google News Mundo y Google News Argentina 1,0; Lobsters 0,8; Reddit 0,7; el resto 0,85) y prioridad: la n.º 1 de esos tres feeds vale 100, entra primera y queda candidata aunque no tenga texto (pedido de Francisco).
+- El extractor lee, en orden: `articleBody` del JSON-LD, los `<p>` (sin menú, encabezado ni pie, primero dentro de `<article>`) y el texto de Arc XP embebido (Página 12).
+- La bajada de notas pide HTML (`Accept`, `Accept-Language`): sin eso github.io no respondía.
+
+Sin texto en tech: un sitio que no es nota (Show HN), un link a Reddit (bloqueado), Ars Technica (405 a bots) y blogs de GitHub Pages que el nodo HTTP de n8n no termina de bajar (con Node directo sí bajan). En global: CNN en Español (403 solo desde el nodo HTTP de n8n) y The Telegraph.
+
 **Entregable:** el workflow elige 10 candidatas por categoría, variadas y con texto, y las marca `candidata`. Cubre los nodos 6, 7 y 8 de `ARQUITECTURA.md`. Sigue sin IA.
 
 ### Tarea 6.1: Puntaje previo nuevo
 
-- [ ] Guardar de qué feed vino cada noticia (`feed`, por ejemplo `Google News EE.UU.` o `Infobae deportes`). Hoy `fuente` guarda el medio y se pierde el feed.
-- [ ] Rehacer `infomate_puntaje_previo` con tres señales, todas normalizadas a 0-1 para que ninguna fuente gane solo por su forma:
+- [x] Guardar de qué feed vino cada noticia (`feed`, por ejemplo `Google News EE.UU.` o `Infobae deportes`). Hoy `fuente` guarda el medio y se pierde el feed.
+- [x] Rehacer `infomate_puntaje_previo` con tres señales, todas normalizadas a 0-1 para que ninguna fuente gane solo por su forma:
     - **lugar en su feed**, como percentil: el 1.º de un feed de 25 vale lo mismo que el 1.º de uno de 100; en HN y Lobsters el orden ya es por votos;
     - **cobertura:** cantidad de medios, con tope de 6;
     - **portada** de Google News.
-- [ ] Prueba en `prueba-funciones.sql`: una noticia 1.ª en un feed chico no queda por debajo de la 10.ª de Google News solo por tener más medios.
+- [x] Prueba en `prueba-funciones.sql`: una noticia 1.ª en un feed chico no queda por debajo de la 10.ª de Google News solo por tener más medios.
 
 ### Tarea 6.2: Elegir las candidatas
 
-- [ ] `infomate_candidatas(corrida)`: las 15 mejores por puntaje previo de cada categoría, con estas reglas:
+- [x] `infomate_candidatas(corrida)`: las 15 mejores por puntaje previo de cada categoría, con estas reglas:
     - como máximo 4 por feed, para que ningún país o sección domine;
     - como máximo 3 de deportes en ARG;
     - sin las que salieron en `diaria` los últimos 7 días (por id o por título parecido);
     - si dos candidatas se parecen 35 % o más, queda la de mayor puntaje (atrapa las repetidas que se escapan, como Bariloche).
-- [ ] Prueba de cada regla en `prueba-funciones.sql`.
+- [x] Prueba de cada regla en `prueba-funciones.sql`.
 
 ### Tarea 6.3: Link real y texto
 
-- [ ] Para las candidatas con link de Google News, decodificarlo en n8n: GET de la página, nodo Code que lee `data-n-a-sg` y `data-n-a-ts`, POST a `batchexecute` y nodo Code que saca el link. Si falla, la candidata queda sin texto.
-- [ ] Para las candidatas sin `contenido`, bajar la página y extraer el texto (`nodos/texto.js`): primero `articleBody` del JSON-LD que traen casi todos los medios y, si no hay, los párrafos `<p>` de 60 caracteres o más. Si quedan menos de 300 caracteres, no hay texto. Se guardan los primeros 2000.
-- [ ] Prueba: `probar-texto.mjs` con páginas de ejemplo (con JSON-LD, solo con `<p>` y con muro de pago).
+- [x] Para las candidatas con link de Google News, decodificarlo en n8n: GET de la página, nodo Code que lee `data-n-a-sg` y `data-n-a-ts`, POST a `batchexecute` y nodo Code que saca el link. Si falla, la candidata queda sin texto.
+- [x] Para las candidatas sin `contenido`, bajar la página y extraer el texto (`nodos/texto.js`): primero `articleBody` del JSON-LD que traen casi todos los medios y, si no hay, los párrafos `<p>` de 60 caracteres o más. Si quedan menos de 300 caracteres, no hay texto. Se guardan los primeros 2000.
+- [x] Prueba: `probar-texto.mjs` con páginas de ejemplo (con JSON-LD, solo con `<p>` y con muro de pago).
 
 ### Tarea 6.4: Quedarse con 10
 
-- [ ] `infomate_guardar_texto(items)`: guarda link real, medio y `contenido`. Después marca `candidata` en las 10 primeras con texto de cada categoría.
-- [ ] Desplegar y correr a mano.
+- [x] `infomate_guardar_texto(items)`: guarda link real, medio y `contenido`. Después marca `candidata` en las 10 primeras con texto de cada categoría.
+- [x] Desplegar y correr a mano.
 
 ### Chequeo del paso 6
 

@@ -9,9 +9,9 @@ const hace = (h) => new Date(ahora - h * 3600 * 1000);
 const rfc = (d) => d.toUTCString();
 
 const fuentes = [
-  { categoria: 'arg', fuente: 'Infobae', origen: 'rss', excluir: '/(opinion|editoriales|lnmas|fotos)/', url: 'https://www.infobae.com/arc/outboundfeeds/rss/category/politica/' },
+  { categoria: 'arg', fuente: 'Infobae', seccion: 'política', origen: 'rss', excluir: '/(opinion|editoriales|lnmas|fotos)/', url: 'https://www.infobae.com/arc/outboundfeeds/rss/category/politica/' },
   { categoria: 'arg', fuente: 'Google News Argentina', origen: 'gnews', url: 'https://news.google.com/rss/x' },
-  { categoria: 'tech', fuente: 'HN', origen: 'hn', tope: 1, url: 'https://hn.algolia.com/x' },
+  { categoria: 'tech', fuente: 'HN', origen: 'hn', tope: 1, peso: 1, prioridad: true, url: 'https://hn.algolia.com/x' },
   { categoria: 'tech', fuente: 'Lobsters', origen: 'lobsters', url: 'https://lobste.rs/hottest.json' },
   { categoria: 'global', fuente: 'DW', origen: 'rss', url: 'https://rss.dw.com/caida' },
   { categoria: 'arg', fuente: 'Portada Google News Argentina', origen: 'portada', url: 'https://news.google.com/rss' },
@@ -96,6 +96,14 @@ assert.equal(por('Pregunta del foro'), undefined);
 // Portadas aparte; fuente caída anotada sin cortar.
 assert.deepEqual(r.portadas, [{ categoria: 'arg', titulo: 'Paro de transporte el martes' }]);
 assert.equal(r.items.filter((n) => n.titulo_original === 'Paro de transporte el martes').length, 1);
-assert.match(r.estado['DW rss.dw.com/caida'], /^ERROR: getaddrinfo/);
+assert.match(r.estado['DW'], /^ERROR: getaddrinfo/);
+
+// Feed, lugar y prioridad para el puntaje previo.
+assert.equal(inf.feed, 'Infobae política');
+assert.ok(Math.abs(inf.lugar - 0.85) < 1e-9, 'la 1.ª de un feed con peso por defecto vale 0.85');
+assert.equal(inf.prioridad, false);
+const top = por('Show HN: Mi proyecto');
+assert.equal(top.lugar, 1); assert.equal(top.prioridad, true);
+assert.equal(gn.feed, 'Google News Argentina');
 
 console.log(`PARSER OK (${r.items.length} ítems)`);

@@ -34,10 +34,10 @@ BEGIN
   r := infomate_ingresar('[{"categoria":"tech","fuente":"HN","titulo_original":"Hola","link":"https://x.org/1","medios":["HN"],"posicion":1}]', '[]', 'c4');
   IF (r->'tech'->>'descartadas')::int <> 1 THEN RAISE EXCEPTION 'título corto debería descartarse: %', r; END IF;
 
-  -- Tope: 250 nuevas de tech en una corrida, quedan 200 (las de más votos).
+  -- Tope: 250 nuevas de tech en una corrida, quedan 200 (las de mejor lugar, que acá son las de más votos).
   r := infomate_ingresar((SELECT jsonb_agg(jsonb_build_object('categoria','tech','fuente','HN',
           'titulo_original', 'Historia distinta numero ' || i || ' sobre tema ' || md5(i::text),
-          'link','https://ej.org/' || i, 'medios', '["HN"]'::jsonb, 'posicion', i, 'puntos', i)) FROM generate_series(1, 250) i), '[]', 'c5');
+          'link','https://ej.org/' || i, 'medios', '["HN"]'::jsonb, 'posicion', i, 'puntos', i, 'lugar', i / 250.0)) FROM generate_series(1, 250) i), '[]', 'c5');
   IF (SELECT count(*) FROM tech WHERE corrida = 'c5') <> 200 THEN RAISE EXCEPTION 'tope: quedaron % de c5', (SELECT count(*) FROM tech WHERE corrida = 'c5'); END IF;
   IF (r->'tech'->>'fuera_de_tope')::int <> 50 OR (r->'tech'->>'nuevas')::int <> 200 THEN RAISE EXCEPTION 'tope: conteos mal: %', r; END IF;
   IF EXISTS (SELECT 1 FROM tech WHERE corrida = 'c5' AND puntos <= 50) THEN RAISE EXCEPTION 'tope: debían quedar las de más votos'; END IF;

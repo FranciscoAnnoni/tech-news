@@ -1,4 +1,4 @@
--- Infomate: funciones del workflow (paso 4). Se puede volver a correr: reemplaza las funciones.
+-- Infomate: funciones del workflow (pasos 4 y 6). Se puede volver a correr: reemplaza las funciones.
 
 -- Título normalizado para comparar: minúsculas, sin acentos ni signos.
 CREATE OR REPLACE FUNCTION f_norm(t text) RETURNS text
@@ -10,17 +10,27 @@ ALTER TABLE noticias ADD COLUMN IF NOT EXISTS corrida text;   -- corrida en la q
 DROP INDEX IF EXISTS noticias_titulo_trgm;
 CREATE INDEX IF NOT EXISTS noticias_norm_trgm ON noticias USING gin (f_norm(titulo_original) gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS noticias_corrida ON noticias (corrida);
+ALTER TABLE noticias ADD COLUMN IF NOT EXISTS feed text;                                 -- feed de donde vino (Infobae deportes, HN...)
+ALTER TABLE noticias ADD COLUMN IF NOT EXISTS lugar real;                                -- lugar en su feed (0-1) por el peso de la fuente
+ALTER TABLE noticias ADD COLUMN IF NOT EXISTS prioridad boolean NOT NULL DEFAULT false;  -- n.º 1 de un feed prioritario en la última corrida
+ALTER TABLE noticias ADD COLUMN IF NOT EXISTS ultima_corrida text;                       -- última corrida en la que apareció
+ALTER TABLE noticias ADD COLUMN IF NOT EXISTS preseleccion smallint;                     -- orden entre las 15 preseleccionadas (1 = mejor)
+CREATE INDEX IF NOT EXISTS noticias_ultima_corrida ON noticias (ultima_corrida);
 
--- Puntaje previo PROVISORIO (se rehace en el paso 6 con datos reales).
---   global y arg: cobertura (medios) + portada + lugar en el feed
---   tech: votos + comentarios + lugar en el feed
+-- Puntaje previo, de 0 a 100 (acordado el 02/11/2026):
+--   global y arg: 50 x lugar + 35 x cobertura + 15 x portada
+--   tech:         70 x lugar + 30 x cobertura
+-- lugar = (1 - (posición - 1) / noticias del feed) x peso de la fuente (ver fuentes.js).
+-- cobertura: global y arg (medios - 1) / 5 con tope de 6 medios; tech (fuentes - 1) / 2 con tope de 3 (HN, Lobsters, Reddit).
+-- La n.º 1 de un feed prioritario (HN, Google News Mundo, Google News Argentina) vale 100.
 CREATE OR REPLACE FUNCTION infomate_puntaje_previo(n noticias) RETURNS real
 LANGUAGE sql IMMUTABLE AS $$
-  SELECT (CASE WHEN n.categoria = 'tech'
-            THEN ln(1 + coalesce(n.puntos, 0)) + 0.5 * ln(1 + coalesce(n.comentarios, 0))
-            ELSE 2.0 * ln(1 + cardinality(n.medios)) + CASE WHEN n.portada THEN 1.5 ELSE 0 END
-          END
-          + CASE WHEN n.posicion <= 5 THEN 1.0 WHEN n.posicion <= 15 THEN 0.5 ELSE 0 END)::real
+  SELECT CASE WHEN n.prioridad THEN 100
+    WHEN n.categoria = 'tech'
+      THEN 70 * coalesce(n.lugar, 0) + 30 * (least(greatest(cardinality(n.medios), 1), 3) - 1) / 2.0
+    ELSE 50 * coalesce(n.lugar, 0) + 35 * (least(greatest(cardinality(n.medios), 1), 6) - 1) / 5.0
+         + CASE WHEN n.portada THEN 15 ELSE 0 END
+  END::real
 $$;
 
 -- Ingresa los ítems del parser sin repetidas. Devuelve conteos por categoría.
@@ -37,6 +47,7 @@ DECLARE
   sumar text[]; borradas int;
 BEGIN
   PERFORM set_limit(UMBRAL);
+  UPDATE noticias SET prioridad = false WHERE prioridad;   -- la prioridad vale solo para la corrida de hoy
   -- ARG primero: así una global que ya está en ARG se detecta y queda solo en ARG.
   FOR it IN SELECT value FROM jsonb_array_elements(items)
             ORDER BY (value->>'categoria') = 'arg' DESC, (value->>'posicion')::int LOOP
@@ -66,9 +77,11 @@ BEGIN
     sumar := ARRAY(SELECT jsonb_array_elements_text(coalesce(it->'medios', '[]')));
     IF nid IS NULL THEN
       INSERT INTO noticias (categoria, titulo_original, descripcion_fuente, contenido, link, link_google, fuente, medios,
-                            fecha_publicacion, posicion, puntos, comentarios, corrida)
+                            fecha_publicacion, posicion, puntos, comentarios, corrida,
+                            feed, lugar, prioridad, ultima_corrida)
       VALUES (v_cat, it->>'titulo_original', it->>'descripcion_fuente', it->>'contenido', v_link, v_gl, it->>'fuente', sumar,
-              (it->>'fecha_publicacion')::timestamptz, (it->>'posicion')::int, (it->>'puntos')::int, (it->>'comentarios')::int, p_corrida);
+              (it->>'fecha_publicacion')::timestamptz, (it->>'posicion')::int, (it->>'puntos')::int, (it->>'comentarios')::int, p_corrida,
+              it->>'feed', (it->>'lugar')::real, coalesce((it->>'prioridad')::boolean, false), p_corrida);
       c := jsonb_set(c, ARRAY[v_cat::text, 'nuevas'], to_jsonb((c->v_cat::text->>'nuevas')::int + 1));
     ELSE
       UPDATE noticias x SET
@@ -87,6 +100,13 @@ BEGIN
                      AND NOT EXISTS (SELECT 1 FROM noticias o WHERE o.categoria = v_cat AND o.link = v_link)
                     THEN v_link ELSE x.link END,
         fuente = CASE WHEN x.link = x.link_google AND NOT es_gn THEN it->>'fuente' ELSE x.fuente END,
+        -- El lugar de una corrida anterior no cuenta: se reemplaza por el de hoy y, dentro de hoy, gana el mejor.
+        feed = CASE WHEN x.ultima_corrida IS DISTINCT FROM p_corrida OR coalesce((it->>'lugar')::real, 0) > coalesce(x.lugar, 0)
+                    THEN coalesce(it->>'feed', x.feed) ELSE x.feed END,
+        lugar = CASE WHEN x.ultima_corrida IS DISTINCT FROM p_corrida THEN (it->>'lugar')::real
+                     ELSE greatest(x.lugar, (it->>'lugar')::real) END,
+        prioridad = x.prioridad OR coalesce((it->>'prioridad')::boolean, false),
+        ultima_corrida = p_corrida,
         ultima_vez = now()
       WHERE x.id = nid AND x.categoria = v_cat;
       c := jsonb_set(c, ARRAY[v_cat::text, 'unidas'], to_jsonb((c->v_cat::text->>'unidas')::int + 1));
@@ -99,7 +119,7 @@ BEGIN
    WHERE x.categoria = (p->>'categoria')::categoria AND x.ultima_vez > now() - VENTANA
      AND f_norm(x.titulo_original) % f_norm(p->>'titulo');
 
-  UPDATE noticias x SET puntaje_previo = infomate_puntaje_previo(x) WHERE x.ultima_vez > now() - VENTANA;
+  UPDATE noticias x SET puntaje_previo = infomate_puntaje_previo(x) WHERE x.ultima_corrida = p_corrida;
 
   -- Tope: de las que entraron en esta corrida, quedan las 200 de mayor puntaje previo por categoría.
   WITH fuera AS (

@@ -12,3 +12,6 @@ docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba.
 docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate -c "TRUNCATE diaria, noticias, corridas"
 docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 02-funciones.sql
 docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba-funciones.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate -c "TRUNCATE diaria, noticias, corridas"
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < 03-preseleccion.sql
+docker exec -i "$C" psql -q -v ON_ERROR_STOP=1 -U postgres -d infomate < prueba-preseleccion.sql
