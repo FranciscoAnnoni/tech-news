@@ -3,7 +3,7 @@
 -- Elige las preseleccionadas de cada categoría (15; 20 en tech, que tiene más páginas sin texto) entre lo que apareció en esta corrida y les pone `preseleccion` (1 a 15).
 -- Reglas: primero las prioritarias (n.º 1 de HN, Google News Mundo y Google News Argentina), que no cuentan para los topes;
 -- después por puntaje previo, con 4 por feed como máximo, 3 de deportes en ARG como máximo, sin lo publicado en `diaria`
--- en los últimos 7 días, sin dos que se parezcan 35 % o más y sin las publicadas por primera vez hace más de 36 h
+-- en los 7 días anteriores (la edición de hoy no cuenta), sin dos que se parezcan 35 % o más y sin las publicadas por primera vez hace más de 36 h
 -- (una noticia vieja que vuelve a aparecer en los feeds se une a su fila y conserva la fecha original).
 CREATE OR REPLACE FUNCTION infomate_preseleccionar(p_corrida text) RETURNS jsonb
 LANGUAGE plpgsql AS $$
@@ -16,6 +16,8 @@ DECLARE
   DEPORTES constant int  := 3;
   PARECIDO constant real := 0.35;
   ANTIGUEDAD constant interval := '36 hours';
+  -- La edición de hoy no cuenta: si se vuelve a correr el mismo día, sus noticias compiten de nuevo.
+  hoy constant date := (now() AT TIME ZONE 'America/Argentina/Buenos_Aires')::date;
   r record; v_cat categoria; elegidas uuid[]; titulos text[]; feeds text[]; n_dep int; res jsonb := '{}';
 BEGIN
   UPDATE noticias SET preseleccion = NULL WHERE preseleccion IS NOT NULL;
@@ -28,7 +30,7 @@ BEGIN
              ORDER BY n.prioridad DESC, n.puntaje_previo DESC NULLS LAST, n.posicion LOOP
       EXIT WHEN cardinality(elegidas) >= cuantas;
       CONTINUE WHEN EXISTS (SELECT 1 FROM diaria d JOIN noticias p ON p.id = d.noticia_id AND p.categoria = d.categoria
-                            WHERE d.fecha > current_date - 7 AND (p.id = r.id OR similarity(f_norm(p.titulo_original), r.t) >= PARECIDO));
+                            WHERE d.fecha > hoy - 7 AND d.fecha < hoy AND (p.id = r.id OR similarity(f_norm(p.titulo_original), r.t) >= PARECIDO));
       CONTINUE WHEN EXISTS (SELECT 1 FROM unnest(titulos) x WHERE similarity(x, r.t) >= PARECIDO);
       IF NOT r.prioridad THEN
         CONTINUE WHEN r.fuente = ANY(ILEGIBLES);
