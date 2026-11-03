@@ -113,6 +113,7 @@ export function Tarjeta({
       className={estilos.tarjeta}
       data-k={profundidad}
       data-talla={tarjeta.talla}
+      data-categoria={tarjeta.categoria}
       data-prueba={arriba ? "tarjeta-arriba" : undefined}
       style={{ "--k": profundidad, "--tono": tarjeta.tono } as CSSProperties}
       {...(arriba
