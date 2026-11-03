@@ -26,10 +26,10 @@ assert.ok(pedidos[1].body.messages[1].content.includes('sin fecha'));
 assert.equal(pedidos[0].body.response_format.json_schema.strict, true);
 assert.equal(pedidos[0].body.temperature, undefined, 'Haiku y Luna no aceptan temperature');
 
-// Validar: buena, resumen largo (600) que entra igual, JSON roto, puntaje fuera de rango, clave faltante, error de HTTP.
+// Validar: buena, resumen largo (600) que se rechaza, JSON roto, puntaje fuera de rango, clave faltante, error de HTTP.
 const resp = (o, cost = 0.001) => ({ choices: [{ message: { content: typeof o === 'string' ? o : JSON.stringify(o) } }], usage: { cost } });
 const bueno = { titulo_es: 'Título', resumen: 'Resumen.', puntaje: 70, motivo: 'Porque sí.' };
-const ps = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'].map((id) => ({ id, categoria: 'arg', body: {} }));
+const ps = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'].map((id) => ({ id, categoria: 'arg', body: { messages: [{ role: 'system', content: 'S' }, { role: 'user', content: 'U' }] } }));
 const resps = [
   resp(bueno),
   resp({ ...bueno, resumen: 'x'.repeat(600) }),
@@ -40,19 +40,35 @@ const resps = [
 ];
 const validar = leer('validar.js');
 const v1 = correr(validar, { 'Pedidos al juez': ps }, resps)[0].json;
-assert.deepEqual(v1.juicios.map((j) => j.id), ['p1', 'p2'], 'entran la buena y la de resumen largo');
-assert.deepEqual(v1.malas.map((m) => m.id), ['p3', 'p4', 'p5', 'p6']);
+assert.deepEqual(v1.juicios.map((j) => j.id), ['p1'], 'entra solo la buena');
+assert.deepEqual(v1.malas.map((m) => m.id), ['p2', 'p3', 'p4', 'p5', 'p6']);
+// La de resumen largo vuelve con la respuesta del juez y el pedido de acortar; las demás, con el pedido original.
+const largo = v1.malas[0].body.messages;
+assert.equal(largo.length, 4);
+assert.equal(largo[2].role, 'assistant');
+assert.ok(largo[3].content.includes('resumen tiene 600 (máximo 380)'));
+assert.equal(v1.malas[1].body.messages.length, 2);
 assert.equal(v1.fallidas, 0);
 assert.equal(v1.costo.arg, 0.005);
 
-// Reintento: p3 sale bien, p4 vuelve a fallar; p5 y p6 también. Suma lo del primer nodo.
+// Límites exactos: 110 y 380 entran; 111 o 381, no.
+const v0 = correr(validar, { 'Pedidos al juez': ps.slice(0, 4) }, [
+  resp({ ...bueno, titulo_es: 't'.repeat(110), resumen: 'r'.repeat(380) }),
+  resp({ ...bueno, titulo_es: 't'.repeat(111) }),
+  resp({ ...bueno, resumen: 'r'.repeat(381) }),
+  resp({ ...bueno, motivo: 'm'.repeat(201) }),
+])[0].json;
+assert.deepEqual(v0.juicios.map((j) => j.id), ['p1']);
+assert.deepEqual(v0.malas.map((m) => m.body.messages.length), [4, 4, 2], 'el motivo largo no es de la tarjeta: reintento normal');
+
+// Reintento: p2 (acortada) y p3 salen bien, p4 vuelve a fallar; p5 y p6 también. Si se vuelve a pasar de largo, falla. Suma lo del primer nodo.
 const validar2 = validar.replace("const ORIGEN = 'Pedidos al juez';", "const ORIGEN = 'Reintentos';");
 const v2 = correr(validar2, { Reintentos: v1.malas, Validar: [v1] },
-  [resp(bueno), resp({ ...bueno, puntaje: -1 }), resp('nada'), { error: {} }])[0].json;
+  [resp({ ...bueno, resumen: 'r'.repeat(300) }), resp(bueno), resp({ ...bueno, puntaje: -1 }), resp('nada'), { error: {} }])[0].json;
 assert.deepEqual(v2.juicios.map((j) => j.id), ['p1', 'p2', 'p3']);
 assert.equal(v2.fallidas, 3);
 assert.deepEqual(v2.malas, []);
-assert.equal(v2.costo.arg, 0.008);
+assert.equal(v2.costo.arg, 0.009);
 
 // Sin nada que juzgar: el ítem vacío de alwaysOutputData no rompe y no suma.
 const v3 = correr(validar, { 'Pedidos al juez': [{}] }, [{ error: {} }])[0].json;

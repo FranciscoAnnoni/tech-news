@@ -54,7 +54,7 @@ Esquema en [`sql/01-esquema.sql`](sql/01-esquema.sql). Se prueba con `sql/probar
 - **`diaria`:** 5 por categoría y por día (`orden` de 1 a 5). Nunca se borra. La clave foránea impide cargar una noticia en una categoría que no es la suya.
 - **`corridas`:** una fila por ejecución, con sus conteos.
 - **`diaria_json` y `edicion(fecha)`:** devuelven la edición de un día como array JSON con el formato de la app, ordenada por puntaje.
-- **Límites que pone la base:** `resumen` de 1000 caracteres como máximo (al juez se le piden 450; 1000 es la red), `contenido` de 2000 como máximo, `puntaje` de 0 a 100 y un mismo link una sola vez por categoría.
+- **Límites que pone la base:** `resumen` de 1000 caracteres como máximo (al juez se le piden 380 y `validar.js` no acepta más; 1000 es la red), `contenido` de 2000 como máximo, `puntaje` de 0 a 100 y un mismo link una sola vez por categoría.
 
 Funciones que usa el workflow. Se escriben en el paso de cada una:
 
@@ -93,8 +93,8 @@ Texto:
 **Validación (`validar.js`):**
 
 - Es JSON y tiene las cuatro claves.
-- `titulo_es` no está vacío y tiene 200 caracteres como máximo.
-- `resumen` no está vacío. Al juez se le piden 450 caracteres; si se pasa, entra igual (sin repetir la llamada) hasta 1000.
+- `titulo_es` no está vacío y tiene 110 caracteres como máximo (lo que entra en la tarjeta sin scroll).
+- `resumen` no está vacío y tiene 380 caracteres como máximo. Si el título o el resumen se pasan, el reintento le devuelve al juez su respuesta con los largos y le pide acortarla; si se vuelve a pasar, queda sin puntaje.
 - `puntaje` es un entero de 0 a 100.
 - `motivo` tiene 200 caracteres como máximo.
 
@@ -106,7 +106,7 @@ Si algo no cumple, se repite la llamada una vez. Si vuelve a fallar, la noticia 
 Sos editor de noticias de <categoría>. Leés una nota y devolvés solo un JSON.
 
 1. titulo_es: el título en español rioplatense neutro, fiel al original.
-2. resumen: hasta 450 caracteres, en español. Solo hechos que están en el texto; no inventes ni opines.
+2. resumen: hasta 380 caracteres, en español. Solo hechos que están en el texto; no inventes ni opines.
 3. puntaje: de 0 a 100, según <criterio>, usando esta escala:
    90-100  hecho que va a ser tema central por días y afecta a muchísima gente
    70-89   importante, con consecuencias concretas para mucha gente

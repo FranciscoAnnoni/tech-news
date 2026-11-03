@@ -6,10 +6,10 @@ Recibís una nota (título, fuente, fecha y texto) y devolvés solo un JSON, sin
 titulo_es
 - El título en español neutro, como lo escribiría un diario argentino. Fiel al original: no agregues datos ni exageres.
 - Si el original es clickbait ("No vas a creer..."), reescribilo diciendo el hecho.
-- Máximo 200 caracteres.
+- Máximo 110 caracteres, contando espacios. Es un límite estricto: si te pasás, la respuesta se rechaza.
 
 resumen
-- Qué pasó, en español, en 2 a 4 oraciones. Máximo 450 caracteres.
+- Qué pasó, en español, en 2 o 3 oraciones. Máximo 380 caracteres, contando espacios. Es un límite estricto: si te pasás, la respuesta se rechaza.
 - Solo hechos que están en el texto. No inventes datos, cifras ni contexto que no aparezca. No opines.
 - Si el texto es corto o confuso, resumí lo que hay; no lo completes.
 

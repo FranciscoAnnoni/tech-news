@@ -48,7 +48,7 @@ No se arranca un paso sin cerrar el anterior. El detalle de cada paso se escribe
 - No se commitean IPs, IDs de credenciales, API keys ni chat IDs. La configuración va por variables de entorno.
 - Zona horaria: `America/Argentina/Buenos_Aires`.
 - Nombres: base `infomate`, workflow `Infomate · Diario`, carpeta `infomate/`.
-- Límites: `resumen` de 450 caracteres pedidos al juez (la base acepta hasta 1000), `contenido` de 2000 caracteres como máximo, hasta 200 noticias por categoría y por día, retención de 7 días (salvo lo publicado en `diaria`), 10 candidatas por categoría y 5 elegidas por categoría.
+- Límites: `titulo_es` de 110 y `resumen` de 380 caracteres, estrictos (lo que entra en la tarjeta sin scroll; el 03/11/2026 se bajaron de 200 y 450, y un iPhone SE con Safari todavía ve scroll; la base acepta hasta 1000), `contenido` de 2000 caracteres como máximo, hasta 200 noticias por categoría y por día, retención de 7 días (salvo lo publicado en `diaria`), 10 candidatas por categoría y 5 elegidas por categoría.
 
 ## Puntos de riesgo (revisar en cada paso que toque esto)
 
@@ -335,7 +335,7 @@ Sin texto en tech: un sitio que no es nota (Show HN), un link a Reddit (bloquead
 - Comparación: [relevamiento/modelos-juez.md](relevamiento/modelos-juez.md) (Claude Haiku 5.5, GPT-6 Luna y MiMo v2.6 Flash; GPT-6.1 Sol descartado por precio, unas 20 veces más caro).
 - Prueba a ciegas: 3 candidatas por categoría x 3 modelos, con los prompts de `prompts/`. Las 27 respuestas salieron en el formato pedido; costo total menos de 1 centavo. Haiku y MiMo se pasaron de 500 caracteres en 4 de 9 resúmenes cada uno; Luna en ninguno.
 - **Decisión de Francisco:** global y ARG con `openai/gpt-6-luna`; tech con `anthropic/claude-haiku-5.5`. MiMo quedó afuera (puntuó más generoso y su ficha declara solo inglés y chino).
-- Al juez se le piden 450 caracteres de resumen; si se pasa, entra igual. La base subió su límite de 500 a 1000, solo como red.
+- Al juez se le piden 450 caracteres de resumen; si se pasa, entra igual. La base subió su límite de 500 a 1000, solo como red. **Cambió el 03/11/2026:** 110 de título y 380 de resumen, estrictos; si se pasa, el reintento le pide acortar.
 - Parámetros: `json_schema` estricto, `provider.require_parameters`, `reasoning.effort: "low"`, sin `temperature`.
 - Prompts: `prompts/juez-base.md` más el criterio de cada juez. ARG: las policiales y tragedias puntúan 0-39 salvo casos de alcance nacional, con el Estado involucrado, consecuencias más allá del hecho o gran escala.
 - Traducir con Google lo que no está en español quedó como idea de Francisco. Con el juez devolviendo título y resumen en español, por ahora no hace falta.
