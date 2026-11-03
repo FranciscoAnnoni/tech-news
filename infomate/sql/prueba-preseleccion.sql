@@ -56,8 +56,14 @@ BEGIN
   IF (r->>'global')::int <> 9 OR (r->>'arg')::int <> 4 THEN RAISE EXCEPTION 'conteos: %', r; END IF;
 
 
+  -- Lo publicado hoy sigue compitiendo (segunda corrida del mismo día).
+  INSERT INTO diaria VALUES ((now() AT TIME ZONE 'America/Argentina/Buenos_Aires')::date, 'global', 1, (SELECT id FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa'));
+  PERFORM infomate_preseleccionar('k2');
+  IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa') IS NULL THEN RAISE EXCEPTION 'lo publicado hoy debería poder volver a competir'; END IF;
+  DELETE FROM diaria;
+
   -- Lo publicado en diaria esta semana no vuelve a preseleccionarse.
-  INSERT INTO diaria VALUES (current_date - 1, 'global', 1, (SELECT id FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa'));
+  INSERT INTO diaria VALUES ((now() AT TIME ZONE 'America/Argentina/Buenos_Aires')::date - 1, 'global', 1, (SELECT id FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa'));
   PERFORM infomate_preseleccionar('k2');
   IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa') IS NOT NULL THEN RAISE EXCEPTION 'lo publicado ayer no debería volver'; END IF;
 
