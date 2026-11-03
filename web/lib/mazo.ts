@@ -40,7 +40,8 @@ export type AccionMazo =
   | { tipo: "resolver"; indice: number; resolucion: Resolucion }
   | { tipo: "avanzar"; hasta: number }
   | { tipo: "anterior" }
-  | { tipo: "reiniciar" };
+  | { tipo: "reiniciar" }
+  | { tipo: "restaurar"; estado: EstadoMazo };
 
 export function reducirMazo(estado: EstadoMazo, accion: AccionMazo): EstadoMazo {
   switch (accion.tipo) {
@@ -52,6 +53,8 @@ export function reducirMazo(estado: EstadoMazo, accion: AccionMazo): EstadoMazo 
       return { ...estado, indice: Math.max(0, estado.indice - 1) };
     case "reiniciar":
       return ESTADO_INICIAL;
+    case "restaurar":
+      return accion.estado;
   }
 }
 

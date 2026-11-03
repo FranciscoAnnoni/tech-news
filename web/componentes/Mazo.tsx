@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
+import { firmaDelMazo, guardarProgreso, leerProgreso } from "@/lib/progreso";
 import type { TarjetaNoticia } from "@/lib/tipos";
 import { BotonCompartir } from "./BotonCompartir";
 import { Detalle } from "./Detalle";
@@ -25,6 +26,16 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
 
   const n = tarjetas.length;
   const { indice } = estado;
+  const firma = firmaDelMazo(tarjetas.map((t) => t.id));
+
+  // Layout effect: restaura antes de pintar, así no se ve la primera tarjeta y luego el salto a donde quedó.
+  useLayoutEffect(() => {
+    const guardado = leerProgreso(localStorage, firma, n);
+    if (guardado) despachar({ tipo: "restaurar", estado: guardado });
+  }, [firma, n]);
+
+  // Si llegó otra edición, la primera escritura pisa el progreso viejo.
+  useEffect(() => guardarProgreso(localStorage, firma, estado), [firma, estado]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
