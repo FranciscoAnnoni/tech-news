@@ -12,3 +12,8 @@ export function urlBase(base: string | undefined = process.env.NEXT_PUBLIC_URL_P
 export function urlPublica(identificador: string, base?: string): string {
   return `${urlBase(base)}/noticia/${identificador}`;
 }
+
+/** La marca pertenece al enlace enviado; previews y metadatos usan urlPublica. */
+export function urlParaCompartir(identificador: string, base?: string): string {
+  return `${urlPublica(identificador, base)}?utm_source=share&utm_medium=referral`;
+}

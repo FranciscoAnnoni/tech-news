@@ -25,3 +25,9 @@ La fecha de edición de `hoy.json` se toma de su cabecera `Last-Modified`, en ho
 `fecha_publicacion` admite ISO o `DD/MM/YYYY HH:mm` en hora argentina; este último se convierte a ISO con huso `-03:00` antes de calcular la vigencia.
 
 Para leer un Blob público basta la URL. `INFOMATE_READ_WRITE_TOKEN` se reserva para el proceso que sube o actualiza las noticias; no se envía en esta lectura y nunca debe llevar el prefijo `NEXT_PUBLIC_`. Los archivos `.env` están ignorados por Git. Esta conexión consume un JSON ya publicado; no modifica el recolector ni sube archivos al store.
+
+## Analítica
+
+Mixpanel y Vercel Speed Insights se habilitan en Vercel Production. En desarrollo y preview están apagados salvo `NEXT_PUBLIC_ANALITICA_PRUEBA=true`; usar exclusivamente un proyecto Mixpanel de prueba con ese override. Configurar `NEXT_PUBLIC_MIXPANEL_TOKEN` con el token público del proyecto, nunca el API secret. `NEXT_PUBLIC_MIXPANEL_API_HOST` admite `https://api-js.mixpanel.com` (US, predeterminado), `https://api-eu.mixpanel.com` o `https://api-in.mixpanel.com`. Sin token o con host inválido se desactiva Mixpanel; Speed Insights es independiente y debe activarse en Vercel.
+
+Para verificar, iniciar con el override y token de prueba, abrir la app y revisar las solicitudes de red: una entrada visible debe producir un `app_iniciada`, sin URL, query ni referrer. Probar también con almacenamiento o red bloqueados. La activación y la verificación con tráfico real requieren configurar los proyectos externos. Para recetas de retorno exacto en días calendario 1 y 7, con huso de Buenos Aires y cohortes maduras, consultar [reportes de analítica](../docs/reportes-analitica.md).
