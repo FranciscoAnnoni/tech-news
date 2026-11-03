@@ -16,9 +16,20 @@
   transform-origin: bottom center;
 }
 
-.tarjeta[data-k="1"],
-.tarjeta[data-k="2"] {
-  background: hsl(var(--tono) 70% 86%);
+/* Las de atrás se ven al deslizar la de arriba: el color dice la categoría. */
+.tarjeta[data-k="1"][data-categoria="Tech"],
+.tarjeta[data-k="2"][data-categoria="Tech"] {
+  background: var(--pastel-tech);
+}
+
+.tarjeta[data-k="1"][data-categoria="Global"],
+.tarjeta[data-k="2"][data-categoria="Global"] {
+  background: var(--pastel-global);
+}
+
+.tarjeta[data-k="1"][data-categoria="ARG"],
+.tarjeta[data-k="2"][data-categoria="ARG"] {
+  background: var(--pastel-arg);
 }
 
 .origen {
