@@ -61,6 +61,14 @@ BEGIN
   PERFORM infomate_preseleccionar('k2');
   IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'Terremoto en Japón deja daños en la costa') IS NOT NULL THEN RAISE EXCEPTION 'lo publicado ayer no debería volver'; END IF;
 
+  -- Lo publicado por primera vez hace más de 36 h no entra aunque siga en los feeds; hace 30 h, sí.
+  UPDATE noticias SET fecha_publicacion = now() - interval '40 hours' WHERE titulo_original = 'El Congreso debate el presupuesto nacional';
+  PERFORM infomate_preseleccionar('k2');
+  IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'El Congreso debate el presupuesto nacional') IS NOT NULL THEN RAISE EXCEPTION 'una de hace 40 h no debería preseleccionarse'; END IF;
+  UPDATE noticias SET fecha_publicacion = now() - interval '30 hours' WHERE titulo_original = 'El Congreso debate el presupuesto nacional';
+  PERFORM infomate_preseleccionar('k2');
+  IF (SELECT preseleccion FROM noticias WHERE titulo_original = 'El Congreso debate el presupuesto nacional') IS NULL THEN RAISE EXCEPTION 'una de hace 30 h debería preseleccionarse'; END IF;
+
   -- Links reales: se cambia el de Google News; si choca con otro de la misma categoría, no.
   UPDATE noticias SET link = 'https://news.google.com/rss/articles/AAA', link_google = 'https://news.google.com/rss/articles/AAA'
    WHERE titulo_original = 'La primera prioritaria del feed para la prueba';
