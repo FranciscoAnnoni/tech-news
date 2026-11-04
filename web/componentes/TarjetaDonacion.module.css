@@ -1,0 +1,90 @@
+/* Toda amarilla, igual que el fondo: el borde y la sombra la separan de la mesa. */
+article.donacion {
+  background: var(--amarillo);
+}
+
+span.monograma {
+  background: var(--papel);
+}
+
+span.etiqueta {
+  color: var(--amarillo);
+}
+
+.cuerpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow-y: auto;
+}
+
+.titulo {
+  margin: 0 0 12px;
+  font: 800 32px/1.12 var(--sans);
+  letter-spacing: -0.01em;
+}
+
+.texto {
+  margin: 0;
+  font: 16px/1.45 var(--sans);
+}
+
+.acciones {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.apoyar {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  border: 3px solid var(--tinta);
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 16px var(--mono);
+  text-decoration: none;
+  box-shadow: 4px 4px 0 #7a5d00;
+}
+
+.apoyar:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #7a5d00;
+}
+
+.ahoraNo {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: 700 13px var(--mono);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.apoyar:focus-visible,
+.ahoraNo:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+
+@media (max-height: 720px) {
+  .titulo {
+    font-size: 25px;
+  }
+
+  .texto {
+    font-size: 14px;
+    line-height: 1.32;
+  }
+
+  .acciones {
+    margin-top: 10px;
+  }
+}

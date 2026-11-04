@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { crearId, registrarEvento } from "@/lib/analitica";
+import {
+  guardarDonacion, leerDonacion, pilaVisible, posicionPendiente, reducirDonacion, URL_MATECITO,
+} from "@/lib/donacion";
+import { diaDeBuenosAires } from "@/lib/edicion";
 import { conteosFinales, contextoMazo, crearMedicionMazo } from "@/lib/medicionMazo";
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
@@ -12,6 +16,7 @@ import { BotonCompartir } from "./BotonCompartir";
 import { Detalle } from "./Detalle";
 import { Guia } from "./Guia";
 import { Tarjeta } from "./Tarjeta";
+import { TarjetaDonacion } from "./TarjetaDonacion";
 import estilosDetalle from "./Detalle.module.css";
 import estilos from "./Mazo.module.css";
 
@@ -48,6 +53,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const [estado, despachar] = useReducer(reducirMazo, ESTADO_INICIAL);
   const [capa, setCapa] = useState<Capa>(null);
   const [enTransicion, setEnTransicion] = useState(false);
+  // Solo en el cliente: depende del localStorage y del azar. El servidor pinta el mazo sin donación.
+  const [donacion, despacharDonacion] = useReducer(reducirDonacion, null);
   const botonDescargar = useRef<HTMLButtonElement>(null);
   const aperturaRegistrada = useRef<Capa>(null);
   const documentoALaVista = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
@@ -68,6 +75,23 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
 
   // Si llegó otra edición, la primera escritura pisa el progreso viejo.
   useEffect(() => guardarProgreso(localStorage, firma, estado), [firma, estado]);
+
+  useLayoutEffect(() => {
+    despacharDonacion({
+      tipo: "planificar", previo: leerDonacion(localStorage), firma, n, hoy: diaDeBuenosAires(new Date()), azar: Math.random(),
+    });
+  }, [firma, n]);
+  useEffect(() => {
+    if (donacion) guardarDonacion(localStorage, donacion);
+  }, [donacion]);
+
+  const posicionDonacion = posicionPendiente(donacion);
+  // La tarjeta de donación va antes de la noticia `posicionDonacion` y no cuenta: el contador sigue en la anterior.
+  const donacionArriba = posicionDonacion !== null && indice === posicionDonacion;
+  const contextoDonacion = useCallback(
+    () => ({ recorrido_id: obtenerMedicion().recorrido_id, posicion: posicionDonacion ?? 0, cantidad_tarjetas: n }),
+    [n, posicionDonacion],
+  );
 
   useEffect(() => {
     obtenerMedicion();
@@ -102,13 +126,20 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         registrarEvento("noticia_abierta", { ...contextoMazo(tarjeta, medicion.recorrido_id, capa.indice, n), superficie: "capa" });
         aperturaRegistrada.current = capa;
       }
+    } else if (!capa && !enTransicion && donacionArriba) {
+      // Una vez por día: al quedar marcada como vista, el efecto no vuelve a entrar.
+      const hoy = diaDeBuenosAires(new Date());
+      if (donacion?.ultimaVista !== hoy) {
+        registrarEvento("donacion_vista", contextoDonacion());
+        despacharDonacion({ tipo: "vista", hoy });
+      }
     } else if (!capa && !enTransicion && indice < n) {
       registrarVista(indice);
     }
     if (!capa && !enTransicion && indice >= n && medicion.completar(n)) {
       registrarEvento("mazo_completado", { recorrido_id: medicion.recorrido_id, cantidad_tarjetas: n, ...conteosFinales(estado) });
     }
-  }, [capa, enTransicion, estado, indice, n, registrarInicio, registrarVista, tarjetas, visible]);
+  }, [capa, contextoDonacion, donacion?.ultimaVista, donacionArriba, enTransicion, estado, indice, n, registrarInicio, registrarVista, tarjetas, visible]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -141,7 +172,7 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   }, [instalada, capa]);
 
   const terminado = indice >= n;
-  const visibles = tarjetas.slice(indice, indice + PROFUNDIDAD);
+  const pila = pilaVisible(indice, n, posicionDonacion, PROFUNDIDAD);
 
   const tarjetaAbierta = capa?.tipo === "detalle" ? tarjetas[capa.indice] : null;
 
@@ -156,15 +187,28 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
           disabled={indice === 0 || enTransicion || capa !== null}
           onClick={() => despachar({ tipo: "anterior" })}
         >
-          ← Anterior
+          ←<b className={estilos.anteriorTexto}> Anterior</b>
         </button>
+        <a
+          className={estilos.apoyar}
+          href={URL_MATECITO}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Apoyar a Infomate con un matecito"
+          onClick={() => {
+            registrarEvento("donacion_abierta", { superficie: "cabecera" });
+            despacharDonacion({ tipo: "resolver", apoyo: true, hoy: diaDeBuenosAires(new Date()) });
+          }}
+        >
+          🧉<b className={estilos.apoyarTexto}>Apoyar</b>
+        </a>
         {!instalada && (
           <button ref={botonDescargar} className={estilos.descargar} type="button" onClick={() => abrirCapa({ tipo: "guia" })}>
             Descargar
           </button>
         )}
         <span className={estilos.cuenta} data-prueba="cuenta">
-          {Math.min(indice + 1, n)}/{n}
+          {Math.min(indice + (donacionArriba ? 0 : 1), n)}/{n}
         </span>
       </header>
 
@@ -182,13 +226,37 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
             </button>
           </div>
         ) : (
-          visibles
-            .map((tarjeta, k) => (
+          pila
+            .map((lugar, k) => {
+              if (lugar.tipo === "donacion") {
+                return (
+                  <TarjetaDonacion
+                    key="donacion"
+                    profundidad={k}
+                    alApoyar={(origen) => {
+                      // En el mismo evento del gesto, si no el navegador bloquea la pestaña. El botón ya es un link.
+                      if (origen === "gesto") window.open(URL_MATECITO, "_blank", "noopener,noreferrer");
+                      registrarEvento("donacion_abierta", { ...contextoDonacion(), superficie: "tarjeta" });
+                      setEnTransicion(true);
+                    }}
+                    alDescartar={() => {
+                      registrarEvento("donacion_descartada", contextoDonacion());
+                      setEnTransicion(true);
+                    }}
+                    alTerminar={(apoyo) => {
+                      setEnTransicion(false);
+                      despacharDonacion({ tipo: "resolver", apoyo, hoy: diaDeBuenosAires(new Date()) });
+                    }}
+                  />
+                );
+              }
+              const tarjeta = tarjetas[lugar.indice];
+              return (
               <Tarjeta
                 key={tarjeta.identificador}
                 tarjeta={tarjeta}
                 profundidad={k}
-                contextoCompartir={() => ({ ...contextoMazo(tarjeta, obtenerMedicion().recorrido_id, indice + k, n), superficie: "tarjeta" })}
+                contextoCompartir={() => ({ ...contextoMazo(tarjeta, obtenerMedicion().recorrido_id, lugar.indice, n), superficie: "tarjeta" })}
                 alMarcar={(direccion) => {
                   if (documentoVisible()) registrarVista(indice);
                   if (direccion < 0) {
@@ -204,14 +272,15 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
                   else despachar({ tipo: "avanzar", hasta: indice + 1 });
                 }}
               />
-            ))
+              );
+            })
             .reverse()
         )}
       </div>
 
       <footer className={estilos.pista} style={terminado ? { visibility: "hidden" } : undefined}>
-        <span>← DESCARTAR</span>
-        <span>ABRIR →</span>
+        <span>{donacionArriba ? "← AHORA NO" : "← DESCARTAR"}</span>
+        <span>{donacionArriba ? "APOYAR →" : "ABRIR →"}</span>
       </footer>
 
       {tarjetaAbierta && (

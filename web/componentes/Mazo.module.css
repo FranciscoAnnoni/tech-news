@@ -61,7 +61,30 @@
   outline-offset: 1px;
 }
 
-@media (max-width: 360px) {
+.anteriorTexto {
+  font: inherit;
+}
+
+/* Teléfonos angostos (360 px es común en Android): con Apoyar y Descargar no entra todo en una línea. */
+@media (max-width: 374px) {
+  .cabecera {
+    gap: 4px;
+  }
+
+  .anterior {
+    min-width: 32px;
+  }
+
+  .anteriorTexto {
+    display: none;
+  }
+
+  .descargar {
+    padding: 0 4px;
+  }
+}
+
+@media (max-width: 340px) {
   .cabecera {
     flex-wrap: wrap;
   }
@@ -114,4 +137,33 @@
   color: var(--tinta);
   font: 800 16px var(--mono);
   cursor: pointer;
+}
+
+/* Siempre visible: quien no vio la tarjeta de donación también puede apoyar. */
+.apoyar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 6px;
+  border: 3px solid var(--tinta);
+  background: var(--papel);
+  color: var(--tinta);
+  font: 800 12px var(--mono);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Con "Descargar" a la vista no entra el texto: queda el mate solo (el link tiene aria-label). */
+.cabecera:has(.descargar) .apoyarTexto {
+  display: none;
+}
+
+.apoyar:focus-visible,
+.descargar:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
 }
