@@ -41,3 +41,33 @@ body {
     animation-duration: 1ms !important;
   }
 }
+
+/* Portada: Mazo en teléfonos, Diario en el resto (tablets incluidas), con scroll normal y sin el marco.
+   La consulta sale de CONSULTA_DIARIO en lib/portada.ts y debe ser idéntica (lo verifica portada.test.ts).
+   El :has limita el cambio a la portada: la página pública de la noticia conserva el marco. */
+[data-portada="diario"] {
+  display: none;
+}
+
+@media not ((max-width: 699px) or ((orientation: landscape) and (max-height: 500px))) {
+  [data-portada="mazo"] {
+    display: none;
+  }
+
+  [data-portada="diario"] {
+    display: block;
+  }
+
+  html:has([data-portada="diario"]),
+  body:has([data-portada="diario"]) {
+    height: auto;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+
+  #telefono:has([data-portada="diario"]) {
+    max-width: none;
+    height: auto;
+    overflow: visible;
+  }
+}

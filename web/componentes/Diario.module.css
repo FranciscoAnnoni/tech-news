@@ -1,0 +1,368 @@
+/* Se ve desde 700px de ancho (tablets incluidas); el corte vive en lib/portada.ts y globals.css. */
+.diario {
+  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  min-height: 100vh;
+  padding: 28px 24px 48px;
+  background: var(--amarillo);
+  color: var(--tinta);
+}
+
+.hoja {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 40px 32px;
+  background: var(--papel);
+  border: 3px solid var(--tinta);
+  box-shadow: 8px 8px 0 var(--tinta);
+}
+
+.cabecera {
+  text-align: center;
+  border-bottom: 6px double var(--tinta);
+  padding-bottom: 10px;
+}
+
+.franja {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font: 700 12px var(--mono);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--tinta);
+  padding-bottom: 8px;
+}
+
+.fecha::first-letter {
+  text-transform: uppercase;
+}
+
+.nombre {
+  margin: 6px 0 0;
+  font: 900 128px/1 var(--serif);
+  letter-spacing: -0.03em;
+}
+
+.lema {
+  margin: 4px 0 12px;
+  font: italic 17px var(--serif);
+}
+
+.indice {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  border-top: 1px solid var(--tinta);
+  padding-top: 8px;
+  font: 800 13px var(--mono);
+  text-transform: uppercase;
+}
+
+.indice b {
+  margin-left: 4px;
+  padding: 1px 6px;
+  background: var(--tinta);
+  color: var(--amarillo);
+}
+
+.vacio {
+  padding: 48px 0;
+  text-align: center;
+  font: italic 20px var(--serif);
+}
+
+.arriba {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  border-bottom: 2px solid var(--tinta);
+}
+
+.costado {
+  margin-left: 24px;
+  padding-left: 24px;
+  border-left: 1px solid var(--tinta);
+}
+
+.costado .nota + .nota {
+  border-top: 1px solid var(--tinta);
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 2px solid var(--tinta);
+}
+
+.fila .nota {
+  padding: 18px 18px 22px;
+}
+
+.fila .nota + .nota {
+  border-left: 1px solid var(--tinta);
+}
+
+.fila .nota:first-child {
+  padding-left: 0;
+}
+
+.fila .nota:last-child {
+  padding-right: 0;
+}
+
+.nota {
+  padding: 22px 0;
+}
+
+.nota a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nota a:hover,
+.bloque a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+}
+
+.nota a:focus-visible,
+.bloque a:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+.volanta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+}
+
+.seccion {
+  padding: 1px 6px;
+  border: 1.5px solid var(--tinta);
+  background: var(--amarillo);
+}
+
+.sello {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--tinta);
+  background: hsl(var(--tono) 75% 70%);
+  font-size: 10px;
+}
+
+.titulo {
+  margin: 0 0 10px;
+  font: 800 22px/1.15 var(--serif);
+  overflow-wrap: anywhere;
+}
+
+.bajada {
+  margin: 0;
+  font: 15px/1.5 var(--serif);
+  text-align: justify;
+  hyphens: auto;
+}
+
+.principal {
+  padding-right: 4px;
+}
+
+.principal .titulo {
+  font-size: 50px;
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+}
+
+.copete {
+  margin: 0 0 16px;
+  font: italic 600 19px/1.45 var(--serif);
+}
+
+.cuerpo {
+  margin: 0 0 14px;
+  font: 16px/1.55 var(--serif);
+  text-align: justify;
+  hyphens: auto;
+  column-count: 2;
+  column-gap: 28px;
+  column-rule: 1px solid var(--tinta);
+}
+
+.cuerpo::first-letter {
+  float: left;
+  padding: 6px 8px 0 0;
+  font: 900 64px/0.8 var(--serif);
+}
+
+.principal .seguir {
+  font: 700 12px var(--mono);
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--amarillo);
+}
+
+.principal .seguir:hover {
+  background: var(--amarillo);
+  text-decoration: none;
+}
+
+.segunda .titulo {
+  font-size: 26px;
+}
+
+.columna .titulo {
+  font-size: 20px;
+}
+
+.columna .bajada {
+  font-size: 14px;
+}
+
+.secciones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-top: 8px;
+}
+
+.bloque {
+  padding: 10px 20px 0;
+}
+
+.bloque:first-child {
+  padding-left: 0;
+}
+
+.bloque + .bloque {
+  border-left: 1px solid var(--tinta);
+}
+
+.tituloSeccion {
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 3px solid var(--tinta);
+  font: 900 13px var(--mono);
+  text-transform: uppercase;
+}
+
+.bloque ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bloque li {
+  padding: 10px 0;
+  border-bottom: 1px dotted var(--tinta);
+  font: 700 16px/1.25 var(--serif);
+}
+
+.bloque li a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bloque li span {
+  display: block;
+  margin-top: 4px;
+  font: 600 11px var(--mono);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.pie {
+  margin-top: 24px;
+  padding-top: 8px;
+  border-top: 6px double var(--tinta);
+  text-align: center;
+  font: 700 11px var(--mono);
+  text-transform: uppercase;
+}
+
+/* Tablets en vertical (iPad mini 744, iPad 768–834) y ventanas angostas. */
+@media (max-width: 1100px) {
+  .diario {
+    padding: 16px 16px 32px;
+  }
+
+  .hoja {
+    padding: 18px 24px 24px;
+    box-shadow: 6px 6px 0 var(--tinta);
+  }
+
+  .nombre {
+    font-size: 96px;
+  }
+
+  .arriba {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .principal {
+    padding-right: 0;
+  }
+
+  .principal .titulo {
+    font-size: 40px;
+  }
+
+  .costado {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--tinta);
+  }
+
+  .costado .nota {
+    padding: 18px 18px 22px 0;
+  }
+
+  .costado .nota + .nota {
+    border-top: 0;
+    border-left: 1px solid var(--tinta);
+    padding: 18px 0 22px 18px;
+  }
+
+  .segunda .titulo {
+    font-size: 22px;
+  }
+
+  .fila {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fila .nota,
+  .fila .nota:first-child,
+  .fila .nota:last-child {
+    padding: 18px 18px 22px 0;
+  }
+
+  .fila .nota:nth-child(even) {
+    padding: 18px 0 22px 18px;
+  }
+
+  .fila .nota:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .fila .nota:nth-child(n + 3) {
+    border-top: 1px solid var(--tinta);
+  }
+
+  .secciones {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bloque,
+  .bloque:first-child {
+    padding: 10px 0 0;
+  }
+
+  .bloque + .bloque {
+    border-left: 0;
+  }
+}

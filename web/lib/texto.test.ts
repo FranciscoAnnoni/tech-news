@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aTarjeta, contenidoVisible, enlaceSeguro, formatearFecha, tallaDe } from "./texto";
+import { aTarjeta, contenidoVisible, enlaceSeguro, formatearFecha, hastaUltimaOracion, tallaDe } from "./texto";
 import { MAX_CONTENIDO, type Noticia } from "./tipos";
 
 const base: Noticia = {
@@ -50,5 +50,21 @@ describe("tarjeta", () => {
   });
   it("rechaza enlaces que no son http(s)", () => {
     expect(enlaceSeguro("javascript:alert(1)")).toBe("#");
+  });
+});
+
+describe("hastaUltimaOracion", () => {
+  it("corta en la última oración completa si llegó recortado", () => {
+    const texto = `Primera oración. Segunda «citada.» ${"x".repeat(MAX_CONTENIDO)}`.slice(0, MAX_CONTENIDO);
+    expect(hastaUltimaOracion(contenidoVisible(texto) ?? "")).toBe("Primera oración. Segunda «citada.»");
+  });
+  it("no toca un texto completo", () => {
+    expect(hastaUltimaOracion("Una nota corta sin punto final")).toBe("Una nota corta sin punto final");
+  });
+  it("sin oraciones completas conserva el corte", () => {
+    expect(hastaUltimaOracion(`${"x".repeat(MAX_CONTENIDO)}…`)).toBe(`${"x".repeat(MAX_CONTENIDO)}…`);
+  });
+  it("no confunde un decimal con el fin de una oración", () => {
+    expect(hastaUltimaOracion(`Subió 3.5 por ciento. Luego ${"y".repeat(MAX_CONTENIDO)}…`)).toBe("Subió 3.5 por ciento.");
   });
 });

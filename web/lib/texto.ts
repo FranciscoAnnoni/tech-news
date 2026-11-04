@@ -34,6 +34,19 @@ export function formatearFecha(publicada: string): string {
 export const contenidoVisible = (contenido: string | null): string | null =>
   contenido && contenido.length >= MAX_CONTENIDO ? `${contenido}…` : contenido;
 
+/**
+ * Texto de la nota sin la frase cortada a la mitad: si llegó recortado en el límite, termina en la última
+ * oración completa. Si no hay ninguna oración completa, conserva el corte con puntos suspensivos.
+ */
+export function hastaUltimaOracion(contenido: string): string {
+  const cortado = contenido.endsWith("…") || contenido.length >= MAX_CONTENIDO;
+  const texto = contenido.replace(/…$/, "").trimEnd();
+  if (!cortado) return texto;
+  const finales = [...texto.matchAll(/[.!?][»”"')]*(?=\s|$)/g)];
+  const ultimo = finales.at(-1);
+  return ultimo?.index ? texto.slice(0, ultimo.index + ultimo[0].length) : `${texto}…`;
+}
+
 /** Los links vienen de fuentes externas: solo se aceptan http(s). */
 export const enlaceSeguro = (url: string): string => (/^https?:\/\//i.test(url) ? url : "#");
 
