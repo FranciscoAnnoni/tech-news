@@ -5,6 +5,7 @@ import { crearId, registrarEvento } from "@/lib/analitica";
 import { conteosFinales, contextoMazo, crearMedicionMazo } from "@/lib/medicionMazo";
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
+import { CONSULTA_DIARIO } from "@/lib/portada";
 import { firmaDelMazo, guardarProgreso, leerProgreso } from "@/lib/progreso";
 import type { TarjetaNoticia } from "@/lib/tipos";
 import { BotonCompartir } from "./BotonCompartir";
@@ -33,6 +34,15 @@ function suscribirVisibilidad(avisar: () => void) {
 }
 const documentoVisible = () => document.visibilityState === "visible";
 
+// Fuera de los teléfonos la portada muestra el Diario y el Mazo queda oculto por CSS: no debe medir
+// tarjetas que nadie ve. Misma consulta que globals.css.
+function suscribirDiario(avisar: () => void) {
+  const consulta = window.matchMedia(CONSULTA_DIARIO);
+  consulta.addEventListener("change", avisar);
+  return () => consulta.removeEventListener("change", avisar);
+}
+const seVeElDiario = () => window.matchMedia(CONSULTA_DIARIO).matches;
+
 
 export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const [estado, despachar] = useReducer(reducirMazo, ESTADO_INICIAL);
@@ -40,7 +50,9 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const [enTransicion, setEnTransicion] = useState(false);
   const botonDescargar = useRef<HTMLButtonElement>(null);
   const aperturaRegistrada = useRef<Capa>(null);
-  const visible = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
+  const documentoALaVista = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
+  const oculto = useSyncExternalStore(suscribirDiario, seVeElDiario, () => true);
+  const visible = documentoALaVista && !oculto;
   // Oculto hasta hidratar: una app ya instalada nunca muestra el botón.
   const instalada = useSyncExternalStore(suscribirInstalacion, estaInstalada, () => true);
 

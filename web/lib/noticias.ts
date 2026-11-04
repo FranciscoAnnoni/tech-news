@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { diaDeBuenosAires } from "./edicion";
 import { buscarNoticiaPublica, esIdNoticia, leerIdentificador, type ResultadoPublico } from "./noticiaPublica";
 import { CATEGORIAS, type Noticia } from "./tipos";
 
@@ -29,14 +30,6 @@ function esNoticia(valor: unknown): valor is Noticia {
     && typeof valor.puntaje === "number" && Number.isFinite(valor.puntaje);
 }
 
-/** La fecha de edición sigue el día de Buenos Aires del proceso que publica el feed. */
-function diaDeEdicion(fecha: Date): string {
-  const partes = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit",
-  }).formatToParts(fecha).map((p) => [p.type, p.value]));
-  return `${partes.year}-${partes.month}-${partes.day}`;
-}
-
 /** Único acceso a Blob, solo en el servidor. La edición omite el archivo mutable hoy.json. */
 async function leerNoticias(edicion?: string): Promise<Noticia[]> {
   const storeId = process.env.INFOMATE_STORE_ID?.trim();
@@ -52,7 +45,7 @@ async function leerNoticias(edicion?: string): Promise<Noticia[]> {
     const feed: unknown = await respuesta.json();
     // Last-Modified conserva el día de la edición aunque hoy.json no se actualice al día siguiente.
     const modificada = new Date(respuesta.headers.get("last-modified") ?? "");
-    const dia = edicion ?? diaDeEdicion(Number.isFinite(modificada.getTime()) ? modificada : new Date());
+    const dia = edicion ?? diaDeBuenosAires(Number.isFinite(modificada.getTime()) ? modificada : new Date());
     // Adaptar el contrato del exportador al modelo de la app.
     datos = Array.isArray(feed)
       ? feed.map((nota: unknown) => {

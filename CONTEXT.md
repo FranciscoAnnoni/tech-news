@@ -7,6 +7,13 @@ Lector de noticias en tarjetas de ARG, Global y Tech. La analítica busca entend
 **Mazo**:
 Conjunto ordenado de tarjetas que el lector puede abrir o descartar. Llegar al final no implica haber leído todas las noticias.
 
+**Diario**:
+Portada con forma de diario de papel que ven las pantallas que no son teléfonos (tablets incluidas). Muestra las mismas tarjetas y en el mismo orden que el Mazo; la primera es la nota principal.
+_Evitar_: versión desktop, web.
+
+**Edición**:
+Noticias publicadas para un día de Buenos Aires. Se numera por días de calendario desde el 2/11/2026 (Edición Nº 1); varias corridas del mismo día son la misma edición.
+
 **Apertura de noticia**:
 Visualización del detalle de una noticia, en una capa del mazo o en su página pública. No demuestra lectura completa.
 _Evitar_: lectura completada.
