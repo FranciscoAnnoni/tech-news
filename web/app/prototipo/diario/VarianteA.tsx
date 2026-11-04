@@ -21,7 +21,16 @@ function Nota({ t, tamano }: { t: TarjetaNoticia; tamano: "principal" | "segunda
       <h2 className={e.titulo}>
         <a href={t.link} target="_blank" rel="noreferrer">{t.titulo}</a>
       </h2>
-      {t.descripcion && <p className={e.bajada}>{t.descripcion}</p>}
+      {tamano === "principal" ? (
+        // La principal muestra el resumen completo como copete y, debajo, el texto largo de la nota
+        // (`contenido`, hasta 2000 caracteres) en dos columnas con capitular. Sin recortes ni clamp.
+        <>
+          {t.descripcion && <p className={e.copete}>{t.descripcion}</p>}
+          {(t.contenido ?? t.descripcion) && <div className={e.bajada}>{t.contenido ?? t.descripcion}</div>}
+        </>
+      ) : (
+        t.descripcion && <p className={e.bajada}>{t.descripcion}</p>
+      )}
     </article>
   );
 }
