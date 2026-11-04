@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { crearId, registrarEvento } from "@/lib/analitica";
 import {
   guardarDonacion, leerDonacion, pilaVisible, posicionPendiente, reducirDonacion, URL_MATECITO,
 } from "@/lib/donacion";
 import { diaDeBuenosAires } from "@/lib/edicion";
+import { alternarEquipo, esEquipo, sumarToque, suscribirEquipo } from "@/lib/equipo";
 import { conteosFinales, contextoMazo, crearMedicionMazo } from "@/lib/medicionMazo";
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
@@ -55,6 +56,19 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const [enTransicion, setEnTransicion] = useState(false);
   // Solo en el cliente: depende del localStorage y del azar. El servidor pinta el mazo sin donación.
   const [donacion, despacharDonacion] = useReducer(reducirDonacion, null);
+  const equipo = useSyncExternalStore(suscribirEquipo, () => esEquipo(localStorage), () => false);
+  const toques = useRef({ cantidad: 0, ultimo: 0 });
+  const [aviso, setAviso] = useState<string | null>(null);
+  const temporizadorAviso = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(temporizadorAviso.current), []);
+  const tocarLogo = (e: MouseEvent<HTMLSpanElement>) => {
+    const { completa, ...racha } = sumarToque(toques.current, e.timeStamp);
+    toques.current = racha;
+    if (!completa) return;
+    setAviso(alternarEquipo(localStorage) ? "Modo equipo activado" : "Modo equipo desactivado");
+    clearTimeout(temporizadorAviso.current);
+    temporizadorAviso.current = setTimeout(() => setAviso(null), 2500);
+  };
   const botonDescargar = useRef<HTMLButtonElement>(null);
   const aperturaRegistrada = useRef<Capa>(null);
   const documentoALaVista = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
@@ -85,7 +99,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
     if (donacion) guardarDonacion(localStorage, donacion);
   }, [donacion]);
 
-  const posicionDonacion = posicionPendiente(donacion);
+  // El modo equipo solo esconde la tarjeta: el plan se sigue guardando igual.
+  const posicionDonacion = equipo ? null : posicionPendiente(donacion);
   // La tarjeta de donación va antes de la noticia `posicionDonacion` y no cuenta: el contador sigue en la anterior.
   const donacionArriba = posicionDonacion !== null && indice === posicionDonacion;
   const contextoDonacion = useCallback(
@@ -179,7 +194,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   return (
     <div className={estilos.mazo}>
       <header className={estilos.cabecera}>
-        <span>INFOMATE</span>
+        {/* Escondido a propósito: 5 toques seguidos alternan el modo equipo (ver lib/equipo.ts). */}
+        <span onClick={tocarLogo}>INFOMATE</span>
         <button
           className={estilos.anterior}
           type="button"
@@ -297,6 +313,11 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         />
       )}
       {capa?.tipo === "guia" && <Guia alCerrar={cerrarCapa} />}
+      {aviso && (
+        <div className={estilos.aviso} role="status">
+          {aviso}
+        </div>
+      )}
     </div>
   );
 }
