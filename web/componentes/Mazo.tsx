@@ -1,7 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { crearId, registrarEvento } from "@/lib/analitica";
+import {
+  guardarDonacion, leerDonacion, pilaVisible, posicionForzada, posicionPendiente, reducirDonacion, URL_MATECITO,
+} from "@/lib/donacion";
+import { diaDeBuenosAires } from "@/lib/edicion";
+import { alternarEquipo, esEquipo, sumarToque, suscribirEquipo } from "@/lib/equipo";
 import { conteosFinales, contextoMazo, crearMedicionMazo } from "@/lib/medicionMazo";
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
@@ -12,6 +17,7 @@ import { BotonCompartir } from "./BotonCompartir";
 import { Detalle } from "./Detalle";
 import { Guia } from "./Guia";
 import { Tarjeta } from "./Tarjeta";
+import { TarjetaDonacion } from "./TarjetaDonacion";
 import estilosDetalle from "./Detalle.module.css";
 import estilos from "./Mazo.module.css";
 
@@ -33,6 +39,7 @@ function suscribirVisibilidad(avisar: () => void) {
   return () => document.removeEventListener("visibilitychange", avisar);
 }
 const documentoVisible = () => document.visibilityState === "visible";
+const sinCambios = () => () => {};
 
 // Fuera de los teléfonos la portada muestra el Diario y el Mazo queda oculto por CSS: no debe medir
 // tarjetas que nadie ve. Misma consulta que globals.css.
@@ -48,6 +55,23 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const [estado, despachar] = useReducer(reducirMazo, ESTADO_INICIAL);
   const [capa, setCapa] = useState<Capa>(null);
   const [enTransicion, setEnTransicion] = useState(false);
+  // Solo en el cliente: depende del localStorage y del azar. El servidor pinta el mazo sin donación.
+  const [donacion, despacharDonacion] = useReducer(reducirDonacion, null);
+  const equipo = useSyncExternalStore(suscribirEquipo, () => esEquipo(localStorage), () => false);
+  // ?donacion en la URL fuerza la tarjeta también en modo equipo (ver posicionForzada).
+  const forzada = useSyncExternalStore(sinCambios, () => new URLSearchParams(window.location.search).has("donacion"), () => false);
+  const toques = useRef({ cantidad: 0, ultimo: 0 });
+  const [aviso, setAviso] = useState<string | null>(null);
+  const temporizadorAviso = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(temporizadorAviso.current), []);
+  const tocarLogo = (e: MouseEvent<HTMLSpanElement>) => {
+    const { completa, ...racha } = sumarToque(toques.current, e.timeStamp);
+    toques.current = racha;
+    if (!completa) return;
+    setAviso(alternarEquipo(localStorage) ? "Modo equipo activado" : "Modo equipo desactivado");
+    clearTimeout(temporizadorAviso.current);
+    temporizadorAviso.current = setTimeout(() => setAviso(null), 2500);
+  };
   const botonDescargar = useRef<HTMLButtonElement>(null);
   const aperturaRegistrada = useRef<Capa>(null);
   const documentoALaVista = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
@@ -68,6 +92,26 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
 
   // Si llegó otra edición, la primera escritura pisa el progreso viejo.
   useEffect(() => guardarProgreso(localStorage, firma, estado), [firma, estado]);
+
+  useLayoutEffect(() => {
+    const azar = Math.random();
+    despacharDonacion({
+      tipo: "planificar", previo: leerDonacion(localStorage), firma, n, hoy: diaDeBuenosAires(new Date()), azar,
+      forzada: posicionForzada(window.location.search, n, azar),
+    });
+  }, [firma, n]);
+  useEffect(() => {
+    if (donacion) guardarDonacion(localStorage, donacion);
+  }, [donacion]);
+
+  // El modo equipo solo esconde la tarjeta: el plan se sigue guardando igual.
+  const posicionDonacion = equipo && !forzada ? null : posicionPendiente(donacion);
+  // La tarjeta de donación va antes de la noticia `posicionDonacion` y no cuenta: el contador sigue en la anterior.
+  const donacionArriba = posicionDonacion !== null && indice === posicionDonacion;
+  const contextoDonacion = useCallback(
+    () => ({ recorrido_id: obtenerMedicion().recorrido_id, posicion: posicionDonacion ?? 0, cantidad_tarjetas: n }),
+    [n, posicionDonacion],
+  );
 
   useEffect(() => {
     obtenerMedicion();
@@ -102,13 +146,20 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         registrarEvento("noticia_abierta", { ...contextoMazo(tarjeta, medicion.recorrido_id, capa.indice, n), superficie: "capa" });
         aperturaRegistrada.current = capa;
       }
+    } else if (!capa && !enTransicion && donacionArriba) {
+      // Una vez por día: al quedar marcada como vista, el efecto no vuelve a entrar.
+      const hoy = diaDeBuenosAires(new Date());
+      if (donacion?.ultimaVista !== hoy) {
+        registrarEvento("donacion_vista", contextoDonacion());
+        despacharDonacion({ tipo: "vista", hoy });
+      }
     } else if (!capa && !enTransicion && indice < n) {
       registrarVista(indice);
     }
     if (!capa && !enTransicion && indice >= n && medicion.completar(n)) {
       registrarEvento("mazo_completado", { recorrido_id: medicion.recorrido_id, cantidad_tarjetas: n, ...conteosFinales(estado) });
     }
-  }, [capa, enTransicion, estado, indice, n, registrarInicio, registrarVista, tarjetas, visible]);
+  }, [capa, contextoDonacion, donacion?.ultimaVista, donacionArriba, enTransicion, estado, indice, n, registrarInicio, registrarVista, tarjetas, visible]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -141,14 +192,15 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   }, [instalada, capa]);
 
   const terminado = indice >= n;
-  const visibles = tarjetas.slice(indice, indice + PROFUNDIDAD);
+  const pila = pilaVisible(indice, n, posicionDonacion, PROFUNDIDAD);
 
   const tarjetaAbierta = capa?.tipo === "detalle" ? tarjetas[capa.indice] : null;
 
   return (
     <div className={estilos.mazo}>
       <header className={estilos.cabecera}>
-        <span>INFOMATE</span>
+        {/* Escondido a propósito: 5 toques seguidos alternan el modo equipo (ver lib/equipo.ts). */}
+        <span onClick={tocarLogo}>INFOMATE</span>
         <button
           className={estilos.anterior}
           type="button"
@@ -164,7 +216,7 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
           </button>
         )}
         <span className={estilos.cuenta} data-prueba="cuenta">
-          {Math.min(indice + 1, n)}/{n}
+          {Math.min(indice + (donacionArriba ? 0 : 1), n)}/{n}
         </span>
       </header>
 
@@ -182,13 +234,37 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
             </button>
           </div>
         ) : (
-          visibles
-            .map((tarjeta, k) => (
+          pila
+            .map((lugar, k) => {
+              if (lugar.tipo === "donacion") {
+                return (
+                  <TarjetaDonacion
+                    key="donacion"
+                    profundidad={k}
+                    alApoyar={(origen) => {
+                      // En el mismo evento del gesto, si no el navegador bloquea la pestaña. El botón ya es un link.
+                      if (origen === "gesto") window.open(URL_MATECITO, "_blank", "noopener,noreferrer");
+                      registrarEvento("donacion_abierta", { ...contextoDonacion(), superficie: "tarjeta" });
+                      setEnTransicion(true);
+                    }}
+                    alDescartar={() => {
+                      registrarEvento("donacion_descartada", contextoDonacion());
+                      setEnTransicion(true);
+                    }}
+                    alTerminar={(apoyo) => {
+                      setEnTransicion(false);
+                      despacharDonacion({ tipo: "resolver", apoyo, hoy: diaDeBuenosAires(new Date()) });
+                    }}
+                  />
+                );
+              }
+              const tarjeta = tarjetas[lugar.indice];
+              return (
               <Tarjeta
                 key={tarjeta.identificador}
                 tarjeta={tarjeta}
                 profundidad={k}
-                contextoCompartir={() => ({ ...contextoMazo(tarjeta, obtenerMedicion().recorrido_id, indice + k, n), superficie: "tarjeta" })}
+                contextoCompartir={() => ({ ...contextoMazo(tarjeta, obtenerMedicion().recorrido_id, lugar.indice, n), superficie: "tarjeta" })}
                 alMarcar={(direccion) => {
                   if (documentoVisible()) registrarVista(indice);
                   if (direccion < 0) {
@@ -204,14 +280,15 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
                   else despachar({ tipo: "avanzar", hasta: indice + 1 });
                 }}
               />
-            ))
+              );
+            })
             .reverse()
         )}
       </div>
 
       <footer className={estilos.pista} style={terminado ? { visibility: "hidden" } : undefined}>
-        <span>← DESCARTAR</span>
-        <span>ABRIR →</span>
+        <span>{donacionArriba ? "← AHORA NO" : "← DESCARTAR"}</span>
+        <span>{donacionArriba ? "APOYAR →" : "ABRIR →"}</span>
       </footer>
 
       {tarjetaAbierta && (
@@ -228,6 +305,11 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
         />
       )}
       {capa?.tipo === "guia" && <Guia alCerrar={cerrarCapa} />}
+      {aviso && (
+        <div className={estilos.aviso} role="status">
+          {aviso}
+        </div>
+      )}
     </div>
   );
 }

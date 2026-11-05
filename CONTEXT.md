@@ -31,3 +31,10 @@ Vuelta a Infomate en la que el lector abre una noticia, va a la fuente o compart
 
 **Exposición de tarjeta**:
 Presentación de una tarjeta en la parte superior del mazo con la página visible. Para las métricas del recorrido se cuenta una vez por noticia, aunque se vuelva a ella.
+
+**Tarjeta de donación**:
+Tarjeta amarilla del Mazo que pide apoyo por Matecito. No es una noticia: no suma al contador, no es una Exposición de tarjeta y "Anterior" la saltea. Aparece cada 3 días como mínimo, nunca el primer día del navegador, y no vuelve en 30 días si tocó Apoyar.
+_Evitar_: publicidad, anuncio.
+
+**Modo equipo**:
+Marca en el localStorage de un navegador de quienes hacen Infomate, para no ver la Tarjeta de donación. Se activa y desactiva con 5 toques seguidos en el logo INFOMATE del Mazo. No identifica a nadie ni da acceso a nada.
