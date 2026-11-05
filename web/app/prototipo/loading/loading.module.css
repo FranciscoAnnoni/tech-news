@@ -97,31 +97,78 @@
 }
 
 /* Cada carta recorre arriba → afuera → abajo → medio → arriba, desfasadas un tercio.
-   Lo que cambia entre variantes es dónde queda cada lugar y cómo se ven las de atrás. */
+   Capas de color: sin sombras; las de atrás se pintan del pastel de su categoría y sin contenido.
+   Cada variante cambia cuánto se corren las de atrás (--x1/--y1 la del medio, --x2/--y2 la del fondo)
+   y su borde (--borde-atras). */
+.v1 {
+  --x1: 5px;
+  --y1: 5px;
+  --x2: 10px;
+  --y2: 10px;
+  --borde-atras: var(--tinta);
+}
 
-/* ---------- A: capas de color ----------
-   Sin sombras. Las de atrás se pintan del pastel de su categoría: entre borde y borde se ve color, no negro. */
+.v2 {
+  --x1: 3px;
+  --y1: 3px;
+  --x2: 6px;
+  --y2: 6px;
+  --borde-atras: var(--tinta);
+}
+
+.v3 {
+  --x1: 9px;
+  --y1: 9px;
+  --x2: 18px;
+  --y2: 18px;
+  --borde-atras: var(--tinta);
+}
+
+/* Las de atrás sin borde: solo la mancha de color corrida. */
+.v4 {
+  --x1: 6px;
+  --y1: 6px;
+  --x2: 12px;
+  --y2: 12px;
+  --borde-atras: var(--tono);
+}
+
+/* Solo hacia abajo, como el Mazo de la app, con un borde del mismo color pero más oscuro. */
+.v5 {
+  --x1: 0px;
+  --y1: 6px;
+  --x2: 0px;
+  --y2: 12px;
+  --borde-atras: color-mix(in srgb, var(--tono), var(--tinta) 35%);
+}
+
 .capas .carta {
   animation-name: capas;
 }
 
-/* El contenido solo se ve en la de arriba: atrás son hojas lisas de color. */
 .capas .origen,
-.capas .titular,
-.capas .renglon {
+.capas .titular {
   animation: contenido var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite;
   animation-delay: calc(var(--i) * var(--t) / -3);
+}
+
+/* Los renglones conservan el brillo además del fundido. */
+.capas .renglon {
+  animation: contenido var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite, brillo 1.2s linear infinite;
+  animation-delay: calc(var(--i) * var(--t) / -3), 0s;
 }
 
 @keyframes capas {
   0% {
     transform: translate(0, 0);
     background-color: var(--papel);
+    border-color: var(--tinta);
     z-index: 3;
   }
   10% {
     transform: translate(80%, -6px) rotate(14deg);
     background-color: var(--papel);
+    border-color: var(--tinta);
     z-index: 3;
   }
   11% {
@@ -129,20 +176,23 @@
   }
   22%,
   33% {
-    transform: translate(10px, 10px);
+    transform: translate(var(--x2), var(--y2));
     background-color: var(--tono);
+    border-color: var(--borde-atras);
     z-index: 1;
   }
   45%,
   66% {
-    transform: translate(5px, 5px);
+    transform: translate(var(--x1), var(--y1));
     background-color: var(--tono);
+    border-color: var(--borde-atras);
     z-index: 2;
   }
   78%,
   100% {
     transform: translate(0, 0);
     background-color: var(--papel);
+    border-color: var(--tinta);
     z-index: 3;
   }
 }
@@ -160,92 +210,4 @@
   100% {
     opacity: 1;
   }
-}
-
-/* ---------- B: abanico ----------
-   Las cartas giran desde abajo como un abanico: los bordes se cruzan en ángulo y nunca van paralelos. */
-.abanico .carta {
-  transform-origin: 50% 110%;
-  animation-name: abanico;
-}
-
-@keyframes abanico {
-  0% {
-    transform: rotate(0deg);
-    z-index: 3;
-  }
-  12% {
-    transform: translateY(-34px) rotate(0deg);
-    z-index: 3;
-  }
-  13% {
-    z-index: 1;
-  }
-  24%,
-  33% {
-    transform: rotate(-14deg);
-    z-index: 1;
-  }
-  45%,
-  66% {
-    transform: rotate(9deg);
-    z-index: 2;
-  }
-  78%,
-  100% {
-    transform: rotate(0deg);
-    z-index: 3;
-  }
-}
-
-/* ---------- C: como el Mazo de la app ----------
-   Las de atrás asoman solo por abajo, más chicas, como en la portada. Una sola sombra: la de la carta de arriba. */
-.comoMazo .carta {
-  transform-origin: bottom center;
-  animation-name: comoMazo;
-}
-
-@keyframes comoMazo {
-  0% {
-    transform: translateY(0) scale(1);
-    background-color: var(--papel);
-    box-shadow: 4px 4px 0 var(--tinta);
-    z-index: 3;
-  }
-  10% {
-    transform: translate(80%, -8px) rotate(14deg);
-    background-color: var(--papel);
-    box-shadow: 4px 4px 0 var(--tinta);
-    z-index: 3;
-  }
-  11% {
-    z-index: 1;
-  }
-  22%,
-  33% {
-    transform: translateY(14px) scale(0.86);
-    background-color: var(--tono);
-    box-shadow: 0 0 0 transparent;
-    z-index: 1;
-  }
-  45%,
-  66% {
-    transform: translateY(7px) scale(0.93);
-    background-color: var(--tono);
-    box-shadow: 0 0 0 transparent;
-    z-index: 2;
-  }
-  78%,
-  100% {
-    transform: translateY(0) scale(1);
-    background-color: var(--papel);
-    box-shadow: 4px 4px 0 var(--tinta);
-    z-index: 3;
-  }
-}
-
-/* En A los renglones conservan el brillo además del fundido. */
-.capas .renglon {
-  animation: contenido var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite, brillo 1.2s linear infinite;
-  animation-delay: calc(var(--i) * var(--t) / -3), 0s;
 }
