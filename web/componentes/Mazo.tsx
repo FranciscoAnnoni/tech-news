@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { crearId, registrarEvento } from "@/lib/analitica";
 import {
-  guardarDonacion, leerDonacion, pilaVisible, posicionPendiente, reducirDonacion, URL_MATECITO,
+  guardarDonacion, leerDonacion, pilaVisible, posicionForzada, posicionPendiente, reducirDonacion, URL_MATECITO,
 } from "@/lib/donacion";
 import { diaDeBuenosAires } from "@/lib/edicion";
 import { alternarEquipo, esEquipo, sumarToque, suscribirEquipo } from "@/lib/equipo";
@@ -39,6 +39,7 @@ function suscribirVisibilidad(avisar: () => void) {
   return () => document.removeEventListener("visibilitychange", avisar);
 }
 const documentoVisible = () => document.visibilityState === "visible";
+const sinCambios = () => () => {};
 
 // Fuera de los teléfonos la portada muestra el Diario y el Mazo queda oculto por CSS: no debe medir
 // tarjetas que nadie ve. Misma consulta que globals.css.
@@ -57,6 +58,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   // Solo en el cliente: depende del localStorage y del azar. El servidor pinta el mazo sin donación.
   const [donacion, despacharDonacion] = useReducer(reducirDonacion, null);
   const equipo = useSyncExternalStore(suscribirEquipo, () => esEquipo(localStorage), () => false);
+  // ?donacion en la URL fuerza la tarjeta también en modo equipo (ver posicionForzada).
+  const forzada = useSyncExternalStore(sinCambios, () => new URLSearchParams(window.location.search).has("donacion"), () => false);
   const toques = useRef({ cantidad: 0, ultimo: 0 });
   const [aviso, setAviso] = useState<string | null>(null);
   const temporizadorAviso = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -91,8 +94,10 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   useEffect(() => guardarProgreso(localStorage, firma, estado), [firma, estado]);
 
   useLayoutEffect(() => {
+    const azar = Math.random();
     despacharDonacion({
-      tipo: "planificar", previo: leerDonacion(localStorage), firma, n, hoy: diaDeBuenosAires(new Date()), azar: Math.random(),
+      tipo: "planificar", previo: leerDonacion(localStorage), firma, n, hoy: diaDeBuenosAires(new Date()), azar,
+      forzada: posicionForzada(window.location.search, n, azar),
     });
   }, [firma, n]);
   useEffect(() => {
@@ -100,7 +105,7 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   }, [donacion]);
 
   // El modo equipo solo esconde la tarjeta: el plan se sigue guardando igual.
-  const posicionDonacion = equipo ? null : posicionPendiente(donacion);
+  const posicionDonacion = equipo && !forzada ? null : posicionPendiente(donacion);
   // La tarjeta de donación va antes de la noticia `posicionDonacion` y no cuenta: el contador sigue en la anterior.
   const donacionArriba = posicionDonacion !== null && indice === posicionDonacion;
   const contextoDonacion = useCallback(
@@ -203,21 +208,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
           disabled={indice === 0 || enTransicion || capa !== null}
           onClick={() => despachar({ tipo: "anterior" })}
         >
-          ←<b className={estilos.anteriorTexto}> Anterior</b>
+          ← Anterior
         </button>
-        <a
-          className={estilos.apoyar}
-          href={URL_MATECITO}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Apoyar a Infomate con un matecito"
-          onClick={() => {
-            registrarEvento("donacion_abierta", { superficie: "cabecera" });
-            despacharDonacion({ tipo: "resolver", apoyo: true, hoy: diaDeBuenosAires(new Date()) });
-          }}
-        >
-          🧉<b className={estilos.apoyarTexto}>Apoyar</b>
-        </a>
         {!instalada && (
           <button ref={botonDescargar} className={estilos.descargar} type="button" onClick={() => abrirCapa({ tipo: "guia" })}>
             Descargar

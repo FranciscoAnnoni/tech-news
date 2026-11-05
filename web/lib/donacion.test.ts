@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  elegirPosicion, guardarDonacion, leerDonacion, marcarVista, pilaVisible, planDonacion, posicionPendiente, resolver, tocaHoy,
+  elegirPosicion, guardarDonacion, leerDonacion, marcarVista, pilaVisible, planDonacion, posicionForzada, posicionPendiente,
+  reducirDonacion, resolver, tocaHoy,
   type EstadoDonacion,
 } from "./donacion";
 import { diasEntre } from "./edicion";
@@ -142,5 +143,24 @@ describe("almacenamiento", () => {
     const roto = { getItem: () => { throw new Error("bloqueado"); }, setItem: () => { throw new Error("bloqueado"); } };
     expect(leerDonacion(roto)).toBeNull();
     expect(() => guardarDonacion(roto, { primerDia: "2026-11-01" })).not.toThrow();
+  });
+});
+
+describe("posicionForzada", () => {
+  it("sin el parámetro no fuerza", () => {
+    expect(posicionForzada("", 15, 0)).toBeUndefined();
+    expect(posicionForzada("?n=10", 15, 0)).toBeUndefined();
+  });
+
+  it("?donacion elige al azar y ?donacion=N la pone después de la noticia N", () => {
+    expect(posicionForzada("?donacion", 15, 0)).toBe(4);
+    expect(posicionForzada("?donacion=1", 15, 0)).toBe(1);
+    expect(posicionForzada("?donacion=99", 15, 0)).toBe(14);
+    expect(posicionForzada("?donacion=0", 15, 0)).toBe(4);
+  });
+
+  it("el reductor la muestra aunque hoy no toque", () => {
+    const plan = reducirDonacion(null, { tipo: "planificar", previo: null, firma: "a", n: 15, hoy: "2026-11-04", azar: 0, forzada: 1 });
+    expect(posicionPendiente(plan)).toBe(1);
   });
 });

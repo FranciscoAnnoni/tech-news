@@ -12,9 +12,9 @@ Lector diario de noticias en tarjetas (Next.js, PWA). El collector vive en la ra
 
 ## Donaciones
 
-El Mazo pide apoyo por Matecito con una tarjeta amarilla que no cuenta como noticia, y con el botón 🧉 de la cabecera. El link es `URL_MATECITO` y la frecuencia está en `lib/donacion.ts` (cada 3 días, nunca el primer día del navegador, 30 días de pausa si tocó Apoyar).
+El Mazo pide apoyo por Matecito con una tarjeta amarilla que no cuenta como noticia. El link es `URL_MATECITO` y la frecuencia está en `lib/donacion.ts` (cada 3 días, nunca el primer día del navegador, 30 días de pausa si tocó Apoyar).
 
-Para no ver la tarjeta mientras desarrollan: 5 toques seguidos en el logo **INFOMATE** activan el modo equipo en ese navegador (otros 5 lo apagan). En iPhone, la app instalada guarda su almacenamiento aparte de Safari: hay que activarlo en las dos. Para forzar la tarjeta al probar, en la consola: `localStorage.setItem('infomate:donacion', '{"primerDia":"2026-10-01"}')` y recargar.
+Para no ver la tarjeta mientras desarrollan: 5 toques seguidos en el logo **INFOMATE** activan el modo equipo en ese navegador (otros 5 lo apagan). En iPhone, la app instalada guarda su almacenamiento aparte de Safari: hay que activarlo en las dos. Para probarla: `/?donacion` la fuerza en esa carga (también en modo equipo) en una posición al azar, y `/?donacion=1` la pone después de la primera noticia. Recordar que el Mazo solo se ve en anchos de teléfono.
 
 ## Noticias desde Vercel Blob
 

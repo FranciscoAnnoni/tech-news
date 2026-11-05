@@ -120,14 +120,31 @@ export function pilaVisible(indice: number, n: number, posicion: number | null, 
   return pila;
 }
 
+/**
+ * Para probar: `?donacion` en la URL la muestra en esta carga sin mirar la frecuencia ni el modo equipo, en una
+ * posición al azar; `?donacion=N`, después de la noticia N. Devuelve la posición pedida, o undefined si no se pidió.
+ * No es secreto: lo peor que hace es mostrarle la tarjeta a quien lo escribe.
+ */
+export function posicionForzada(busqueda: string, n: number, azar: number): number | null | undefined {
+  const parametros = new URLSearchParams(busqueda);
+  if (!parametros.has("donacion")) return undefined;
+  const pedida = Number.parseInt(parametros.get("donacion") ?? "", 10);
+  if (Number.isInteger(pedida) && pedida >= 1 && n >= 2) return Math.min(pedida, n - 1);
+  return elegirPosicion(n, azar);
+}
+
 export type AccionDonacion =
-  | { tipo: "planificar"; previo: EstadoDonacion | null; firma: string; n: number; hoy: string; azar: number }
+  | { tipo: "planificar"; previo: EstadoDonacion | null; firma: string; n: number; hoy: string; azar: number; forzada?: number | null }
   | { tipo: "vista"; hoy: string }
   | { tipo: "resolver"; apoyo: boolean; hoy: string };
 
 /** Null hasta que el cliente lee el almacenamiento: el servidor pinta el mazo sin donación. */
 export function reducirDonacion(estado: EstadoDonacion | null, accion: AccionDonacion): EstadoDonacion | null {
-  if (accion.tipo === "planificar") return planDonacion(accion.previo, accion.firma, accion.n, accion.hoy, accion.azar);
+  if (accion.tipo === "planificar") {
+    const plan = planDonacion(accion.previo, accion.firma, accion.n, accion.hoy, accion.azar);
+    if (accion.forzada === undefined) return plan;
+    return { ...plan, edicion: { firma: accion.firma, posicion: accion.forzada, resuelta: false } };
+  }
   if (!estado) return estado;
   return accion.tipo === "vista" ? marcarVista(estado, accion.hoy) : resolver(estado, accion.apoyo, accion.hoy);
 }

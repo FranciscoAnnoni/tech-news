@@ -24,7 +24,7 @@ type Eventos = {
   noticia_no_disponible_vista: Record<string, never>;
   donacion_vista: ContextoDonacion;
   donacion_descartada: ContextoDonacion;
-  donacion_abierta: (ContextoDonacion & { superficie: "tarjeta" }) | { superficie: "cabecera" };
+  donacion_abierta: ContextoDonacion & { superficie: "tarjeta" };
 };
 type Evento = { [K in keyof Eventos]: { nombre: K; propiedades: Eventos[K]; modo: "navegador" | "pwa" } }[keyof Eventos];
 type Cliente = { track: (nombre: string, propiedades: Record<string, unknown>) => void };

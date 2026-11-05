@@ -1,6 +1,8 @@
-/* Toda amarilla, igual que el fondo: el borde y la sombra la separan de la mesa. */
+/* Amarillo pastel: de la familia del fondo, pero más suave para que no se sienta intrusiva. */
 article.donacion {
-  background: var(--amarillo);
+  background: var(--pastel-amarillo);
+  /* Para medir en alto de la tarjeta (cqh). */
+  container-type: size;
 }
 
 span.monograma {
@@ -37,6 +39,8 @@ span.etiqueta {
   flex-direction: column;
   gap: 6px;
   margin-top: 16px;
+  /* Sube todo el bloque (texto y botones) un 20 % del alto de la tarjeta. */
+  margin-bottom: 20cqh;
 }
 
 .apoyar {
@@ -86,5 +90,6 @@ span.etiqueta {
 
   .acciones {
     margin-top: 10px;
+    margin-bottom: 12cqh;
   }
 }
