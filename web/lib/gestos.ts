@@ -1,4 +1,4 @@
-/** Distancia mínima para que un deslizamiento en el Detalle vuelva a las tarjetas. */
+/** Distancia mínima para que arrastrar desde el borde en el Detalle vuelva a las tarjetas. */
 export const UMBRAL_VOLVER = 90;
 /** Distancia hacia abajo para que soltar en el Mazo busque noticias. */
 export const UMBRAL_RECARGA = 110;
@@ -13,9 +13,21 @@ export function direccionDelGesto(dx: number, dy: number): Direccion {
   return Math.abs(dx) > Math.abs(dy) * 1.2 ? "horizontal" : "vertical";
 }
 
-/** En el Detalle, deslizar hacia la izquierda (largo, o corto y rápido) vuelve a las tarjetas. */
+/** Ancho de la franja del borde izquierdo donde tiene que apoyarse el dedo para volver, como en iOS. */
+export const BORDE_VOLVER = 32;
+
+export function empiezaEnElBorde(x: number, izquierda: number): boolean {
+  return x - izquierda <= BORDE_VOLVER;
+}
+
+/** Desde el borde no hace falta ir derecho: alcanza con que avance hacia la derecha más que la mitad de lo que sube o baja. */
+export function esTironDesdeElBorde(dx: number, dy: number): boolean {
+  return dx > 0 && dx >= Math.abs(dy) * 0.5;
+}
+
+/** Arrastrar desde el borde hacia la derecha (largo, o corto y rápido) vuelve a las tarjetas. */
 export function vuelveALasTarjetas(dx: number, velocidad: number): boolean {
-  return dx <= -UMBRAL_VOLVER || (velocidad < -0.6 && dx < -40);
+  return dx >= UMBRAL_VOLVER || (velocidad > 0.5 && dx > 40);
 }
 
 /** Cuánto baja el aviso: sigue al dedo con resistencia y se frena pasado el umbral. */

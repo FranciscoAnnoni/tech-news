@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buscaNoticias, direccionDelGesto, tironDeRecarga, UMBRAL_RECARGA, UMBRAL_VOLVER, vuelveALasTarjetas } from "./gestos";
+import { BORDE_VOLVER, buscaNoticias, direccionDelGesto, empiezaEnElBorde, esTironDesdeElBorde, tironDeRecarga, UMBRAL_RECARGA, UMBRAL_VOLVER, vuelveALasTarjetas } from "./gestos";
 
 describe("dirección del gesto", () => {
   it("no decide con un movimiento mínimo", () => {
@@ -14,18 +14,31 @@ describe("dirección del gesto", () => {
 });
 
 describe("volver a las tarjetas desde el Detalle", () => {
-  it("vuelve al deslizar a la izquierda pasado el umbral", () => {
-    expect(vuelveALasTarjetas(-UMBRAL_VOLVER, 0)).toBe(true);
-    expect(vuelveALasTarjetas(-UMBRAL_VOLVER + 1, 0)).toBe(false);
+  it("solo arranca desde la franja del borde izquierdo", () => {
+    expect(empiezaEnElBorde(BORDE_VOLVER, 0)).toBe(true);
+    expect(empiezaEnElBorde(BORDE_VOLVER + 1, 0)).toBe(false);
+    expect(empiezaEnElBorde(30, 20)).toBe(true);
   });
 
-  it("vuelve con un deslizamiento corto y rápido", () => {
-    expect(vuelveALasTarjetas(-50, -0.8)).toBe(true);
-    expect(vuelveALasTarjetas(-30, -0.8)).toBe(false);
+  it("acepta un tirón en diagonal hacia la derecha", () => {
+    expect(esTironDesdeElBorde(60, 0)).toBe(true);
+    expect(esTironDesdeElBorde(60, 100)).toBe(true);
+    expect(esTironDesdeElBorde(40, 100)).toBe(false);
+    expect(esTironDesdeElBorde(-60, 0)).toBe(false);
   });
 
-  it("deslizar a la derecha no vuelve", () => {
-    expect(vuelveALasTarjetas(200, 1.5)).toBe(false);
+  it("vuelve pasado el umbral hacia la derecha", () => {
+    expect(vuelveALasTarjetas(UMBRAL_VOLVER, 0)).toBe(true);
+    expect(vuelveALasTarjetas(UMBRAL_VOLVER - 1, 0)).toBe(false);
+  });
+
+  it("vuelve con un tirón corto y rápido", () => {
+    expect(vuelveALasTarjetas(50, 0.8)).toBe(true);
+    expect(vuelveALasTarjetas(30, 0.8)).toBe(false);
+  });
+
+  it("hacia la izquierda no vuelve", () => {
+    expect(vuelveALasTarjetas(-200, -1.5)).toBe(false);
   });
 });
 

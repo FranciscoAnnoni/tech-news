@@ -1,85 +1,100 @@
 "use client";
 
-import { useEffect, useRef, type PointerEvent, type ReactNode } from "react";
-import { direccionDelGesto, vuelveALasTarjetas, type Direccion } from "@/lib/gestos";
+import { useEffect, useRef, type ReactNode } from "react";
+import { empiezaEnElBorde, esTironDesdeElBorde, vuelveALasTarjetas } from "@/lib/gestos";
 import estilos from "./DeslizarParaVolver.module.css";
 
 const SALIDA_MS = 200;
+/** Antes de esta distancia todavía no se sabe si es un tirón desde el borde o un scroll. */
+const ZONA_MUERTA = 8;
 
 interface Gesto {
-  id: number;
   x: number;
   y: number;
   ultimoX: number;
   ultimoT: number;
   velocidad: number;
-  direccion: Direccion;
+  estado: "pendiente" | "tirando" | "descartado";
 }
 
 /**
- * Envuelve el Detalle del Mazo: deslizar hacia la izquierda lo cierra y vuelve a las tarjetas, igual que
- * "Volver y seguir". El scroll vertical del Detalle sigue siendo del navegador (touch-action: pan-y).
+ * Envuelve el Detalle del Mazo con el gesto de volver de iOS: apoyar el dedo en el borde izquierdo y arrastrar hacia
+ * la derecha, aunque sea en diagonal. Vuelve a las tarjetas igual que "Volver y seguir".
+ * Eventos touch y no pointer: con touch-action: pan-y el navegador cancela los pointer events si el dedo baja un poco.
+ * Mientras se tira desde el borde se frena el scroll (touchmove no pasivo); el resto del Detalle scrollea como siempre.
  */
 export function DeslizarParaVolver({ alVolver, children }: { alVolver: () => void; children: ReactNode }) {
   const nodo = useRef<HTMLDivElement>(null);
-  const gesto = useRef<Gesto | null>(null);
-  const saliendo = useRef(false);
-  const temporizador = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const volver = useRef(alVolver);
 
-  useEffect(() => () => clearTimeout(temporizador.current), []);
+  useEffect(() => {
+    volver.current = alVolver;
+  }, [alVolver]);
 
-  function mover(dx: number, transicion: string) {
-    if (!nodo.current) return;
-    nodo.current.style.transition = transicion;
-    nodo.current.style.transform = dx ? `translateX(${dx}px)` : "";
-  }
+  useEffect(() => {
+    const capa = nodo.current;
+    if (!capa) return;
+    let gesto: Gesto | null = null;
+    let saliendo = false;
+    let temporizador: ReturnType<typeof setTimeout> | undefined;
 
-  function alBajar(e: PointerEvent<HTMLDivElement>) {
-    if (saliendo.current || gesto.current || e.pointerType === "mouse") return;
-    gesto.current = { id: e.pointerId, x: e.clientX, y: e.clientY, ultimoX: e.clientX, ultimoT: e.timeStamp, velocidad: 0, direccion: null };
-  }
+    const mover = (dx: number, transicion: string) => {
+      capa.style.transition = transicion;
+      capa.style.transform = dx ? `translateX(${dx}px)` : "";
+    };
+    const alTocar = (e: TouchEvent) => {
+      const dedo = e.touches[0];
+      gesto = null;
+      if (saliendo || e.touches.length !== 1 || !dedo) return;
+      if (!empiezaEnElBorde(dedo.clientX, capa.getBoundingClientRect().left)) return;
+      gesto = { x: dedo.clientX, y: dedo.clientY, ultimoX: dedo.clientX, ultimoT: e.timeStamp, velocidad: 0, estado: "pendiente" };
+    };
+    const alMover = (e: TouchEvent) => {
+      const dedo = e.touches[0];
+      if (!gesto || !dedo || gesto.estado === "descartado") return;
+      const dx = dedo.clientX - gesto.x;
+      const dy = dedo.clientY - gesto.y;
+      if (gesto.estado === "pendiente") {
+        if (Math.hypot(dx, dy) < ZONA_MUERTA) return;
+        gesto.estado = esTironDesdeElBorde(dx, dy) ? "tirando" : "descartado";
+        if (gesto.estado === "descartado") return;
+      }
+      if (e.cancelable) e.preventDefault();
+      const dt = e.timeStamp - gesto.ultimoT;
+      if (dt > 0) gesto.velocidad = (dedo.clientX - gesto.ultimoX) / dt;
+      gesto.ultimoX = dedo.clientX;
+      gesto.ultimoT = e.timeStamp;
+      mover(Math.max(dx, 0), "none");
+    };
+    const alSoltar = (e: TouchEvent) => {
+      const dedo = e.changedTouches[0];
+      const g = gesto;
+      gesto = null;
+      if (!g || !dedo || g.estado !== "tirando") return;
+      if (e.type === "touchend" && vuelveALasTarjetas(dedo.clientX - g.x, g.velocidad)) {
+        saliendo = true;
+        mover(capa.offsetWidth, `transform ${SALIDA_MS}ms ease-in`);
+        temporizador = setTimeout(() => volver.current(), SALIDA_MS);
+      } else {
+        mover(0, "transform .2s ease-out");
+      }
+    };
 
-  function alMover(e: PointerEvent<HTMLDivElement>) {
-    const g = gesto.current;
-    if (!g || e.pointerId !== g.id) return;
-    const dx = e.clientX - g.x;
-    if (!g.direccion) {
-      g.direccion = direccionDelGesto(dx, e.clientY - g.y);
-      if (g.direccion === "horizontal") e.currentTarget.setPointerCapture(g.id);
-    }
-    if (g.direccion !== "horizontal") return;
-    const dt = e.timeStamp - g.ultimoT;
-    if (dt > 0) g.velocidad = (e.clientX - g.ultimoX) / dt;
-    g.ultimoX = e.clientX;
-    g.ultimoT = e.timeStamp;
-    // Solo acompaña hacia la izquierda: a la derecha no hay nada.
-    mover(Math.min(dx, 0), "none");
-  }
-
-  function alSoltar(e: PointerEvent<HTMLDivElement>, cancelado: boolean) {
-    const g = gesto.current;
-    if (!g || e.pointerId !== g.id) return;
-    gesto.current = null;
-    if (g.direccion !== "horizontal") return;
-    if (!cancelado && vuelveALasTarjetas(e.clientX - g.x, g.velocidad)) {
-      saliendo.current = true;
-      if (nodo.current) mover(-nodo.current.offsetWidth, `transform ${SALIDA_MS}ms ease-in`);
-      temporizador.current = setTimeout(alVolver, SALIDA_MS);
-    } else {
-      mover(0, "transform .2s ease-out");
-    }
-  }
+    capa.addEventListener("touchstart", alTocar, { passive: true });
+    capa.addEventListener("touchmove", alMover, { passive: false });
+    capa.addEventListener("touchend", alSoltar, { passive: true });
+    capa.addEventListener("touchcancel", alSoltar, { passive: true });
+    return () => {
+      clearTimeout(temporizador);
+      capa.removeEventListener("touchstart", alTocar);
+      capa.removeEventListener("touchmove", alMover);
+      capa.removeEventListener("touchend", alSoltar);
+      capa.removeEventListener("touchcancel", alSoltar);
+    };
+  }, []);
 
   return (
-    <div
-      ref={nodo}
-      className={estilos.capa}
-      data-prueba="deslizar-para-volver"
-      onPointerDown={alBajar}
-      onPointerMove={alMover}
-      onPointerUp={(e) => alSoltar(e, false)}
-      onPointerCancel={(e) => alSoltar(e, true)}
-    >
+    <div ref={nodo} className={estilos.capa} data-prueba="deslizar-para-volver">
       {children}
     </div>
   );
