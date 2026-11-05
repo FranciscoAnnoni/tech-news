@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { empiezaEnElBorde, esTironDesdeElBorde, vuelveALasTarjetas } from "@/lib/gestos";
-import { estaInstalada } from "@/lib/instalacion";
-import { tieneGestoDeVolverDelSistema } from "@/lib/plataforma";
 import estilos from "./DeslizarParaVolver.module.css";
 
 const SALIDA_MS = 200;
@@ -24,7 +22,6 @@ interface Gesto {
  * la derecha, aunque sea en diagonal. Vuelve a las tarjetas igual que "Volver y seguir".
  * Eventos touch y no pointer: con touch-action: pan-y el navegador cancela los pointer events si el dedo baja un poco.
  * Mientras se tira desde el borde se frena el scroll (touchmove no pasivo); el resto del Detalle scrollea como siempre.
- * En iOS (Safari y app instalada) no se usa: el sistema ya tiene ese gesto y, con los dos, se veían tres pantallas.
  */
 export function DeslizarParaVolver({ alVolver, children }: { alVolver: () => void; children: ReactNode }) {
   const nodo = useRef<HTMLDivElement>(null);
@@ -37,8 +34,6 @@ export function DeslizarParaVolver({ alVolver, children }: { alVolver: () => voi
   useEffect(() => {
     const capa = nodo.current;
     if (!capa) return;
-    const entorno = { ua: navigator.userAgent, plataformaNavegador: navigator.platform, toquesMaximos: navigator.maxTouchPoints };
-    if (tieneGestoDeVolverDelSistema({ ...entorno, instalada: estaInstalada() })) return;
     let gesto: Gesto | null = null;
     let saliendo = false;
     let temporizador: ReturnType<typeof setTimeout> | undefined;
