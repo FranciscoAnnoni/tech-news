@@ -10,7 +10,6 @@ import { firmaDelMazo, guardarProgreso, leerProgreso } from "@/lib/progreso";
 import type { TarjetaNoticia } from "@/lib/tipos";
 import { BotonCompartir } from "./BotonCompartir";
 import { Cargando } from "./Cargando";
-import { DeslizarParaVolver } from "./DeslizarParaVolver";
 import { Detalle } from "./Detalle";
 import { Guia } from "./Guia";
 import { Tarjeta } from "./Tarjeta";
@@ -184,7 +183,6 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
           <div className={estilos.fin} data-prueba="fin">
             <h2>Terminaste.</h2>
             <p>{textoFin(estado)}</p>
-            <p>No hay más noticias por ahora.</p>
             <button type="button" onClick={() => {
               medicionActual = crearMedicionMazo(crearId());
               aperturaRegistrada.current = null;
@@ -227,19 +225,17 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
       </footer>
 
       {tarjetaAbierta && (
-        <DeslizarParaVolver alVolver={cerrarCapa}>
-          <Detalle
-            tarjeta={tarjetaAbierta}
-            variante="capa"
-            contextoMazo={() => ({ recorrido_id: obtenerMedicion().recorrido_id, posicion: indice + 1, cantidad_tarjetas: n })}
-            compartir={<BotonCompartir identificador={tarjetaAbierta.identificador} titulo={tarjetaAbierta.titulo} contexto={() => ({ ...contextoMazo(tarjetaAbierta, obtenerMedicion().recorrido_id, indice, n), superficie: "capa" })} />}
-            cierre={
-              <button className={estilosDetalle.boton} type="button" onClick={cerrarCapa}>
-                Volver y seguir
-              </button>
-            }
-          />
-        </DeslizarParaVolver>
+        <Detalle
+          tarjeta={tarjetaAbierta}
+          variante="capa"
+          contextoMazo={() => ({ recorrido_id: obtenerMedicion().recorrido_id, posicion: indice + 1, cantidad_tarjetas: n })}
+          compartir={<BotonCompartir identificador={tarjetaAbierta.identificador} titulo={tarjetaAbierta.titulo} contexto={() => ({ ...contextoMazo(tarjetaAbierta, obtenerMedicion().recorrido_id, indice, n), superficie: "capa" })} />}
+          cierre={
+            <button className={estilosDetalle.boton} type="button" onClick={cerrarCapa}>
+              Volver y seguir
+            </button>
+          }
+        />
       )}
       {capa?.tipo === "guia" && <Guia alCerrar={cerrarCapa} />}
     </div>

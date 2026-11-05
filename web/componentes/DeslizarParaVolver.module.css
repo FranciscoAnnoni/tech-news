@@ -1,7 +1,0 @@
-/* Mismo lugar que la capa del Detalle: lo que se mueve al deslizar es este contenedor. */
-.capa {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  will-change: transform;
-}
