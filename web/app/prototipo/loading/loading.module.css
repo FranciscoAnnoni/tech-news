@@ -1,4 +1,5 @@
-/* PROTOTIPO — tres pantallas de carga. Solo CSS. */
+/* PROTOTIPO — tres formas de apilar el mazo del loading sin el negro doble. Solo CSS.
+   El negro doble salía de la sombra de cada carta + su borde, repetidos a 4 px uno del otro. */
 .pantalla {
   position: absolute;
   inset: 0;
@@ -12,7 +13,7 @@
 }
 
 .marca {
-  margin: 28px 0 4px;
+  margin: 32px 0 4px;
   font: 900 22px/1 Georgia, "Times New Roman", serif;
   letter-spacing: -0.01em;
 }
@@ -25,19 +26,15 @@
   text-transform: uppercase;
 }
 
-.corta {
-  width: 60% !important;
-}
-
-/* ---------- A: mazo chico que se mezcla ---------- */
+/* ---------- Común: la carta con skeleton ---------- */
 .mazo {
+  --t: 2.4s;
   position: relative;
   width: 92px;
   height: 124px;
 }
 
 .carta {
-  --t: 2.4s;
   position: absolute;
   inset: 0;
   display: flex;
@@ -46,39 +43,8 @@
   padding: 9px;
   background: var(--papel);
   border: 2.5px solid var(--tinta);
-  box-shadow: 3px 3px 0 var(--tinta);
-  animation: mezclar var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation: var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite;
   animation-delay: calc(var(--i) * var(--t) / -3);
-}
-
-/* Cada carta pasa por arriba → afuera → abajo → medio → arriba. Las tres desfasadas un tercio. */
-@keyframes mezclar {
-  0% {
-    transform: translate(0, 0);
-    z-index: 3;
-  }
-  10% {
-    transform: translate(78%, -6px) rotate(14deg);
-    z-index: 3;
-  }
-  11% {
-    z-index: 1;
-  }
-  22%,
-  33% {
-    transform: translate(8px, 8px);
-    z-index: 1;
-  }
-  45%,
-  66% {
-    transform: translate(4px, 4px);
-    z-index: 2;
-  }
-  78%,
-  100% {
-    transform: translate(0, 0);
-    z-index: 3;
-  }
 }
 
 .origen {
@@ -96,7 +62,6 @@
 }
 
 .lineaFuente,
-.titular,
 .renglon {
   display: block;
   background: linear-gradient(90deg, #e3ddcb 0%, #f7f3e7 50%, #e3ddcb 100%);
@@ -110,16 +75,19 @@
 }
 
 .titular {
+  display: block;
   width: 100%;
   height: 9px;
-  background-color: var(--tinta);
-  background-image: none;
-  animation: none;
+  background: var(--tinta);
 }
 
 .renglon {
   width: 100%;
   height: 5px;
+}
+
+.corta {
+  width: 60%;
 }
 
 @keyframes brillo {
@@ -128,205 +96,156 @@
   }
 }
 
-/* ---------- B: Lottie "News or Document - Scroll", 100×100, 2 s ---------- */
-.lottie {
-  --t: 2s;
-  --curva: cubic-bezier(0.33, 1, 0.68, 1);
-  position: relative;
-  width: 100px;
-  height: 100px;
+/* Cada carta recorre arriba → afuera → abajo → medio → arriba, desfasadas un tercio.
+   Lo que cambia entre variantes es dónde queda cada lugar y cómo se ven las de atrás. */
+
+/* ---------- A: capas de color ----------
+   Sin sombras. Las de atrás se pintan del pastel de su categoría: entre borde y borde se ve color, no negro. */
+.capas .carta {
+  animation-name: capas;
 }
 
-/* Hoja de atrás: asoma a la izquierda y sube cuando la de adelante baja. */
-.atras {
-  position: absolute;
-  left: 12.5px;
-  top: 14px;
-  width: 54px;
-  height: 75px;
-  background: var(--tinta);
-  border-radius: 0 0 0 8px;
-  transform: translateY(17px);
-  animation: subir var(--t) var(--curva) infinite;
+/* El contenido solo se ve en la de arriba: atrás son hojas lisas de color. */
+.capas .origen,
+.capas .titular,
+.capas .renglon {
+  animation: contenido var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation-delay: calc(var(--i) * var(--t) / -3);
 }
 
-@keyframes subir {
-  0%,
-  100% {
-    transform: translateY(17px);
+@keyframes capas {
+  0% {
+    transform: translate(0, 0);
+    background-color: var(--papel);
+    z-index: 3;
   }
-  25%,
-  55% {
-    transform: translateY(0);
+  10% {
+    transform: translate(80%, -6px) rotate(14deg);
+    background-color: var(--papel);
+    z-index: 3;
   }
-}
-
-/* Hoja de adelante: baja el borde de arriba (recorte) y las columnas corren hacia arriba. */
-.adelante {
-  position: absolute;
-  left: 29px;
-  top: 10.5px;
-  width: 60.5px;
-  height: 78.5px;
-  overflow: hidden;
-  background: var(--papel);
-  border: 2px solid var(--tinta);
-  border-radius: 0 0 5px 0;
-  animation: bajar var(--t) var(--curva) infinite;
-}
-
-@keyframes bajar {
-  0%,
-  100% {
-    clip-path: inset(0 0 0 0);
+  11% {
+    z-index: 1;
   }
-  25%,
-  55% {
-    clip-path: inset(17px 0 0 0);
-  }
-}
-
-.contenido {
-  display: flex;
-  flex-direction: column;
-  gap: 4.5px;
-  padding: 9.5px 8px 0 11px;
-  animation: correr var(--t) var(--curva) infinite;
-}
-
-@keyframes correr {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  25%,
-  55% {
-    transform: translateY(-4px);
-  }
-}
-
-.cabezal {
-  height: 8px;
-  margin-bottom: 2px;
-  background: var(--amarillo);
-  border: 1.5px solid var(--tinta);
-}
-
-.fila {
-  display: flex;
-  gap: 4px;
-}
-
-.fila i {
-  flex: 1;
-  height: 3.75px;
-  background: var(--tinta);
-}
-
-/* ---------- C: diario chico que se dobla ---------- */
-.diario {
-  --t: 2.6s;
-  position: relative;
-  display: flex;
-  width: 120px;
-  height: 84px;
-  perspective: 420px;
-  animation: respirar var(--t) ease-in-out infinite;
-}
-
-@keyframes respirar {
-  0%,
-  100% {
-    transform: translateX(0);
+  22%,
+  33% {
+    transform: translate(10px, 10px);
+    background-color: var(--tono);
+    z-index: 1;
   }
   45%,
-  70% {
-    /* Doblado queda la mitad del ancho: se corre para seguir centrado. */
-    transform: translateX(30px);
+  66% {
+    transform: translate(5px, 5px);
+    background-color: var(--tono);
+    z-index: 2;
+  }
+  78%,
+  100% {
+    transform: translate(0, 0);
+    background-color: var(--papel);
+    z-index: 3;
   }
 }
 
-.pagina {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 60px;
-  height: 84px;
-  padding: 7px 6px;
-  background: var(--papel);
-  border: 2.5px solid var(--tinta);
-}
-
-.diario > .pagina {
-  border-right-width: 1.25px;
-}
-
-.mancheta {
-  margin-bottom: 3px;
-  padding-bottom: 3px;
-  border-bottom: 1.5px solid var(--tinta);
-  font: 900 7px/1 Georgia, "Times New Roman", serif;
-  letter-spacing: -0.02em;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.linea {
-  display: block;
-  width: 100%;
-  height: 4px;
-  background: var(--tinta);
-  opacity: 0.85;
-}
-
-.foto {
-  display: block;
-  height: 26px;
-  margin-bottom: 2px;
-  background: var(--pastel-global);
-  border: 1.5px solid var(--tinta);
-}
-
-.solapa {
-  position: relative;
-  width: 60px;
-  height: 84px;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  animation: doblar var(--t) cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-
-@keyframes doblar {
+@keyframes contenido {
   0%,
-  15% {
-    transform: rotateY(0);
+  10% {
+    opacity: 1;
+  }
+  20%,
+  70% {
+    opacity: 0;
+  }
+  78%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---------- B: abanico ----------
+   Las cartas giran desde abajo como un abanico: los bordes se cruzan en ángulo y nunca van paralelos. */
+.abanico .carta {
+  transform-origin: 50% 110%;
+  animation-name: abanico;
+}
+
+@keyframes abanico {
+  0% {
+    transform: rotate(0deg);
+    z-index: 3;
+  }
+  12% {
+    transform: translateY(-34px) rotate(0deg);
+    z-index: 3;
+  }
+  13% {
+    z-index: 1;
+  }
+  24%,
+  33% {
+    transform: rotate(-14deg);
+    z-index: 1;
   }
   45%,
-  70% {
-    transform: rotateY(-180deg);
+  66% {
+    transform: rotate(9deg);
+    z-index: 2;
   }
+  78%,
   100% {
-    transform: rotateY(0);
+    transform: rotate(0deg);
+    z-index: 3;
   }
 }
 
-.cara {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-left-width: 1.25px;
+/* ---------- C: como el Mazo de la app ----------
+   Las de atrás asoman solo por abajo, más chicas, como en la portada. Una sola sombra: la de la carta de arriba. */
+.comoMazo .carta {
+  transform-origin: bottom center;
+  animation-name: comoMazo;
 }
 
-.dorso {
-  align-items: center;
-  justify-content: center;
-  transform: rotateY(180deg);
-  background: var(--papel);
-  border-left-width: 2.5px;
-  border-right-width: 1.25px;
+@keyframes comoMazo {
+  0% {
+    transform: translateY(0) scale(1);
+    background-color: var(--papel);
+    box-shadow: 4px 4px 0 var(--tinta);
+    z-index: 3;
+  }
+  10% {
+    transform: translate(80%, -8px) rotate(14deg);
+    background-color: var(--papel);
+    box-shadow: 4px 4px 0 var(--tinta);
+    z-index: 3;
+  }
+  11% {
+    z-index: 1;
+  }
+  22%,
+  33% {
+    transform: translateY(14px) scale(0.86);
+    background-color: var(--tono);
+    box-shadow: 0 0 0 transparent;
+    z-index: 1;
+  }
+  45%,
+  66% {
+    transform: translateY(7px) scale(0.93);
+    background-color: var(--tono);
+    box-shadow: 0 0 0 transparent;
+    z-index: 2;
+  }
+  78%,
+  100% {
+    transform: translateY(0) scale(1);
+    background-color: var(--papel);
+    box-shadow: 4px 4px 0 var(--tinta);
+    z-index: 3;
+  }
 }
 
-.inicial {
-  font: 900 40px/1 Georgia, "Times New Roman", serif;
+/* En A los renglones conservan el brillo además del fundido. */
+.capas .renglon {
+  animation: contenido var(--t) cubic-bezier(0.45, 0, 0.2, 1) infinite, brillo 1.2s linear infinite;
+  animation-delay: calc(var(--i) * var(--t) / -3), 0s;
 }
