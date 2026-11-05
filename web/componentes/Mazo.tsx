@@ -5,7 +5,6 @@ import { crearId, registrarEvento } from "@/lib/analitica";
 import { conteosFinales, contextoMazo, crearMedicionMazo } from "@/lib/medicionMazo";
 import { estaInstalada, suscribirInstalacion } from "@/lib/instalacion";
 import { ESTADO_INICIAL, reducirMazo, textoFin } from "@/lib/mazo";
-import { buscaNoticias, direccionDelGesto, tironDeRecarga, type Direccion } from "@/lib/gestos";
 import { CONSULTA_DIARIO } from "@/lib/portada";
 import { firmaDelMazo, guardarProgreso, leerProgreso } from "@/lib/progreso";
 import type { TarjetaNoticia } from "@/lib/tipos";
@@ -46,25 +45,12 @@ function suscribirDiario(avisar: () => void) {
 }
 const seVeElDiario = () => window.matchMedia(CONSULTA_DIARIO).matches;
 
-/** Algún contenedor con scroll entre el dedo y el Mazo ya bajó: el tirón es para volver arriba, no para recargar. */
-function hayScrollArriba(objetivo: EventTarget | null, mazo: HTMLElement): boolean {
-  for (let nodo = objetivo instanceof Element ? objetivo : null; nodo && nodo !== mazo; nodo = nodo.parentElement) {
-    if (nodo.scrollTop > 0) return true;
-  }
-  return false;
-}
-
-type Recarga = "inactiva" | "tirando" | "lista" | "buscando";
-
 
 export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; numeroEdicion: number | null }) {
   const [estado, despachar] = useReducer(reducirMazo, ESTADO_INICIAL);
   const [capa, setCapa] = useState<Capa>(null);
   const [enTransicion, setEnTransicion] = useState(false);
   const botonDescargar = useRef<HTMLButtonElement>(null);
-  const raiz = useRef<HTMLDivElement>(null);
-  const aviso = useRef<HTMLDivElement>(null);
-  const [recarga, setRecarga] = useState<Recarga>("inactiva");
   const aperturaRegistrada = useRef<Capa>(null);
   const documentoALaVista = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
   const oculto = useSyncExternalStore(suscribirDiario, seVeElDiario, () => true);
@@ -158,60 +144,6 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
     return () => window.removeEventListener("popstate", alVolver);
   }, [capa]);
 
-  // Tirar hacia abajo en el Mazo (sin capa abierta) recarga la página para buscar noticias nuevas. Eventos touch y no
-  // pointer: el texto de la tarjeta tiene scroll propio y el navegador cancela los pointer events al scrollear.
-  const sinCapa = !capa && !enTransicion;
-  useEffect(() => {
-    const mazo = raiz.current;
-    if (!mazo || !sinCapa) return;
-    let inicio: { x: number; y: number; direccion: Direccion } | null = null;
-    let mostrado: Recarga = "inactiva";
-    const mostrar = (dy: number) => {
-      if (aviso.current) aviso.current.style.transform = `translate(-50%, ${tironDeRecarga(dy)}px)`;
-    };
-    const alTocar = (e: TouchEvent) => {
-      const dedo = e.touches[0];
-      inicio = e.touches.length === 1 && dedo && !hayScrollArriba(e.target, mazo) ? { x: dedo.clientX, y: dedo.clientY, direccion: null } : null;
-    };
-    const alMover = (e: TouchEvent) => {
-      const dedo = e.touches[0];
-      if (!inicio || !dedo) return;
-      const dx = dedo.clientX - inicio.x;
-      const dy = dedo.clientY - inicio.y;
-      inicio.direccion ??= direccionDelGesto(dx, dy);
-      if (inicio.direccion !== "vertical" || dy <= 0) return;
-      mostrar(dy);
-      const ahora = buscaNoticias(dx, dy) ? "lista" : "tirando";
-      if (ahora !== mostrado) setRecarga(ahora);
-      mostrado = ahora;
-    };
-    const alSoltar = (e: TouchEvent) => {
-      const dedo = e.changedTouches[0];
-      if (!inicio || !dedo) return;
-      const { x, y, direccion } = inicio;
-      inicio = null;
-      mostrado = "inactiva";
-      if (direccion !== "vertical") return;
-      if (buscaNoticias(dedo.clientX - x, dedo.clientY - y)) {
-        setRecarga("buscando");
-        window.location.reload();
-      } else {
-        mostrar(0);
-        setRecarga("inactiva");
-      }
-    };
-    mazo.addEventListener("touchstart", alTocar, { passive: true });
-    mazo.addEventListener("touchmove", alMover, { passive: true });
-    mazo.addEventListener("touchend", alSoltar, { passive: true });
-    mazo.addEventListener("touchcancel", alSoltar, { passive: true });
-    return () => {
-      mazo.removeEventListener("touchstart", alTocar);
-      mazo.removeEventListener("touchmove", alMover);
-      mazo.removeEventListener("touchend", alSoltar);
-      mazo.removeEventListener("touchcancel", alSoltar);
-    };
-  }, [sinCapa, listo]);
-
   // appinstalled llega con la guía abierta.
   useEffect(() => {
     if (instalada && capa?.tipo === "guia") window.history.back();
@@ -225,17 +157,7 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
   if (!listo) return <Cargando numero={numeroEdicion} />;
 
   return (
-    <div ref={raiz} className={estilos.mazo}>
-      <div
-        ref={aviso}
-        className={estilos.recarga}
-        data-estado={recarga}
-        data-prueba="recarga"
-        role="status"
-        aria-hidden={recarga === "inactiva"}
-      >
-        {recarga === "buscando" ? "Buscando noticias…" : recarga === "lista" ? "Soltá para buscar noticias" : "↓ Tirá para buscar noticias"}
-      </div>
+    <div className={estilos.mazo}>
       <header className={estilos.cabecera}>
         <span>INFOMATE</span>
         <button
@@ -262,7 +184,7 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
           <div className={estilos.fin} data-prueba="fin">
             <h2>Terminaste.</h2>
             <p>{textoFin(estado)}</p>
-            <p>No hay más noticias por ahora. Tirá hacia abajo para buscar nuevas.</p>
+            <p>No hay más noticias por ahora.</p>
             <button type="button" onClick={() => {
               medicionActual = crearMedicionMazo(crearId());
               aperturaRegistrada.current = null;
