@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { detectarPlataforma } from "./plataforma";
+import { detectarPlataforma, tieneGestoDeVolverDelSistema } from "./plataforma";
 
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)";
 const ANDROID = "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140 Mobile Safari/537.36";
@@ -24,4 +24,16 @@ it("reconoce un iPad que se presenta como Mac", () => {
 
 it("reconoce Telegram por sus objetos en window", () => {
   expect(detectarPlataforma({ ua: `${IPHONE} Safari/604.1`, telegram: true })).toBe("inapp");
+});
+
+it.each([
+  ["Safari iOS", { ua: `${IPHONE} Version/18.5 Mobile/15E148 Safari/604.1` }, true],
+  ["app instalada en iOS (sin Safari en el UA)", { ua: `${IPHONE} Mobile/15E148`, instalada: true }, true],
+  ["iPad que se presenta como Mac", { ua: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/18.5 Safari/605.1.15", plataformaNavegador: "MacIntel", toquesMaximos: 5 }, true],
+  ["WebView de otra app en iOS", { ua: `${IPHONE} Mobile/15E148` }, false],
+  ["Instagram en iOS", { ua: `${IPHONE} Mobile/15E148 Safari/604.1 Instagram 350.0` }, false],
+  ["Chrome Android", { ua: ANDROID }, false],
+  ["app instalada en Android", { ua: ANDROID, instalada: true }, false],
+])("gesto de volver del sistema: %s", (_nombre, entorno, esperado) => {
+  expect(tieneGestoDeVolverDelSistema(entorno)).toBe(esperado);
 });
