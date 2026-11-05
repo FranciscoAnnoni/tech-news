@@ -9,6 +9,7 @@ import { CONSULTA_DIARIO } from "@/lib/portada";
 import { firmaDelMazo, guardarProgreso, leerProgreso } from "@/lib/progreso";
 import type { TarjetaNoticia } from "@/lib/tipos";
 import { BotonCompartir } from "./BotonCompartir";
+import { Cargando } from "./Cargando";
 import { Detalle } from "./Detalle";
 import { Guia } from "./Guia";
 import { Tarjeta } from "./Tarjeta";
@@ -44,7 +45,7 @@ function suscribirDiario(avisar: () => void) {
 const seVeElDiario = () => window.matchMedia(CONSULTA_DIARIO).matches;
 
 
-export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
+export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; numeroEdicion: number | null }) {
   const [estado, despachar] = useReducer(reducirMazo, ESTADO_INICIAL);
   const [capa, setCapa] = useState<Capa>(null);
   const [enTransicion, setEnTransicion] = useState(false);
@@ -60,14 +61,20 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const { indice } = estado;
   const firma = firmaDelMazo(tarjetas.map((t) => t.id));
 
-  // Layout effect: restaura antes de pintar, así no se ve la primera tarjeta y luego el salto a donde quedó.
+  // El servidor no conoce el progreso (vive en localStorage) y pintaría siempre la primera tarjeta: hasta leerlo se
+  // muestra el loading. Restaurar y destapar van en el mismo layout effect, antes de pintar, así nunca se ven las
+  // tarjetas de alguien que ya terminó para después saltar a "Terminaste".
+  const [listo, marcarListo] = useReducer(() => true, false);
   useLayoutEffect(() => {
     const guardado = leerProgreso(localStorage, firma, n);
     if (guardado) despachar({ tipo: "restaurar", estado: guardado });
+    marcarListo();
   }, [firma, n]);
 
-  // Si llegó otra edición, la primera escritura pisa el progreso viejo.
-  useEffect(() => guardarProgreso(localStorage, firma, estado), [firma, estado]);
+  // Si llegó otra edición, la primera escritura pisa el progreso viejo. Antes de leerlo no se escribe nada.
+  useEffect(() => {
+    if (listo) guardarProgreso(localStorage, firma, estado);
+  }, [firma, estado, listo]);
 
   useEffect(() => {
     obtenerMedicion();
@@ -92,7 +99,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   }, [n, registrarInicio, tarjetas]);
 
   useEffect(() => {
-    if (!visible || !documentoVisible() || capa?.tipo === "guia") return;
+    // Sin el progreso restaurado, la tarjeta de arriba todavía no es la que se ve.
+    if (!listo || !visible || !documentoVisible() || capa?.tipo === "guia") return;
     const medicion = registrarInicio();
     if (capa?.tipo === "detalle") {
       if (aperturaRegistrada.current !== capa) {
@@ -108,7 +116,7 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
     if (!capa && !enTransicion && indice >= n && medicion.completar(n)) {
       registrarEvento("mazo_completado", { recorrido_id: medicion.recorrido_id, cantidad_tarjetas: n, ...conteosFinales(estado) });
     }
-  }, [capa, enTransicion, estado, indice, n, registrarInicio, registrarVista, tarjetas, visible]);
+  }, [capa, enTransicion, estado, indice, listo, n, registrarInicio, registrarVista, tarjetas, visible]);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -144,6 +152,8 @@ export function Mazo({ tarjetas }: { tarjetas: TarjetaNoticia[] }) {
   const visibles = tarjetas.slice(indice, indice + PROFUNDIDAD);
 
   const tarjetaAbierta = capa?.tipo === "detalle" ? tarjetas[capa.indice] : null;
+
+  if (!listo) return <Cargando numero={numeroEdicion} />;
 
   return (
     <div className={estilos.mazo}>

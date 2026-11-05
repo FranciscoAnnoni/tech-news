@@ -152,3 +152,41 @@ describe("obtenerNoticias", () => {
     expect(await obtenerNoticias()).toEqual([]);
   });
 });
+
+describe("fallas momentáneas de Blob", () => {
+  const feed = [{ ...datos.noticias[0], categoria: "tech", fecha_publicacion: "2026-11-01T10:00:00Z" }];
+
+  it.each([403, 500, 503])("reintenta una vez si Blob responde %i", async (estado) => {
+    vi.stubEnv("INFOMATE_STORE_ID", storeId);
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: estado }))
+      .mockResolvedValueOnce(Response.json(feed));
+    vi.stubGlobal("fetch", fetch);
+    expect(await obtenerNoticias()).toHaveLength(1);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenLastCalledWith(url, { cache: "no-store" });
+  });
+
+  it("reintenta si falla la red", async () => {
+    vi.stubEnv("INFOMATE_STORE_ID", storeId);
+    const fetch = vi.fn().mockRejectedValueOnce(new TypeError("fetch failed")).mockResolvedValueOnce(Response.json(feed));
+    vi.stubGlobal("fetch", fetch);
+    expect(await obtenerNoticias()).toHaveLength(1);
+  });
+
+  it("si falla dos veces, tira el error con el estado", async () => {
+    vi.stubEnv("INFOMATE_STORE_ID", storeId);
+    const fetch = vi.fn().mockImplementation(async () => new Response(null, { status: 403 }));
+    vi.stubGlobal("fetch", fetch);
+    await expect(obtenerNoticias()).rejects.toThrow("HTTP 403");
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("no reintenta un 404 de una edición", async () => {
+    vi.stubEnv("INFOMATE_STORE_ID", storeId);
+    const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 404 }));
+    vi.stubGlobal("fetch", fetch);
+    expect(await buscarNoticia(`2026-11-02-tech-${datos.noticias[0].id}`, new Date("2026-11-03T12:00:00Z"))).toEqual({ disponible: false });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});

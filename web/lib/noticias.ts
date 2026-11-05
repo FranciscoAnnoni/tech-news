@@ -30,6 +30,21 @@ function esNoticia(valor: unknown): valor is Noticia {
     && typeof valor.puntaje === "number" && Number.isFinite(valor.puntaje);
 }
 
+/** Espera antes del segundo intento a Blob. */
+export const ESPERA_REINTENTO_MS = 400;
+
+/**
+ * El Blob es público: no necesita el token de escritura. No congelar el feed en el build.
+ * Blob a veces responde 403 o 5xx de forma momentánea (36 veces en producción entre el 2 y el 5/11/2026): un solo
+ * reintento corto lo absorbe. Un 404 no se reintenta, porque es una edición que no existe.
+ */
+async function pedirABlob(url: string): Promise<Response> {
+  const respuesta = await fetch(url, { cache: "no-store" }).catch(() => null);
+  if (respuesta && (respuesta.ok || respuesta.status === 404)) return respuesta;
+  await new Promise((listo) => setTimeout(listo, ESPERA_REINTENTO_MS));
+  return fetch(url, { cache: "no-store" });
+}
+
 /** Único acceso a Blob, solo en el servidor. La edición omite el archivo mutable hoy.json. */
 async function leerNoticias(edicion?: string): Promise<Noticia[]> {
   const storeId = process.env.INFOMATE_STORE_ID?.trim();
@@ -38,8 +53,7 @@ async function leerNoticias(edicion?: string): Promise<Noticia[]> {
     const store = storeId.replace(/^store_/, "").toLowerCase();
     if (!/^[a-z0-9]+$/.test(store)) throw new Error("INFOMATE_STORE_ID inválido.");
     const url = `https://${store}.public.blob.vercel-storage.com/infomate/${edicion ?? "hoy"}.json`;
-    // El Blob es público: no necesita el token de escritura. No congelar el feed en el build.
-    const respuesta = await fetch(url, { cache: "no-store" });
+    const respuesta = await pedirABlob(url);
     if (edicion && respuesta.status === 404) return [];
     if (!respuesta.ok) throw new Error(`No se pudieron obtener las noticias de Blob (HTTP ${respuesta.status}).`);
     const feed: unknown = await respuesta.json();

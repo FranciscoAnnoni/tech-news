@@ -1,0 +1,196 @@
+.pantalla {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--amarillo);
+  color: var(--tinta);
+  font-family: var(--mono);
+}
+
+.marca {
+  margin: 34px 0 4px;
+  font: 900 22px/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -0.01em;
+}
+
+.edicion {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* El mazo. Cada carta recorre arriba → afuera → fondo → medio → arriba; las tres van desfasadas un tercio.
+   Sin sombras: si cada carta tiene la suya, sumadas a los bordes se ven como un negro doble. */
+.mazo {
+  --t: 2.4s;
+  --curva: cubic-bezier(0.45, 0, 0.2, 1);
+  /* Cuánto se corren las de atrás: la del medio y la del fondo. */
+  --medio: 8.5px;
+  --fondo: 17px;
+  position: relative;
+  width: 92px;
+  height: 124px;
+  /* Centra el conjunto, contando lo que asoman las de atrás. */
+  margin: 0 17px 17px 0;
+}
+
+.carta {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px;
+  background: var(--papel);
+  border: 2.5px solid var(--tinta);
+  animation: mezclar var(--t) var(--curva) infinite;
+  animation-delay: calc(var(--i) * var(--t) / -3);
+}
+
+@keyframes mezclar {
+  0% {
+    transform: translate(0, 0);
+    background-color: var(--papel);
+    z-index: 3;
+  }
+  10% {
+    transform: translate(80%, -6px) rotate(14deg);
+    background-color: var(--papel);
+    z-index: 3;
+  }
+  11% {
+    z-index: 1;
+  }
+  22%,
+  33% {
+    transform: translate(var(--fondo), var(--fondo));
+    background-color: var(--tono);
+    z-index: 1;
+  }
+  45%,
+  66% {
+    transform: translate(var(--medio), var(--medio));
+    background-color: var(--tono);
+    z-index: 2;
+  }
+  78%,
+  100% {
+    transform: translate(0, 0);
+    background-color: var(--papel);
+    z-index: 3;
+  }
+}
+
+/* El skeleton solo se ve en la carta de arriba: atrás son hojas lisas de color. */
+.origen,
+.titular,
+.renglon {
+  animation: contenido var(--t) var(--curva) infinite;
+  animation-delay: calc(var(--i) * var(--t) / -3);
+}
+
+@keyframes contenido {
+  0%,
+  10% {
+    opacity: 1;
+  }
+  20%,
+  70% {
+    opacity: 0;
+  }
+  78%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.origen {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: auto;
+}
+
+.monograma {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--tinta);
+  background: var(--tono);
+}
+
+.fuente,
+.renglon {
+  display: block;
+  background: linear-gradient(90deg, #e3ddcb 0%, #f7f3e7 50%, #e3ddcb 100%);
+  background-size: 200% 100%;
+}
+
+.fuente {
+  width: 34px;
+  height: 6px;
+  animation: brillo 1.2s linear infinite;
+}
+
+.titular {
+  display: block;
+  width: 100%;
+  height: 9px;
+  background: var(--tinta);
+}
+
+.renglon {
+  width: 100%;
+  height: 5px;
+  animation:
+    contenido var(--t) var(--curva) infinite,
+    brillo 1.2s linear infinite;
+  animation-delay: calc(var(--i) * var(--t) / -3), 0s;
+}
+
+.corta {
+  width: 60%;
+}
+
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Movimiento reducido: globals.css acorta todo a 1 ms y un loop infinito parpadearía. Mazo quieto y apilado. */
+@media (prefers-reduced-motion: reduce) {
+  .carta,
+  .origen,
+  .titular,
+  .renglon,
+  .fuente {
+    animation: none !important;
+  }
+
+  .carta {
+    z-index: calc(3 - var(--i));
+    transform: translate(calc(var(--i) * var(--medio)), calc(var(--i) * var(--medio)));
+  }
+
+  .carta:nth-child(n + 2) {
+    background: var(--tono);
+  }
+
+  .carta:nth-child(n + 2) > * {
+    opacity: 0;
+  }
+}
