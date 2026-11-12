@@ -7,6 +7,7 @@ import { despacharDonacion, planificarDonacion } from "@/lib/donacionCompartida"
 import { diaDeBuenosAires } from "@/lib/edicion";
 import { documentoVisible, seVeElDiario, suscribirDiario, suscribirVisibilidad } from "@/lib/visibilidad";
 import estilos from "./AvisoDonacion.module.css";
+import { AvisoDiarioPrototipo, useVariante } from "./PrototipoDonacion";
 import { useDonacion } from "./usarDonacion";
 
 /**
@@ -17,6 +18,8 @@ import { useDonacion } from "./usarDonacion";
 export function AvisoDonacion({ firma, cantidad }: { firma: string; cantidad: number }) {
   useLayoutEffect(() => planificarDonacion(firma, cantidad), [firma, cantidad]);
   const { donacion, posicion } = useDonacion();
+  // PROTOTIPO: ?variant=1..5 cambia el diseño del recuadro.
+  const v = useVariante();
   const diario = useSyncExternalStore(suscribirDiario, seVeElDiario, () => false);
   const alFrente = useSyncExternalStore(suscribirVisibilidad, documentoVisible, () => false);
   const seVe = diario && alFrente;
@@ -34,6 +37,22 @@ export function AvisoDonacion({ firma, cantidad }: { firma: string; cantidad: nu
   if (posicion === null) return null;
 
   const resolver = (apoyo: boolean) => despacharDonacion({ tipo: "resolver", apoyo, hoy: diaDeBuenosAires(new Date()) });
+
+  if (v) {
+    return (
+      <AvisoDiarioPrototipo
+        v={v}
+        aportar={(texto, clase) => (
+          <a className={clase} href={URL_MERCADO_PAGO} target="_blank" rel="noopener noreferrer"
+            onClick={() => { registrarEvento("donacion_abierta", contexto); resolver(true); }}>{texto}</a>
+        )}
+        ahoraNo={(texto, clase) => (
+          <button className={clase} type="button" aria-label="Cerrar"
+            onClick={() => { registrarEvento("donacion_descartada", contexto); resolver(false); }}>{texto}</button>
+        )}
+      />
+    );
+  }
 
   return (
     <aside className={estilos.aviso} aria-label="Apoyá a Infomate" data-prueba="donacion-diario">

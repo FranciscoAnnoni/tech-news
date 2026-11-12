@@ -5,6 +5,7 @@ import { BOTON_DONACION, TEXTO_DONACION, TITULO_DONACION, URL_MERCADO_PAGO } fro
 import estilosTarjeta from "./Tarjeta.module.css";
 import estilos from "./TarjetaDonacion.module.css";
 import { useDeslizar } from "./useDeslizar";
+import { claseMazo, CuerpoMazo, useVariante } from "./PrototipoDonacion";
 
 /**
  * Pide un aporte por Mercado Pago. Va en el Mazo como una tarjeta más, pero no es una noticia: no cuenta en el contador.
@@ -30,17 +31,34 @@ export function TarjetaDonacion({
     alTocar: () => {},
   });
   const arriba = profundidad === 0;
+  // PROTOTIPO: ?variant=1..5 cambia el diseño de la tarjeta.
+  const v = useVariante();
 
   return (
     <article
       ref={nodo}
-      className={`${estilosTarjeta.tarjeta} ${estilos.donacion}`}
+      className={`${estilosTarjeta.tarjeta} ${v ? claseMazo(v) : estilos.donacion}`}
       data-k={profundidad}
       data-prueba={arriba ? "donacion-arriba" : undefined}
       style={{ "--k": profundidad } as CSSProperties}
       aria-label="Apoyá a Infomate"
       {...(arriba ? manejadores : {})}
     >
+      {v ? (
+        <CuerpoMazo
+          v={v}
+          aportar={(texto, clase) => (
+            <a className={clase} href={URL_MERCADO_PAGO} target="_blank" rel="noopener noreferrer" tabIndex={arriba ? 0 : -1}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => { porBoton.current = true; resolver(1); }}>{texto}</a>
+          )}
+          ahoraNo={(texto, clase) => (
+            <button className={clase} type="button" tabIndex={arriba ? 0 : -1}
+              onPointerDown={(e) => e.stopPropagation()} onClick={() => resolver(-1)}>{texto}</button>
+          )}
+        />
+      ) : (
+        <>
       <div className={estilosTarjeta.origen}>
         <span className={`${estilosTarjeta.monograma} ${estilos.monograma}`}>IM</span>
         <span className={estilosTarjeta.fuente}>Infomate</span>
@@ -69,6 +87,8 @@ export function TarjetaDonacion({
           Ahora no
         </button>
       </div>
+        </>
+      )}
       <div ref={selloAbrir} className={`${estilosTarjeta.sello} ${estilosTarjeta.selloAbrir}`}>APOYAR</div>
       <div ref={selloDescartar} className={`${estilosTarjeta.sello} ${estilosTarjeta.selloDescartar}`}>AHORA NO</div>
     </article>

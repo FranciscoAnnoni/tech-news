@@ -4,6 +4,7 @@ import { Cargando } from "@/componentes/Cargando";
 import { Diario } from "@/componentes/Diario";
 import { ErrorPortada } from "@/componentes/ErrorPortada";
 import { Mazo } from "@/componentes/Mazo";
+import { PrototipoSelector } from "@/componentes/PrototipoSelector";
 import { nDesdeParametro, tarjetasDelMazo } from "@/lib/mazo";
 import { obtenerNoticias } from "@/lib/noticias";
 import { diaDeBuenosAires, fechaDeEdicion, numeroDeEdicion } from "@/lib/edicion";
@@ -41,6 +42,12 @@ export default function Pagina({ searchParams }: { searchParams: Busqueda }) {
           <Portada searchParams={searchParams} />
         </Suspense>
       </ErrorPortada>
+      {/* PROTOTIPO: barra para elegir la variante del pedido de aporte. Nunca en producción. */}
+      {process.env.VERCEL_ENV !== "production" && (
+        <Suspense fallback={null}>
+          <PrototipoSelector />
+        </Suspense>
+      )}
     </>
   );
 }

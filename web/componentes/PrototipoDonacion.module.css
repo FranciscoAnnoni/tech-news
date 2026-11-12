@@ -1,0 +1,314 @@
+/* PROTOTIPO — estilos de las 10 variantes del pedido de aporte. Tirar junto con PrototipoDonacion.tsx. */
+
+/* ================================================================ Mazo: fondo de cada tarjeta */
+article.mTicket { background: var(--papel); }
+article.mNumeros { background: var(--tinta); color: var(--amarillo); }
+article.mCarta {
+  background:
+    linear-gradient(90deg, transparent 38px, #e3a5a5 38px, #e3a5a5 40px, transparent 40px),
+    repeating-linear-gradient(var(--papel) 0 31px, #c9d8ea 31px 32px);
+}
+article.mMate { background: var(--amarillo); }
+article.mPregunta { background: var(--papel); }
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.botonTinta,
+.botonAmarillo {
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  padding: 0 12px;
+  border: 3px solid var(--tinta);
+  font: 800 16px var(--mono);
+  text-align: center;
+  text-decoration: none;
+}
+.botonTinta { background: var(--tinta); color: var(--amarillo); box-shadow: 4px 4px 0 #7a5d00; }
+.botonAmarillo { background: var(--amarillo); color: var(--tinta); border-color: var(--amarillo); }
+.botonTinta:active,
+.botonAmarillo:active { transform: translate(2px, 2px); }
+
+.linkChico,
+.linkClaro {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  font: 700 13px var(--mono);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.linkChico { color: var(--tinta); }
+.linkClaro { color: var(--amarillo); }
+
+.etiquetaClara,
+.etiquetaOscura {
+  margin: 0 0 14px;
+  font: 800 12px var(--mono);
+  letter-spacing: 0.08em;
+}
+.etiquetaOscura {
+  align-self: flex-start;
+  padding: 4px 8px;
+  background: var(--tinta);
+  color: var(--amarillo);
+}
+
+/* ---------------------------------------------------------------- 1 Ticket */
+.ticket {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0 6px;
+  font: 15px/1.5 var(--mono);
+}
+.ticketCabeza { margin: 0; text-align: center; font-weight: 800; font-size: 17px; }
+.ticketRaya { margin: 10px 0; overflow: hidden; white-space: nowrap; text-align: center; color: #777; }
+.ticketItems { margin: 0; padding: 0; list-style: none; }
+.ticketItems li { display: flex; gap: 6px; }
+.ticketItems li span:first-child { flex: 1; overflow: hidden; white-space: nowrap; }
+.ticketItems li span:first-child::after { content: " ................................................"; color: #999; }
+.ticketTotal { display: flex; justify-content: space-between; margin: 0; font: 900 30px var(--mono); }
+.ticketGracias { margin: 14px 0 0; text-align: center; font-size: 12px; color: #555; }
+
+/* ---------------------------------------------------------------- 2 Números */
+.numeros {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.grillaNumeros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0;
+  border-top: 2px solid var(--amarillo);
+}
+.grillaNumeros div { padding: 16px 0 14px; border-bottom: 2px solid var(--amarillo); }
+.grillaNumeros div:nth-child(odd) { padding-right: 12px; border-right: 2px solid var(--amarillo); }
+.grillaNumeros div:nth-child(even) { padding-left: 14px; }
+.grillaNumeros dt { font: 900 44px/1 var(--sans); letter-spacing: -0.03em; }
+.grillaNumeros dd { margin: 6px 0 0; font: 600 14px/1.3 var(--sans); color: #f7e3a0; }
+
+/* ---------------------------------------------------------------- 3 Carta */
+.carta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 30px;
+  font-family: "Iowan Old Style", Georgia, serif;
+}
+.cartaSaludo { margin: 0; font: italic 700 30px/32px "Iowan Old Style", Georgia, serif; }
+.cartaTexto { margin: 0 0 32px; font: italic 19px/32px "Iowan Old Style", Georgia, serif; }
+.cartaFirma {
+  margin: 0;
+  font: 34px/32px "Snell Roundhand", "Bradley Hand", "Segoe Script", cursive;
+  transform: rotate(-4deg);
+  transform-origin: left;
+}
+
+/* ---------------------------------------------------------------- 4 Mate */
+.mate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.mateIcono {
+  font-size: 128px;
+  line-height: 1;
+  animation: cebar 2.4s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+@keyframes cebar {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) { .mateIcono { animation: none; } }
+.mateTitulo { margin: 20px 0 8px; font: 900 34px/1.05 var(--sans); letter-spacing: -0.02em; }
+.mateTexto { margin: 0; font: 17px/1.4 var(--sans); }
+.mate .acciones { align-self: stretch; }
+
+/* ---------------------------------------------------------------- 5 Pregunta */
+.pregunta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 12%;
+}
+.preguntaTitulo { margin: 0 0 10px; font: 900 36px/1.05 var(--sans); letter-spacing: -0.02em; }
+.preguntaTexto { margin: 0 0 20px; font: 17px/1.4 var(--sans); }
+.preguntaBotones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opcionSi,
+.opcionNo {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  padding: 10px;
+  border: 3px solid var(--tinta);
+  font: 600 14px/1.35 var(--mono);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.opcionSi { background: var(--tinta); color: var(--amarillo); box-shadow: 4px 4px 0 #7a5d00; }
+.opcionNo { background: transparent; color: var(--tinta); }
+.opcionSi b,
+.opcionNo b { font-size: 16px; }
+
+/* ================================================================ Diario */
+.cerrar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: 800 17px var(--mono);
+  cursor: pointer;
+}
+.botonTintaDiario {
+  display: inline-grid;
+  place-items: center;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 3px solid var(--tinta);
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 14px var(--mono);
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 4px 4px 0 #7a5d00;
+}
+
+/* ---------------------------------------------------------------- 1 Clasificado */
+.clasificado {
+  position: relative;
+  max-width: 460px;
+  margin: 22px auto;
+  padding: 12px 40px 14px 16px;
+  border: 1px solid var(--tinta);
+  background: var(--papel);
+}
+.clasificadoRubro {
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--tinta);
+  font: 800 11px var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.clasificadoTexto { margin: 0; font: 15px/1.35 var(--serif); text-align: justify; hyphens: auto; }
+.clasificadoLink { color: var(--tinta); font-weight: 800; }
+
+/* ---------------------------------------------------------------- 2 Faja */
+.faja {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 18px 0;
+  padding: 10px 10px 10px 18px;
+  background: var(--tinta);
+  color: var(--amarillo);
+}
+.fajaTexto { flex: 1; font: 800 15px var(--mono); }
+.fajaBoton {
+  padding: 8px 14px;
+  background: var(--amarillo);
+  color: var(--tinta);
+  font: 800 14px var(--mono);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.fajaCerrar {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: var(--amarillo);
+  font: 800 16px var(--mono);
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- 3 Editorial */
+.editorial {
+  position: relative;
+  margin: 22px 0;
+  padding: 18px 0 20px;
+  border-top: 3px solid var(--tinta);
+  border-bottom: 1px solid var(--tinta);
+}
+.editorialSeccion { margin: 0; font: 800 12px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.editorialTitulo { margin: 6px 0 12px; font: 900 40px/1.05 var(--serif); letter-spacing: -0.01em; }
+.editorialColumnas { columns: 2; column-gap: 32px; column-rule: 1px solid var(--tinta); font: 17px/1.5 var(--serif); }
+.editorialColumnas p { margin: 0 0 10px; text-align: justify; hyphens: auto; }
+.editorialColumnas p:first-child::first-letter { float: left; margin: 4px 8px 0 0; font: 900 58px/0.8 var(--serif); }
+.editorialPie { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 10px; }
+.editorialFirma { font: italic 18px var(--serif); }
+
+/* ---------------------------------------------------------------- 4 Cupón */
+.cupon {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 28px;
+  margin: 24px 0;
+  padding: 18px 48px 18px 24px;
+  border: 3px dashed var(--tinta);
+  background: var(--pastel-amarillo);
+}
+.cuponTijera { position: absolute; top: -16px; left: 22px; padding: 0 4px; background: var(--papel); font-size: 22px; }
+.cuponVale {
+  display: grid;
+  justify-items: center;
+  padding: 6px 22px;
+  border: 2px solid var(--tinta);
+  background: var(--papel);
+  font: 800 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cuponVale b { font: 900 42px/1.1 var(--serif); letter-spacing: -0.02em; text-transform: none; }
+.cuponTitulo { margin: 0 0 4px; font: 900 24px var(--serif); }
+.cuponTexto p:last-child { margin: 0; font: 16px/1.4 var(--serif); }
+
+/* ---------------------------------------------------------------- 5 Esquina */
+.esquina {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  width: 320px;
+  padding: 16px 18px 18px;
+  border: 3px solid var(--tinta);
+  background: var(--papel);
+  box-shadow: 6px 6px 0 var(--tinta);
+  animation: entrarEsquina 450ms cubic-bezier(.2, .9, .3, 1.2) both;
+}
+@keyframes entrarEsquina { from { opacity: 0; transform: translateY(24px); } }
+@media (prefers-reduced-motion: reduce) { .esquina { animation: none; } }
+.esquinaTitulo { margin: 0 32px 6px 0; font: 900 20px var(--serif); }
+.esquinaTexto { margin: 0 0 14px; font: 15px/1.4 var(--serif); }
+
+@media (max-width: 900px) {
+  .cupon { grid-template-columns: auto minmax(0, 1fr); }
+  .cupon > a { grid-column: 1 / -1; justify-self: start; }
+  .editorialColumnas { columns: 1; }
+  .faja { flex-wrap: wrap; }
+}
