@@ -12,9 +12,9 @@ Lector diario de noticias en tarjetas (Next.js, PWA). El collector vive en la ra
 
 ## Donaciones
 
-El Mazo pide un aporte de $2.000 por Mercado Pago con una tarjeta amarilla que no cuenta como noticia. El link es `URL_MERCADO_PAGO` y el monto `MONTO_SUGERIDO` y la frecuencia está en `lib/donacion.ts` (cada 3 días, nunca el primer día del navegador, 30 días de pausa si tocó Apoyar).
+El Mazo pide un aporte de $2.000 por Mercado Pago con una tarjeta amarilla con un mate que se balancea, que no cuenta como noticia. El link es `URL_MERCADO_PAGO` y el monto `MONTO_SUGERIDO` y la frecuencia está en `lib/donacion.ts` (cada 3 días, nunca el primer día del navegador, 30 días de pausa si tocó Apoyar).
 
-En el Diario (pantallas que no son teléfonos) el mismo pedido es un recuadro con una ✕ (`componentes/AvisoDonacion.tsx`); el plan es compartido (`lib/donacionCompartida.ts`).
+En el Diario (pantallas que no son teléfonos) el mismo pedido es un cupón recortable, clickeable entero, con una ✕ para cerrarlo (`componentes/AvisoDonacion.tsx`). Los diseños salieron de un prototipo de 5 variantes por superficie, guardado en la rama `prototype/donacion-variantes`; el plan es compartido (`lib/donacionCompartida.ts`).
 
 Para no ver el pedido mientras desarrollan: 5 toques seguidos en el logo **INFOMATE** (Mazo o Diario) activan el modo equipo en ese navegador (otros 5 lo apagan; recargar reinicia la cuenta). Cada toque saca un mate del logo. En iPhone, la app instalada guarda su almacenamiento aparte de Safari: hay que activarlo en las dos. Para probarla: `/?donacion` la fuerza en esa carga (también en modo equipo) en una posición al azar, y `/?donacion=1` la pone después de la primera noticia. Recordar que el Mazo solo se ve en anchos de teléfono.
 

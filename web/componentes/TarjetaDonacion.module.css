@@ -1,36 +1,50 @@
-/* Amarillo pastel: de la familia del fondo, pero más suave para que no se sienta intrusiva. */
+/* Amarillo de la marca, todo centrado alrededor del mate. */
 article.donacion {
-  background: var(--pastel-amarillo);
-  /* Para medir en alto de la tarjeta (cqh). */
-  container-type: size;
-}
-
-span.monograma {
-  background: var(--papel);
-}
-
-span.etiqueta {
-  color: var(--amarillo);
+  justify-content: center;
+  background: var(--amarillo);
 }
 
 .cuerpo {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  overflow-y: auto;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* El mate se balancea despacio desde la base, como si alguien lo estuviera cebando. */
+.mate {
+  font-size: 128px;
+  line-height: 1;
+  transform-origin: 50% 90%;
+  animation: cebar 2.4s ease-in-out infinite;
+}
+
+@keyframes cebar {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mate {
+    animation: none;
+  }
 }
 
 .titulo {
-  margin: 0 0 12px;
-  font: 800 32px/1.12 var(--sans);
-  letter-spacing: -0.01em;
+  margin: 20px 0 8px;
+  font: 900 34px/1.05 var(--sans);
+  letter-spacing: -0.02em;
 }
 
 .texto {
   margin: 0;
-  font: 16px/1.45 var(--sans);
+  font: 17px/1.4 var(--sans);
 }
 
 .acciones {
@@ -38,19 +52,17 @@ span.etiqueta {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-top: 16px;
-  /* Sube todo el bloque (texto y botones) un 20 % del alto de la tarjeta. */
-  margin-bottom: 20cqh;
+  margin-top: 18px;
 }
 
 .apoyar {
   display: grid;
   place-items: center;
-  min-height: 52px;
+  min-height: 54px;
   border: 3px solid var(--tinta);
   background: var(--tinta);
   color: var(--amarillo);
-  font: 800 16px var(--mono);
+  font: 800 17px var(--mono);
   text-decoration: none;
   box-shadow: 4px 4px 0 #7a5d00;
 }
@@ -79,17 +91,16 @@ span.etiqueta {
 }
 
 @media (max-height: 720px) {
+  .mate {
+    font-size: 96px;
+  }
+
   .titulo {
-    font-size: 25px;
+    margin-top: 12px;
+    font-size: 28px;
   }
 
   .texto {
-    font-size: 14px;
-    line-height: 1.32;
-  }
-
-  .acciones {
-    margin-top: 10px;
-    margin-bottom: 12cqh;
+    font-size: 15px;
   }
 }
