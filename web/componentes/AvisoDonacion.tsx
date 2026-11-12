@@ -11,7 +11,7 @@ import { useDonacion } from "./usarDonacion";
 
 /**
  * Pedido de aporte en el Diario: un cupón recortable, como los de un diario de papel. Todo el cupón lleva a Mercado Pago. Sigue el mismo plan que la tarjeta
- * del Mazo (cada 3 días como mínimo, nunca el primer día, 30 días de pausa si aportó) y comparte su estado: lo que se
+ * del Mazo (sí o sí la primera vez, después al azar entre 2 y 7 días, 30 días de pausa si aportó) y comparte su estado: lo que se
  * resuelve acá ya no aparece en el Mazo de esta edición. La ✕ lo cierra hasta la próxima vez que toque.
  */
 export function AvisoDonacion({ firma, cantidad }: { firma: string; cantidad: number }) {

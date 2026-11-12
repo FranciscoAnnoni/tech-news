@@ -21,22 +21,31 @@ describe("diasEntre", () => {
 });
 
 describe("tocaHoy", () => {
-  it("nunca el primer día que entra", () => {
-    expect(tocaHoy({ primerDia: "2026-11-04" }, "2026-11-04")).toBe(false);
-    expect(tocaHoy({ primerDia: "2026-11-04" }, "2026-11-05")).toBe(true);
+  it("si nunca la vio, aparece sí o sí", () => {
+    expect(tocaHoy({ primerDia: "2026-11-04" }, "2026-11-04", 0.99)).toBe(true);
+    expect(tocaHoy({ primerDia: "2026-11-01" }, "2026-11-04", 0.99)).toBe(true);
   });
 
-  it("una vez cada 3 días desde la última vez que la vio", () => {
+  it("al día siguiente de verla no aparece, aunque el sorteo dé", () => {
+    expect(tocaHoy({ primerDia: "2026-11-01", ultimaVista: "2026-11-04" }, "2026-11-05", 0)).toBe(false);
+  });
+
+  it("entre el mínimo y el máximo depende del sorteo", () => {
     const visto = { primerDia: "2026-11-01", ultimaVista: "2026-11-04" };
-    expect(tocaHoy(visto, "2026-11-05")).toBe(false);
-    expect(tocaHoy(visto, "2026-11-06")).toBe(false);
-    expect(tocaHoy(visto, "2026-11-07")).toBe(true);
+    expect(tocaHoy(visto, "2026-11-06", 0.3)).toBe(true);
+    expect(tocaHoy(visto, "2026-11-06", 0.4)).toBe(false);
+    expect(tocaHoy(visto, "2026-11-10", 0.99)).toBe(false);
   });
 
-  it("después de apoyar, no vuelve por 30 días", () => {
-    const dono = { primerDia: "2026-11-01", donoEl: "2026-11-04" };
-    expect(tocaHoy(dono, "2026-12-03")).toBe(false);
-    expect(tocaHoy(dono, "2026-12-04")).toBe(true);
+  it("a los 7 días sin verla vuelve sí o sí", () => {
+    expect(tocaHoy({ primerDia: "2026-11-01", ultimaVista: "2026-11-04" }, "2026-11-11", 0.99)).toBe(true);
+  });
+
+  it("después de apoyar, no vuelve por 30 días, ni siquiera si nunca la vio", () => {
+    const dono = { primerDia: "2026-11-01", ultimaVista: "2026-11-04", donoEl: "2026-11-04" };
+    expect(tocaHoy(dono, "2026-12-03", 0)).toBe(false);
+    expect(tocaHoy(dono, "2026-12-04", 0.99)).toBe(true);
+    expect(tocaHoy({ primerDia: "2026-11-01", donoEl: "2026-11-04" }, "2026-11-05", 0)).toBe(false);
   });
 });
 
@@ -45,6 +54,12 @@ describe("elegirPosicion", () => {
     expect(elegirPosicion(15, 0)).toBe(4);
     expect(elegirPosicion(15, 0.999)).toBe(10);
     expect(elegirPosicion(15, 1)).toBe(10);
+  });
+
+  it("con otro rango, entre esos límites", () => {
+    expect(elegirPosicion(15, 0, 2, 4)).toBe(2);
+    expect(elegirPosicion(15, 0.999, 2, 4)).toBe(4);
+    expect(elegirPosicion(3, 0.999, 2, 4)).toBe(2);
   });
 
   it("en un mazo corto nunca queda al final", () => {
@@ -56,26 +71,28 @@ describe("elegirPosicion", () => {
 });
 
 describe("planDonacion", () => {
-  it("la primera visita no la muestra y recuerda el primer día", () => {
-    const plan = planDonacion(null, "a,b", 15, "2026-11-04", 0);
-    expect(plan).toEqual({ primerDia: "2026-11-04", edicion: { firma: "a,b", posicion: null, resuelta: false } });
+  it("la primera visita la muestra temprano y recuerda el primer día", () => {
+    expect(planDonacion(null, "a,b", 15, "2026-11-04", 0, 0.99)).toEqual(
+      { primerDia: "2026-11-04", edicion: { firma: "a,b", posicion: 2, resuelta: false } },
+    );
+    expect(planDonacion(null, "a,b", 15, "2026-11-04", 0.999, 0.99).edicion?.posicion).toBe(4);
   });
 
   it("si toca, elige la posición una vez por edición y una recarga no la cambia", () => {
-    const plan = planDonacion({ primerDia: "2026-11-01" }, "a,b", 15, "2026-11-04", 0.5);
+    const plan = planDonacion({ primerDia: "2026-11-01", ultimaVista: "2026-11-01" }, "a,b", 15, "2026-11-04", 0.5, 0);
     expect(plan.edicion?.posicion).toBe(7);
-    expect(planDonacion(plan, "a,b", 15, "2026-11-04", 0)).toBe(plan);
+    expect(planDonacion(plan, "a,b", 15, "2026-11-04", 0, 0.99)).toBe(plan);
   });
 
   it("con otra edición vuelve a decidir", () => {
     const ayer: EstadoDonacion = { primerDia: "2026-11-01", ultimaVista: "2026-11-04", edicion: { firma: "a", posicion: 5, resuelta: true } };
-    expect(planDonacion(ayer, "b", 15, "2026-11-05", 0).edicion).toEqual({ firma: "b", posicion: null, resuelta: false });
-    expect(planDonacion(ayer, "c", 15, "2026-11-07", 0).edicion).toEqual({ firma: "c", posicion: 4, resuelta: false });
+    expect(planDonacion(ayer, "b", 15, "2026-11-05", 0, 0).edicion).toEqual({ firma: "b", posicion: null, resuelta: false });
+    expect(planDonacion(ayer, "c", 15, "2026-11-11", 0, 0.99).edicion).toEqual({ firma: "c", posicion: 4, resuelta: false });
   });
 
-  it("si no llegó a verla, al día siguiente vuelve a tocar", () => {
-    const sinVer: EstadoDonacion = { primerDia: "2026-11-01", edicion: { firma: "a", posicion: 8, resuelta: false } };
-    expect(planDonacion(sinVer, "b", 15, "2026-11-05", 0).edicion?.posicion).toBe(4);
+  it("si la primera vez no llegó a verla, en la próxima edición vuelve, otra vez temprano", () => {
+    const sinVer: EstadoDonacion = { primerDia: "2026-11-04", edicion: { firma: "a", posicion: 3, resuelta: false } };
+    expect(planDonacion(sinVer, "b", 15, "2026-11-05", 0, 0.99).edicion?.posicion).toBe(2);
   });
 });
 
@@ -160,7 +177,8 @@ describe("posicionForzada", () => {
   });
 
   it("el reductor la muestra aunque hoy no toque", () => {
-    const plan = reducirDonacion(null, { tipo: "planificar", previo: null, firma: "a", n: 15, hoy: "2026-11-04", azar: 0, forzada: 1 });
+    const previo = { primerDia: "2026-11-01", ultimaVista: "2026-11-04" };
+    const plan = reducirDonacion(null, { tipo: "planificar", previo, firma: "a", n: 15, hoy: "2026-11-04", azar: 0, sorteo: 0, forzada: 1 });
     expect(posicionPendiente(plan)).toBe(1);
   });
 });

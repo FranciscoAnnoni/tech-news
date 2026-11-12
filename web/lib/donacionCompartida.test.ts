@@ -34,4 +34,15 @@ describe("donación compartida entre el Mazo y el Diario", () => {
     expect(oyente).toHaveBeenCalledTimes(2);
     desuscribir();
   });
+
+  it("la primera vez la planifica sin necesidad de forzarla", () => {
+    planificarDonacion("firma", 15, { almacen: almacen(), busqueda: "", ahora: new Date("2026-11-12T15:00:00Z"), azar: 0, sorteo: 0.99 });
+    expect(leerEstadoDonacion()?.edicion?.posicion).toBe(2);
+  });
+
+  it("si el almacenamiento está bloqueado no la muestra", () => {
+    const roto = { getItem: () => { throw new Error("bloqueado"); }, setItem: () => { throw new Error("bloqueado"); } };
+    planificarDonacion("firma", 15, { almacen: roto, busqueda: "", ahora: new Date("2026-11-12T15:00:00Z"), azar: 0, sorteo: 0 });
+    expect(leerEstadoDonacion()?.edicion?.posicion).toBeNull();
+  });
 });
