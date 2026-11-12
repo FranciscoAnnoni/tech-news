@@ -1,7 +1,7 @@
 import { diasEntre } from "./edicion";
 
 /** Link de pago de Mercado Pago (reutilizable, $2.000) donde la gente aporta. */
-export const URL_MERCADO_PAGO = "https://mpago.li/19i3d7f";
+export const URL_MERCADO_PAGO = "https://mpago.la/27PuiJ8";
 /** Monto que se pide en la tarjeta; tiene que coincidir con el del link de pago. */
 export const MONTO_SUGERIDO = "$2.000";
 
