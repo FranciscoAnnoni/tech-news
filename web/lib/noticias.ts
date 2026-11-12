@@ -83,9 +83,30 @@ export async function obtenerNoticias(): Promise<Noticia[]> {
   return leerNoticias();
 }
 
-/** La página pública y su preview consultan el archivo de la edición incluida en el link. */
+/** Día YYYY-MM-DD corrido `dias` días de calendario. */
+function correrDia(dia: string, dias: number): string {
+  const fecha = new Date(`${dia}T12:00:00Z`);
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return fecha.toISOString().slice(0, 10);
+}
+
+/**
+ * La página pública y su preview consultan el archivo de la edición incluida en el link.
+ * La fecha del link puede no coincidir con el archivo que tiene la noticia: el día de hoy.json sale del
+ * Last-Modified que devuelve la CDN de Blob, que es la hora en que la CDN guardó la copia y no la de la subida.
+ * Entre la medianoche y la corrida de la mañana, hoy.json todavía tiene la edición anterior pero los links salen
+ * con la fecha nueva. Por eso, si la noticia no está en su archivo, se busca en el día anterior y en el siguiente.
+ * La vigencia de 7 días sigue contando desde la publicación.
+ */
 export async function buscarNoticia(identificador: string, ahora: Date): Promise<ResultadoPublico> {
   const partes = leerIdentificador(identificador);
   if (!partes) return { disponible: false };
-  return buscarNoticiaPublica(identificador, await leerNoticias(partes.edicion), ahora);
+  const resultado = buscarNoticiaPublica(identificador, await leerNoticias(partes.edicion), ahora);
+  if (resultado.disponible || !partes.edicion) return resultado;
+  for (const dia of [correrDia(partes.edicion, -1), correrDia(partes.edicion, 1)]) {
+    const vecinas = await leerNoticias(dia).catch(() => []);
+    const encontrada = buscarNoticiaPublica(`${dia}-${partes.clave}`, vecinas, ahora);
+    if (encontrada.disponible) return encontrada;
+  }
+  return resultado;
 }
