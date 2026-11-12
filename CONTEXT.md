@@ -33,7 +33,7 @@ Vuelta a Infomate en la que el lector abre una noticia, va a la fuente o compart
 Presentación de una tarjeta en la parte superior del mazo con la página visible. Para las métricas del recorrido se cuenta una vez por noticia, aunque se vuelva a ella.
 
 **Tarjeta de donación**:
-Tarjeta amarilla del Mazo que pide un aporte de $2.000 por Mercado Pago. No es una noticia: no suma al contador, no es una Exposición de tarjeta y "Anterior" la saltea. Aparece cada 3 días como mínimo, nunca el primer día del navegador, y no vuelve en 30 días si tocó Apoyar. En el Diario el mismo pedido es un recuadro con una ✕, entre la portada y las columnas; los dos comparten el plan, así que lo que se resuelve en uno no aparece en el otro.
+Tarjeta amarilla del Mazo con un mate que se balancea ("¿Nos invitás un mate?") que pide un aporte de $2.000 por Mercado Pago. No es una noticia: no suma al contador, no es una Exposición de tarjeta y "Anterior" la saltea. Aparece cada 3 días como mínimo, nunca el primer día del navegador, y no vuelve en 30 días si tocó Apoyar. En el Diario el mismo pedido es un cupón recortable ("$2.000 de apoyo") entre la portada y las columnas: todo el cupón lleva a Mercado Pago y la ✕ lo cierra; los dos comparten el plan, así que lo que se resuelve en uno no aparece en el otro.
 _Evitar_: publicidad, anuncio.
 
 **Modo equipo**:

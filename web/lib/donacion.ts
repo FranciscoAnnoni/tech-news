@@ -4,10 +4,6 @@ import { diasEntre } from "./edicion";
 export const URL_MERCADO_PAGO = "https://mpago.la/27PuiJ8";
 /** Monto que se pide en la tarjeta; tiene que coincidir con el del link de pago. */
 export const MONTO_SUGERIDO = "$2.000";
-/** Textos del pedido, iguales en la tarjeta del Mazo y en el recuadro del Diario. */
-export const TITULO_DONACION = `¿Te sirve Infomate? Bancanos con ${MONTO_SUGERIDO}.`;
-export const TEXTO_DONACION = "Lo hacemos dos personas a pulmón. Con un aporte por Mercado Pago nos ayudás a pagar los servidores y a seguir sumando noticias todos los días.";
-export const BOTON_DONACION = `Aportar ${MONTO_SUGERIDO} con Mercado Pago`;
 
 /** Días mínimos entre dos veces que se muestra la tarjeta de donación. */
 export const CADA_DIAS = 3;

@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 import { registrarEvento } from "@/lib/analitica";
-import { BOTON_DONACION, TEXTO_DONACION, TITULO_DONACION, URL_MERCADO_PAGO } from "@/lib/donacion";
+import { MONTO_SUGERIDO, URL_MERCADO_PAGO } from "@/lib/donacion";
 import { despacharDonacion, planificarDonacion } from "@/lib/donacionCompartida";
 import { diaDeBuenosAires } from "@/lib/edicion";
 import { documentoVisible, seVeElDiario, suscribirDiario, suscribirVisibilidad } from "@/lib/visibilidad";
@@ -10,7 +10,7 @@ import estilos from "./AvisoDonacion.module.css";
 import { useDonacion } from "./usarDonacion";
 
 /**
- * Pedido de aporte en el Diario: un recuadro como los avisos de un diario de papel. Sigue el mismo plan que la tarjeta
+ * Pedido de aporte en el Diario: un cupón recortable, como los de un diario de papel. Todo el cupón lleva a Mercado Pago. Sigue el mismo plan que la tarjeta
  * del Mazo (cada 3 días como mínimo, nunca el primer día, 30 días de pausa si aportó) y comparte su estado: lo que se
  * resuelve acá ya no aparece en el Mazo de esta edición. La ✕ lo cierra hasta la próxima vez que toque.
  */
@@ -36,7 +36,8 @@ export function AvisoDonacion({ firma, cantidad }: { firma: string; cantidad: nu
   const resolver = (apoyo: boolean) => despacharDonacion({ tipo: "resolver", apoyo, hoy: diaDeBuenosAires(new Date()) });
 
   return (
-    <aside className={estilos.aviso} aria-label="Apoyá a Infomate" data-prueba="donacion-diario">
+    <aside className={estilos.cupon} aria-label="Apoyá a Infomate" data-prueba="donacion-diario">
+      <span className={estilos.tijera} aria-hidden="true">✂</span>
       <button
         className={estilos.cerrar}
         type="button"
@@ -48,13 +49,17 @@ export function AvisoDonacion({ firma, cantidad }: { firma: string; cantidad: nu
       >
         ✕
       </button>
-      <div className={estilos.texto}>
-        <p className={estilos.volanta}>Infomate · Apoyo</p>
-        <h2 className={estilos.titulo}>{TITULO_DONACION}</h2>
-        <p className={estilos.cuerpo}>{TEXTO_DONACION}</p>
+      <div className={estilos.vale}>
+        <b>{MONTO_SUGERIDO}</b>
+        <span>de apoyo</span>
       </div>
+      <div>
+        <p className={estilos.titulo}>Recortá y bancá a Infomate</p>
+        <p className={estilos.texto}>Dos personas, a pulmón, todos los días. Tu aporte paga los servidores.</p>
+      </div>
+      {/* El ::after del link cubre todo el cupón: cualquier parte lleva a Mercado Pago, menos la ✕. */}
       <a
-        className={estilos.aportar}
+        className={estilos.apoyar}
         href={URL_MERCADO_PAGO}
         target="_blank"
         rel="noopener noreferrer"
@@ -63,7 +68,7 @@ export function AvisoDonacion({ firma, cantidad }: { firma: string; cantidad: nu
           resolver(true);
         }}
       >
-        {BOTON_DONACION} →
+        APOYAR
       </a>
     </aside>
   );

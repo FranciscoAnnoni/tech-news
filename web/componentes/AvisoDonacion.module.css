@@ -1,14 +1,16 @@
-/* Un aviso recuadrado, como los de un diario de papel: doble filete y fondo amarillo pastel. */
-.aviso {
+/* Cupón recortable: borde punteado, tijera y el monto en un recuadro. Todo el cupón es el link. */
+.cupon {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 16px 32px;
-  margin: 20px 0;
-  padding: 20px 56px 20px 24px;
-  border: 6px double var(--tinta);
+  gap: 28px;
+  margin: 24px 0;
+  padding: 18px 48px 18px 24px;
+  border: 3px dashed var(--tinta);
   background: var(--pastel-amarillo);
+  cursor: pointer;
+  transition: transform 140ms ease-out, box-shadow 140ms ease-out;
   animation: aparecer 400ms ease-out both;
 }
 
@@ -19,84 +21,110 @@
   }
 }
 
-.volanta {
-  margin: 0 0 6px;
+.cupon:active {
+  transform: translate(2px, 2px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cupon:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 #9a9a9a;
+  }
+}
+
+.tijera {
+  position: absolute;
+  top: -16px;
+  left: 22px;
+  padding: 0 4px;
+  background: var(--papel);
+  font-size: 22px;
+}
+
+.vale {
+  display: grid;
+  justify-items: center;
+  padding: 6px 22px;
+  border: 2px solid var(--tinta);
+  background: var(--papel);
   font: 800 11px var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.vale b {
+  font: 900 42px/1.1 var(--serif);
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
 .titulo {
-  margin: 0 0 6px;
-  font: 900 30px/1.1 var(--serif);
-  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  font: 900 24px var(--serif);
 }
 
-.cuerpo {
+.texto {
   margin: 0;
-  max-width: 62ch;
-  font: 17px/1.45 var(--serif);
+  font: 16px/1.4 var(--serif);
 }
 
-.aportar {
-  display: grid;
+.apoyar {
+  display: inline-grid;
   place-items: center;
-  min-height: 52px;
-  padding: 0 20px;
+  min-height: 48px;
+  padding: 0 28px;
   border: 3px solid var(--tinta);
   background: var(--tinta);
   color: var(--amarillo);
-  font: 800 15px var(--mono);
+  font: 800 16px var(--mono);
+  letter-spacing: 0.08em;
   text-decoration: none;
   white-space: nowrap;
   box-shadow: 4px 4px 0 #7a5d00;
-  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
 }
 
-.aportar:active {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 #7a5d00;
+.apoyar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .aportar:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0 #7a5d00;
-  }
-}
-
+/* Arriba del link estirado: cierra sin abrir Mercado Pago. */
 .cerrar {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 44px;
-  height: 44px;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
   border: 0;
   background: transparent;
   color: var(--tinta);
-  font: 800 18px var(--mono);
+  font: 800 17px var(--mono);
   cursor: pointer;
 }
 
-.aportar:focus-visible,
+.apoyar:focus-visible,
 .cerrar:focus-visible {
   outline: 3px solid var(--tinta);
   outline-offset: 3px;
 }
 
-/* Tablets en vertical: el botón abajo del texto. */
+/* Tablets en vertical: el botón abajo. */
 @media (max-width: 900px) {
-  .aviso {
-    grid-template-columns: minmax(0, 1fr);
+  .cupon {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .aportar {
+  .apoyar {
+    grid-column: 1 / -1;
     justify-self: start;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aviso {
+  .cupon {
     animation: none;
+    transition: none;
   }
 }
