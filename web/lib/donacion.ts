@@ -5,13 +5,20 @@ export const URL_MERCADO_PAGO = "https://mpago.la/27PuiJ8";
 /** Monto que se pide en la tarjeta; tiene que coincidir con el del link de pago. */
 export const MONTO_SUGERIDO = "$2.000";
 
-/** Días mínimos entre dos veces que se muestra la tarjeta de donación. */
-export const CADA_DIAS = 3;
+/** Después de mostrarse, días en que seguro no vuelve: así la vez siguiente no aparece. */
+export const MINIMO_DIAS = 2;
+/** Días sin mostrarse después de los cuales vuelve sí o sí. */
+export const MAXIMO_DIAS = 7;
+/** Entre el mínimo y el máximo, probabilidad de que aparezca en cada edición. */
+export const PROBABILIDAD = 1 / 3;
 /** Después de tocar Apoyar, días sin volver a mostrar la tarjeta. */
 export const PAUSA_TRAS_DONAR = 30;
 /** La tarjeta va después de una noticia al azar entre la 4ª y la 10ª, y nunca al final del mazo. */
 export const DESDE = 4;
 export const HASTA = 10;
+/** Hasta que la vio por primera vez va antes, entre la 2ª y la 4ª, para que la vea aunque lea poco. */
+export const DESDE_PRIMERA = 2;
+export const HASTA_PRIMERA = 4;
 
 const CLAVE = "infomate:donacion";
 
@@ -19,7 +26,7 @@ type Almacen = Pick<Storage, "getItem" | "setItem">;
 
 /** Lo que recuerda el navegador. Los días son YYYY-MM-DD de Buenos Aires. */
 export interface EstadoDonacion {
-  /** Primer día que este navegador abrió el Mazo: ese día nunca se muestra. */
+  /** Primer día que este navegador abrió Infomate. */
   primerDia: string;
   /** Último día en que la tarjeta quedó arriba del Mazo. */
   ultimaVista?: string;
@@ -60,7 +67,7 @@ export function guardarDonacion(almacen: Almacen, estado: EstadoDonacion): void 
   try {
     almacen.setItem(CLAVE, JSON.stringify(estado));
   } catch {
-    // Almacenamiento bloqueado: cada visita parece la primera y la tarjeta no aparece (ver planDonacion).
+    // Almacenamiento bloqueado: planificarDonacion ya lo detectó y no la muestra.
   }
 }
 
@@ -70,30 +77,34 @@ const pasaron = (desde: string | undefined, hoy: string, dias: number) => {
   return d === null || d >= dias;
 };
 
-export function tocaHoy(estado: EstadoDonacion, hoy: string): boolean {
-  return (
-    pasaron(estado.primerDia, hoy, 1) &&
-    pasaron(estado.ultimaVista, hoy, CADA_DIAS) &&
-    pasaron(estado.donoEl, hoy, PAUSA_TRAS_DONAR)
-  );
+/** Si nunca la vio, sí. Después: no antes del mínimo, sí al llegar al máximo y en el medio al azar. 30 días de pausa si aportó. */
+export function tocaHoy(estado: EstadoDonacion, hoy: string, sorteo: number): boolean {
+  if (!pasaron(estado.donoEl, hoy, PAUSA_TRAS_DONAR)) return false;
+  if (!estado.ultimaVista) return true;
+  if (!pasaron(estado.ultimaVista, hoy, MINIMO_DIAS)) return false;
+  return pasaron(estado.ultimaVista, hoy, MAXIMO_DIAS) || sorteo < PROBABILIDAD;
 }
 
-/** Cuántas noticias van antes de la tarjeta. Null si el mazo es muy corto para meterla en el medio. */
-export function elegirPosicion(n: number, azar: number): number | null {
+/** Cuántas noticias van antes de la tarjeta, entre `desde` y `hasta`. Null si el mazo es muy corto para meterla en el medio. */
+export function elegirPosicion(n: number, azar: number, desdeMin = DESDE, hastaMax = HASTA): number | null {
   if (n < 2) return null;
-  const hasta = Math.min(HASTA, n - 1);
-  const desde = Math.min(DESDE, hasta);
+  const hasta = Math.min(hastaMax, n - 1);
+  const desde = Math.min(desdeMin, hasta);
   return desde + Math.min(Math.floor(azar * (hasta - desde + 1)), hasta - desde);
 }
 
 /**
  * Estado con el plan de esta edición. Si la edición ya tenía plan, lo respeta.
- * Sin estado previo (primera vez o almacenamiento bloqueado) arranca hoy, así que hoy no se muestra.
+ * Sin estado previo es la primera vez: arranca hoy y la muestra.
  */
-export function planDonacion(previo: EstadoDonacion | null, firma: string, n: number, hoy: string, azar: number): EstadoDonacion {
+export function planDonacion(
+  previo: EstadoDonacion | null, firma: string, n: number, hoy: string, azar: number, sorteo: number,
+): EstadoDonacion {
   const estado: EstadoDonacion = previo ?? { primerDia: hoy };
   if (estado.edicion?.firma === firma) return estado;
-  const posicion = tocaHoy(estado, hoy) ? elegirPosicion(n, azar) : null;
+  const primera = !estado.ultimaVista;
+  const posicion = !tocaHoy(estado, hoy, sorteo) ? null
+    : primera ? elegirPosicion(n, azar, DESDE_PRIMERA, HASTA_PRIMERA) : elegirPosicion(n, azar);
   return { ...estado, edicion: { firma, posicion, resuelta: false } };
 }
 
@@ -136,14 +147,17 @@ export function posicionForzada(busqueda: string, n: number, azar: number): numb
 }
 
 export type AccionDonacion =
-  | { tipo: "planificar"; previo: EstadoDonacion | null; firma: string; n: number; hoy: string; azar: number; forzada?: number | null }
+  | {
+    tipo: "planificar"; previo: EstadoDonacion | null; firma: string; n: number; hoy: string; azar: number; sorteo: number;
+    forzada?: number | null;
+  }
   | { tipo: "vista"; hoy: string }
   | { tipo: "resolver"; apoyo: boolean; hoy: string };
 
 /** Null hasta que el cliente lee el almacenamiento: el servidor pinta el mazo sin donación. */
 export function reducirDonacion(estado: EstadoDonacion | null, accion: AccionDonacion): EstadoDonacion | null {
   if (accion.tipo === "planificar") {
-    const plan = planDonacion(accion.previo, accion.firma, accion.n, accion.hoy, accion.azar);
+    const plan = planDonacion(accion.previo, accion.firma, accion.n, accion.hoy, accion.azar, accion.sorteo);
     if (accion.forzada === undefined) return plan;
     return { ...plan, edicion: { firma: accion.firma, posicion: accion.forzada, resuelta: false } };
   }

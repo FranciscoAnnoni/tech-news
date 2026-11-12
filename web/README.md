@@ -12,7 +12,7 @@ Lector diario de noticias en tarjetas (Next.js, PWA). El collector vive en la ra
 
 ## Donaciones
 
-El Mazo pide un aporte de $2.000 por Mercado Pago con una tarjeta amarilla con un mate que se balancea, que no cuenta como noticia. El link es `URL_MERCADO_PAGO` y el monto `MONTO_SUGERIDO` y la frecuencia está en `lib/donacion.ts` (cada 3 días, nunca el primer día del navegador, 30 días de pausa si tocó Apoyar).
+El Mazo pide un aporte de $2.000 por Mercado Pago con una tarjeta amarilla con un mate que se balancea, que no cuenta como noticia. El link es `URL_MERCADO_PAGO` y el monto `MONTO_SUGERIDO` y la frecuencia está en `lib/donacion.ts` (la primera vez sí o sí, entre la 2ª y la 4ª noticia; después nunca al día siguiente de verla, a los 7 días sí o sí y en el medio 1 de cada 3 al azar; 30 días de pausa si tocó Apoyar).
 
 En el Diario (pantallas que no son teléfonos) el mismo pedido es un cupón recortable, clickeable entero, con una ✕ para cerrarlo (`componentes/AvisoDonacion.tsx`). Los diseños salieron de un prototipo de 5 variantes por superficie, guardado en la rama `prototype/donacion-variantes`; el plan es compartido (`lib/donacionCompartida.ts`).
 

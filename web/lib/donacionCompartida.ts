@@ -24,15 +24,28 @@ export function despacharDonacion(accion: AccionDonacion, almacen: Almacen = loc
 /** Decide el plan de la edición una sola vez por carga, aunque lo pidan el Mazo y el Diario. */
 export function planificarDonacion(
   firma: string, n: number,
-  { almacen = localStorage as Almacen, busqueda = window.location.search, ahora = new Date(), azar = Math.random() }:
-    { almacen?: Almacen; busqueda?: string; ahora?: Date; azar?: number } = {},
+  {
+    almacen = localStorage as Almacen, busqueda = window.location.search, ahora = new Date(), azar = Math.random(),
+    sorteo = Math.random(),
+  }: { almacen?: Almacen; busqueda?: string; ahora?: Date; azar?: number; sorteo?: number } = {},
 ): void {
   if (planificada === firma) return;
   planificada = firma;
+  const hoy = diaDeBuenosAires(ahora);
+  // Sin almacenamiento cada visita parecería la primera y la vería siempre: se la trata como vista hoy.
+  const previo = leerDonacion(almacen) ?? (sePuedeGuardar(almacen) ? null : { primerDia: hoy, ultimaVista: hoy });
   despacharDonacion({
-    tipo: "planificar", previo: leerDonacion(almacen), firma, n, hoy: diaDeBuenosAires(ahora), azar,
-    forzada: posicionForzada(busqueda, n, azar),
+    tipo: "planificar", previo, firma, n, hoy, azar, sorteo, forzada: posicionForzada(busqueda, n, azar),
   }, almacen);
+}
+
+function sePuedeGuardar(almacen: Almacen): boolean {
+  try {
+    almacen.setItem("infomate:prueba", "1");
+    return almacen.getItem("infomate:prueba") === "1";
+  } catch {
+    return false;
+  }
 }
 
 export const leerEstadoDonacion = (): EstadoDonacion | null => estado;
