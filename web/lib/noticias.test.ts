@@ -46,6 +46,28 @@ describe("links de una edición diaria", () => {
     expect(await buscarNoticia(link, new Date("2026-11-08T10:00:00.001Z"))).toEqual({ disponible: false });
   });
 
+  it("encuentra la noticia en el día anterior si el link salió con la fecha nueva antes de la corrida", async () => {
+    // Pasada la medianoche, hoy.json tiene la edición del 02/11 pero el link salió con fecha 03/11.
+    vi.stubEnv("INFOMATE_STORE_ID", storeId);
+    const del3 = url.replace("hoy.json", "2026-11-03.json");
+    const fetch = vi.fn().mockImplementation(async (ruta) => {
+      if (ruta === archivo) return Response.json(feed);
+      if (ruta === del3) return Response.json([{ ...feed[0], id: "00000000-0000-4000-8000-000000000000" }]);
+      return new Response(null, { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetch);
+    const resultado = await buscarNoticia(`2026-11-03-tech-${id}`, new Date("2026-11-03T12:00:00Z"));
+    expect(resultado.disponible).toBe(true);
+    if (resultado.disponible) expect(resultado.noticia.edicion).toBe("2026-11-02");
+  });
+
+  it("no revive una noticia vencida aunque esté en el día vecino", async () => {
+    vi.stubEnv("INFOMATE_STORE_ID", storeId);
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async (ruta) =>
+      ruta === archivo ? Response.json(feed) : new Response(null, { status: 404 })));
+    expect(await buscarNoticia(`2026-11-03-tech-${id}`, new Date("2026-11-09T12:00:00Z"))).toEqual({ disponible: false });
+  });
+
   it("muestra no disponible si el archivo diario ya no existe", async () => {
     vi.stubEnv("INFOMATE_STORE_ID", storeId);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
@@ -187,6 +209,7 @@ describe("fallas momentáneas de Blob", () => {
     const fetch = vi.fn().mockResolvedValue(new Response(null, { status: 404 }));
     vi.stubGlobal("fetch", fetch);
     expect(await buscarNoticia(`2026-11-02-tech-${datos.noticias[0].id}`, new Date("2026-11-03T12:00:00Z"))).toEqual({ disponible: false });
-    expect(fetch).toHaveBeenCalledTimes(1);
+    // Un pedido por archivo: el del link, el día anterior y el siguiente, sin reintentos.
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 });
