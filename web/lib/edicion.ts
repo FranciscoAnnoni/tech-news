@@ -43,3 +43,11 @@ export function fechaDeEdicion(dia: string): string | null {
     timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric",
   }).format(new Date(instante));
 }
+
+/** Días de calendario entre dos días YYYY-MM-DD (negativo si `hasta` es anterior). Null si alguno es inválido. */
+export function diasEntre(desde: string, hasta: string): number | null {
+  const a = mediodia(desde);
+  const b = mediodia(hasta);
+  if (a === null || b === null) return null;
+  return Math.round((b - a) / MS_POR_DIA);
+}
