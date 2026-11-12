@@ -1,7 +1,10 @@
 import type { CSSProperties, ReactNode } from "react";
+import { firmaDelMazo } from "@/lib/progreso";
 import { hastaUltimaOracion } from "@/lib/texto";
 import { CATEGORIAS, type Categoria, type TarjetaNoticia } from "@/lib/tipos";
+import { AvisoDonacion } from "./AvisoDonacion";
 import estilos from "./Diario.module.css";
+import { LogoInfomate } from "./LogoInfomate";
 
 const SECCION: Record<Categoria, string> = { ARG: "Argentina", Global: "Mundo", Tech: "Tecnología" };
 
@@ -79,7 +82,7 @@ export function Diario({ tarjetas, fecha, numero }: { tarjetas: TarjetaNoticia[]
             <span>{edicion} · Buenos Aires</span>
             <span>{tarjetas.length} noticias</span>
           </div>
-          <h1 className={estilos.nombre}>Infomate</h1>
+          <h1 className={estilos.nombre}><LogoInfomate>Infomate</LogoInfomate></h1>
           <p className={estilos.lema}>Lo que pasó hoy en Argentina, el mundo y la tecnología, en pocas líneas.</p>
           <nav className={estilos.indice} aria-label="Secciones">
             {secciones.map((c) => (
@@ -102,6 +105,9 @@ export function Diario({ tarjetas, fecha, numero }: { tarjetas: TarjetaNoticia[]
         ) : (
           <p className={estilos.vacio}>Todavía no hay noticias en esta edición.</p>
         )}
+
+        {/* Mismo plan que la tarjeta del Mazo: solo aparece los días que toca. */}
+        {principal && <AvisoDonacion firma={firmaDelMazo(tarjetas.map((t) => t.id))} cantidad={tarjetas.length} />}
 
         {columnas.length > 0 && (
           <section className={estilos.fila}>
