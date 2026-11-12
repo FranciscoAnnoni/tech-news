@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analitica } from "@/componentes/Analitica";
 import { AnaliticaInstalacion } from "@/componentes/AnaliticaInstalacion";
 import { Rendimiento } from "@/componentes/Rendimiento";
-import { analiticaHabilitada } from "@/lib/analiticaConfig";
+import { analiticaHabilitada, idGoogleAnalytics } from "@/lib/analiticaConfig";
 import type { ReactNode } from "react";
 import { CAPTURA_INSTALACION } from "@/lib/instalacion";
 import { metadatosMarca } from "@/lib/preview";
@@ -30,6 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const habilitada = analiticaHabilitada(process.env.VERCEL_ENV, process.env.NEXT_PUBLIC_ANALITICA_PRUEBA);
+  const ga = habilitada ? idGoogleAnalytics(process.env.NEXT_PUBLIC_GA_ID) : null;
   return (
     <html lang="es">
       <head>
@@ -41,6 +43,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Rendimiento habilitado={habilitada} />
         <div id="telefono">{children}</div>
       </body>
+      {/* Google Analytics: adquisición (de dónde llega la gente) y visitas por día. Ver docs/adr/0004. */}
+      {ga && <GoogleAnalytics gaId={ga} />}
     </html>
   );
 }
