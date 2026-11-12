@@ -154,7 +154,6 @@ export function AvisoDiarioPrototipo({ v, aportar, ahoraNo }: { v: number } & Ac
       <span className={p.cuponTijera} aria-hidden="true">✂</span>
       {cerrar}
       <div className={p.cuponVale}>
-        <span>Vale por</span>
         <b>{MONTO_SUGERIDO}</b>
         <span>de apoyo</span>
       </div>
@@ -162,7 +161,7 @@ export function AvisoDiarioPrototipo({ v, aportar, ahoraNo }: { v: number } & Ac
         <p className={p.cuponTitulo}>Recortá y bancá a Infomate</p>
         <p>Dos personas, a pulmón, todos los días. Tu aporte paga los servidores.</p>
       </div>
-      {aportar("Canjear en Mercado Pago →", p.botonTintaDiario)}
+      {aportar("APOYAR", `${p.botonTintaDiario} ${p.cuponLink}`)}
     </aside>
   );
   return (

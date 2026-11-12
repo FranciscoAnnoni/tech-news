@@ -21,6 +21,7 @@ import { TarjetaDonacion } from "./TarjetaDonacion";
 import estilosDetalle from "./Detalle.module.css";
 import estilos from "./Mazo.module.css";
 import { useDonacion } from "./usarDonacion";
+import { useVariante } from "./PrototipoDonacion";
 
 type Capa = { tipo: "detalle"; indice: number } | { tipo: "guia" } | null;
 
@@ -73,7 +74,9 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
   // El plan es compartido con el Diario (ver lib/donacionCompartida.ts).
   useLayoutEffect(() => planificarDonacion(firma, n), [firma, n]);
   // La tarjeta de donación va antes de la noticia `posicionDonacion` y no cuenta: el contador sigue en la anterior.
-  const donacionArriba = posicionDonacion !== null && indice === posicionDonacion;
+  // PROTOTIPO: con ?variant solo se ve la tarjeta de apoyo, sin noticias.
+  const soloDonacion = useVariante() !== null && posicionDonacion !== null;
+  const donacionArriba = posicionDonacion !== null && (soloDonacion || indice === posicionDonacion);
   const contextoDonacion = useCallback(
     () => ({ recorrido_id: obtenerMedicion().recorrido_id, posicion: posicionDonacion ?? 0, cantidad_tarjetas: n, superficie: "tarjeta" as const }),
     [n, posicionDonacion],
@@ -158,8 +161,8 @@ export function Mazo({ tarjetas, numeroEdicion }: { tarjetas: TarjetaNoticia[]; 
     if (instalada && capa?.tipo === "guia") window.history.back();
   }, [instalada, capa]);
 
-  const terminado = indice >= n;
-  const pila = pilaVisible(indice, n, posicionDonacion, PROFUNDIDAD);
+  const terminado = !soloDonacion && indice >= n;
+  const pila: ReturnType<typeof pilaVisible> = soloDonacion ? [{ tipo: "donacion" }] : pilaVisible(indice, n, posicionDonacion, PROFUNDIDAD);
 
   const tarjetaAbierta = capa?.tipo === "detalle" ? tarjetas[capa.indice] : null;
 

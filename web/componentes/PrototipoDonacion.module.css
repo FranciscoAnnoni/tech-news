@@ -273,6 +273,16 @@ article.mPregunta { background: var(--papel); }
   border: 3px dashed var(--tinta);
   background: var(--pastel-amarillo);
 }
+/* Todo el cupón es el link: el ::after del botón lo cubre entero. La ✕ queda arriba y cierra sin abrir Mercado Pago. */
+.cupon { cursor: pointer; transition: transform 140ms ease-out, box-shadow 140ms ease-out; }
+.cuponLink { position: static; }
+.cuponLink::after { content: ""; position: absolute; inset: 0; }
+.cupon .cerrar { z-index: 1; }
+.cupon:active { transform: translate(2px, 2px); }
+@media (hover: hover) and (pointer: fine) {
+  .cupon:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 #9a9a9a; }
+}
+.cuponLink { padding: 0 28px; font-size: 16px; letter-spacing: 0.08em; }
 .cuponTijera { position: absolute; top: -16px; left: 22px; padding: 0 4px; background: var(--papel); font-size: 22px; }
 .cuponVale {
   display: grid;
