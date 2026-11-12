@@ -1,0 +1,102 @@
+/* Un aviso recuadrado, como los de un diario de papel: doble filete y fondo amarillo pastel. */
+.aviso {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px 32px;
+  margin: 20px 0;
+  padding: 20px 56px 20px 24px;
+  border: 6px double var(--tinta);
+  background: var(--pastel-amarillo);
+  animation: aparecer 400ms ease-out both;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.volanta {
+  margin: 0 0 6px;
+  font: 800 11px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.titulo {
+  margin: 0 0 6px;
+  font: 900 30px/1.1 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.cuerpo {
+  margin: 0;
+  max-width: 62ch;
+  font: 17px/1.45 var(--serif);
+}
+
+.aportar {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  padding: 0 20px;
+  border: 3px solid var(--tinta);
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 15px var(--mono);
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 4px 4px 0 #7a5d00;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.aportar:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #7a5d00;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .aportar:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 #7a5d00;
+  }
+}
+
+.cerrar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: 800 18px var(--mono);
+  cursor: pointer;
+}
+
+.aportar:focus-visible,
+.cerrar:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+
+/* Tablets en vertical: el botón abajo del texto. */
+@media (max-width: 900px) {
+  .aviso {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aportar {
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso {
+    animation: none;
+  }
+}

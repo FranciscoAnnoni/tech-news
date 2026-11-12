@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type CSSProperties } from "react";
-import { MONTO_SUGERIDO, URL_MERCADO_PAGO } from "@/lib/donacion";
+import { BOTON_DONACION, TEXTO_DONACION, TITULO_DONACION, URL_MERCADO_PAGO } from "@/lib/donacion";
 import estilosTarjeta from "./Tarjeta.module.css";
 import estilos from "./TarjetaDonacion.module.css";
 import { useDeslizar } from "./useDeslizar";
@@ -47,11 +47,8 @@ export function TarjetaDonacion({
         <span className={`${estilosTarjeta.categoria} ${estilos.etiqueta}`}>Apoyo</span>
       </div>
       <div className={estilos.cuerpo}>
-        <h2 className={estilos.titulo}>¿Te sirve Infomate? Bancanos con {MONTO_SUGERIDO}.</h2>
-        <p className={estilos.texto}>
-          Lo hacemos dos personas a pulmón. Con un aporte por Mercado Pago nos ayudás a pagar los servidores y a seguir
-          sumando noticias todos los días.
-        </p>
+        <h2 className={estilos.titulo}>{TITULO_DONACION}</h2>
+        <p className={estilos.texto}>{TEXTO_DONACION}</p>
       </div>
       {/* Frenar pointerdown: si no, el gesto de la tarjeta captura el puntero y le roba el click a los botones. */}
       <div className={estilos.acciones} onPointerDown={(e) => e.stopPropagation()}>
@@ -66,7 +63,7 @@ export function TarjetaDonacion({
             resolver(1);
           }}
         >
-          Aportar {MONTO_SUGERIDO} con Mercado Pago
+          {BOTON_DONACION}
         </a>
         <button className={estilos.ahoraNo} type="button" tabIndex={arriba ? 0 : -1} onClick={() => resolver(-1)}>
           Ahora no

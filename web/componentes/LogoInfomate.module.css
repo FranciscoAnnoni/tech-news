@@ -1,0 +1,52 @@
+.logo {
+  position: relative;
+  display: inline-block;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* El matecito sale del logo hacia abajo, gira un poco y se desvanece. */
+.mate {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 30;
+  font-style: normal;
+  font-size: max(22px, 0.4em);
+  line-height: 1;
+  pointer-events: none;
+  animation: salir 850ms cubic-bezier(.2, .8, .3, 1) forwards;
+}
+
+@keyframes salir {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx) * 0.5), 10px) scale(1.25) rotate(calc(var(--giro) * 0.5));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), 46px) scale(0.9) rotate(var(--giro));
+  }
+}
+
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: calc(60px + env(safe-area-inset-bottom));
+  z-index: 50;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  background: var(--tinta);
+  color: var(--amarillo);
+  font: 800 13px var(--mono);
+  letter-spacing: 0;
+  white-space: nowrap;
+  pointer-events: none;
+}

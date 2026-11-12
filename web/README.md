@@ -14,7 +14,9 @@ Lector diario de noticias en tarjetas (Next.js, PWA). El collector vive en la ra
 
 El Mazo pide un aporte de $2.000 por Mercado Pago con una tarjeta amarilla que no cuenta como noticia. El link es `URL_MERCADO_PAGO` y el monto `MONTO_SUGERIDO` y la frecuencia está en `lib/donacion.ts` (cada 3 días, nunca el primer día del navegador, 30 días de pausa si tocó Apoyar).
 
-Para no ver la tarjeta mientras desarrollan: 5 toques seguidos en el logo **INFOMATE** activan el modo equipo en ese navegador (otros 5 lo apagan). En iPhone, la app instalada guarda su almacenamiento aparte de Safari: hay que activarlo en las dos. Para probarla: `/?donacion` la fuerza en esa carga (también en modo equipo) en una posición al azar, y `/?donacion=1` la pone después de la primera noticia. Recordar que el Mazo solo se ve en anchos de teléfono.
+En el Diario (pantallas que no son teléfonos) el mismo pedido es un recuadro con una ✕ (`componentes/AvisoDonacion.tsx`); el plan es compartido (`lib/donacionCompartida.ts`).
+
+Para no ver el pedido mientras desarrollan: 5 toques seguidos en el logo **INFOMATE** (Mazo o Diario) activan el modo equipo en ese navegador (otros 5 lo apagan; recargar reinicia la cuenta). Cada toque saca un mate del logo. En iPhone, la app instalada guarda su almacenamiento aparte de Safari: hay que activarlo en las dos. Para probarla: `/?donacion` la fuerza en esa carga (también en modo equipo) en una posición al azar, y `/?donacion=1` la pone después de la primera noticia. Recordar que el Mazo solo se ve en anchos de teléfono.
 
 ## Noticias desde Vercel Blob
 

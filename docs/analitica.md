@@ -44,9 +44,9 @@ Publicada como [GitHub issue #13](https://github.com/FranciscoAnnoni/tech-news/i
 | `app_instalada` | Confirmación mediante el evento del navegador, solo donde esté disponible. |
 | `app_iniciada` | Entrada a la web, con modo navegador/PWA y atribución de entrada depurada. No emitir por cada cambio de tarjeta. |
 | `noticia_no_disponible_vista` | Entrada a un link que ya no puede mostrar la noticia. |
-| `donacion_vista` | Tarjeta de donación arriba del Mazo con la página visible; una vez por día. `posicion` es cuántas noticias van antes. |
-| `donacion_descartada` | Tarjeta de donación deslizada a la izquierda o "Ahora no". |
-| `donacion_abierta` | Apoyar tocado o deslizado en la tarjeta (`superficie` `tarjeta`). Abre el link de pago de Mercado Pago; no confirma que haya donado. |
+| `donacion_vista` | Pedido de aporte visible con la página al frente: tarjeta arriba del Mazo (`superficie` `tarjeta`) o recuadro del Diario (`superficie` `diario`); una vez por día. `posicion` es cuántas noticias van antes en el Mazo. El Diario no manda `recorrido_id`. |
+| `donacion_descartada` | Tarjeta deslizada a la izquierda o "Ahora no" (`tarjeta`), o ✕ del recuadro (`diario`). |
+| `donacion_abierta` | Aportar tocado o deslizado en la tarjeta (`tarjeta`) o tocado en el recuadro (`diario`). Abre el link de pago de Mercado Pago; no confirma que haya donado. |
 
 Propiedades propuestas: identificador de noticia, edición, categoría, fuente, posición y tamaño del mazo, superficie (tarjeta/capa/página), identificador de recorrido, modo navegador/PWA y atribución de entrada depurada. No enviar texto completo ni URLs con parámetros arbitrarios.
 

@@ -4,8 +4,8 @@ import type { Plataforma } from "./plataforma";
 export type Pantalla = "mazo" | "noticia" | "no_disponible";
 export type ContextoNoticia = { identificador: string; categoria: Categoria; fuente: string; edicion?: string };
 export type ContextoMazo = ContextoNoticia & { recorrido_id: string; posicion: number; cantidad_tarjetas: number };
-/** `posicion`: cuántas noticias van antes de la tarjeta de donación. */
-type ContextoDonacion = { recorrido_id: string; posicion: number; cantidad_tarjetas: number };
+/** `posicion`: cuántas noticias van antes de la tarjeta de donación. El Diario no tiene recorrido. */
+type ContextoDonacion = { recorrido_id?: string; posicion: number; cantidad_tarjetas: number; superficie: "tarjeta" | "diario" };
 type Superficie = "tarjeta" | "capa" | "pagina";
 type Accion = ContextoNoticia & { superficie: Superficie; recorrido_id?: string; posicion?: number; cantidad_tarjetas?: number };
 type Eventos = {
@@ -24,7 +24,7 @@ type Eventos = {
   noticia_no_disponible_vista: Record<string, never>;
   donacion_vista: ContextoDonacion;
   donacion_descartada: ContextoDonacion;
-  donacion_abierta: ContextoDonacion & { superficie: "tarjeta" };
+  donacion_abierta: ContextoDonacion;
 };
 type Evento = { [K in keyof Eventos]: { nombre: K; propiedades: Eventos[K]; modo: "navegador" | "pwa" } }[keyof Eventos];
 type Cliente = { track: (nombre: string, propiedades: Record<string, unknown>) => void };
