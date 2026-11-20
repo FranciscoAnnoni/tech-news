@@ -200,7 +200,9 @@ def diario():
 
 
 def error():
-    """Workflow de error de Infomate · Diario: avisa por Telegram qué nodo falló y por qué. No hace falta activarlo."""
+    """Workflow de error de Infomate · Diario: avisa por Telegram qué nodo falló y por qué.
+    Hay que publicarlo (`n8n publish:workflow --id=infomateError001` y reiniciar): en n8n 2.x, si no está publicado,
+    n8n no lo llama ("is not active and cannot be executed"). Así se perdieron los avisos del 18 y 19/11/2026."""
     texto = ("=Infomate · Diario falló\nNodo: {{ $json.execution.lastNodeExecuted }}\n"
              "Error: {{ $json.execution.error.message }}\n{{ $json.execution.url }}")
     nodes = [
