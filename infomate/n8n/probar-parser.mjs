@@ -112,4 +112,21 @@ assert.equal(gn.feed, 'Google News Argentina');
 assert.equal(por('Opinion | U.S.-China Relations Will Never Be the Same'), undefined, 'columnas de opinión no entran');
 const xi = por('Xi meets Gulf leaders on trade');
 
+// 19/11/2026: una nota cortada a 2000 justo en medio de un emoji tiró abajo "Guardar sin repetidas" (Postgres no acepta
+// un surrogate suelto). Ni el corte ni una entidad rota (&#55356;) pueden dejar medio emoji.
+{
+  const SUELTO = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+  const texto = 'a'.repeat(1999) + '🟧 sigue';
+  const f = [{ categoria: 'arg', fuente: 'La Nación', origen: 'rss', url: 'https://x' }];
+  const d = [{ data: `<rss><item><title>Súper Niño &#55356; en Argentina</title><link>https://lanacion.com.ar/a</link>
+    <pubDate>${rfc(hace(1))}</pubDate><content:encoded><![CDATA[${texto}]]></content:encoded></item></rss>` }];
+  const n2 = { 'Fuentes': f, 'Bajar fuentes': d, 'Fuentes Reddit': [], 'Bajar Reddit': [] };
+  const [{ json: r2 }] = new Function('$', '$execution', codigo)((n) => ({ all: () => n2[n].map((json) => ({ json })) }), { id: 1 });
+  const [n] = r2.items;
+  assert.ok(n, 'la nota con emoji entra');
+  assert.equal(n.contenido, 'a'.repeat(1999), 'el corte no deja medio emoji');
+  assert.equal(n.titulo_original, "Súper Niño en Argentina");
+  assert.ok(!SUELTO.test(JSON.stringify(r2)), 'ningún surrogate suelto en la salida');
+}
+
 console.log(`PARSER OK (${r.items.length} ítems)`);

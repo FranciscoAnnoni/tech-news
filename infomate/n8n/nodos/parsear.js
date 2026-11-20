@@ -11,6 +11,10 @@ const SERVICIO = /\b(calendario de (pagos|cobros?)|cuando cobro|cuanto cobro|fec
 const OPINION_TITULO = /^(opinion|opinión|op-ed|editorial)\s*[|:-]/i;
 const sinAcentos = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+// Postgres rechaza el JSON entero si un texto trae medio emoji (un "surrogate" suelto): pasó el 19/11/2026 con
+// una nota de La Nación cortada a 2000 justo en un emoji. sano() los saca y corto() no corta nunca un par.
+const SUELTO = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+const sano = (s) => (typeof s === 'string' ? s.replace(SUELTO, '') : s);
 function ent(s) {
   if (!s) return '';
   const m = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" };
@@ -19,9 +23,10 @@ function ent(s) {
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&(amp|lt|gt|quot|apos|nbsp|#39);/g, (_, e) => m[e]);
 }
-const sinHtml = (s) => ent(ent(s)).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+const sinHtml = (s) => sano(ent(ent(s))).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const tag = (b, t) => { const m = b.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`)); return m ? m[1] : ''; };
-const corto = (s, n) => (s && s.length > n ? s.slice(0, n) : s || null);
+const corto = (s, n) => (s ? sano(s.length > n ? s.slice(0, n) : s) || null : null);
+const sanear = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? v.map(sano) : sano(v)]));
 const fecha = (s) => { s = sinHtml(s); return s && !isNaN(Date.parse(s)) ? new Date(s).toISOString() : null; };
 
 // Mismo link escrito distinto = misma nota: sin http/www, sin utm_*, sin # ni / final. (Sin new URL(): no existe en n8n.)
@@ -133,7 +138,7 @@ function parsear(pares, ahora) {
       estado[clave] = 'ERROR: ' + String(e.message).slice(0, 200);
     }
   }
-  return { items, portadas, estado };
+  return { items: items.map(sanear), portadas: portadas.map(sanear), estado };
 }
 
 const zip = (a, b) => a.map((x, i) => [x.json, (b[i] || {}).json]);

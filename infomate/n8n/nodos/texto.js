@@ -13,6 +13,8 @@ function ent(s) {
     .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&([a-zA-Z]+);/g, (x, e) => ENT[e] ?? x);
 }
+// Sin medio emoji (surrogate suelto): Postgres rechaza el JSON entero. Ver parsear.js.
+const SUELTO = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
 const limpio = (s) => ent(String(s || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 
 function articleBody(html) {
@@ -49,7 +51,7 @@ function extraer(html) {
   if (typeof html !== 'string' || !html) return null;
   for (const lector of [articleBody, parrafos, arc]) {
     const t = lector(html);
-    if (t.length >= MIN) return t.slice(0, MAX);
+    if (t.length >= MIN) return t.slice(0, MAX).replace(SUELTO, '');
   }
   return null;
 }
